@@ -1,6 +1,7 @@
 package studio.nox.app
 
 import android.graphics.Bitmap
+import java.io.ByteArrayOutputStream
 import android.net.Uri
 import android.view.ViewGroup
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -50,6 +51,8 @@ import studio.nox.model.SceneConfig
 import studio.nox.model.SceneLooks
 import studio.nox.model.ColorHarmony
 import studio.nox.model.EditHistory
+import studio.nox.model.PortablePreset
+import studio.nox.model.PresetTransfer
 import kotlin.math.roundToInt
 import studio.nox.renderer.MotionSensor
 import studio.nox.renderer.NoxSurfaceView
@@ -99,6 +102,44 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
             }.onSuccess {vm.notify("PNG сохранён")}.onFailure {vm.notify(it.message?:"Ошибка экспорта PNG")}
         }
     }
+    val portableExportLauncher=rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/plain")) { uri:Uri? ->
+        if(uri!=null) scope.launch {
+            runCatching {
+                val items=presets.map { PortablePreset(it.name,it.scene) }
+                val data=PresetTransfer.encode(items)
+                withContext(Dispatchers.IO) {
+                    val output=context.contentResolver.openOutputStream(uri)
+                        ?: error("Не удалось открыть файл")
+                    output.bufferedWriter(Charsets.UTF_8).use { it.write(data) }
+                }
+            }.onSuccess {vm.notify("Коллекция экспортирована")}
+             .onFailure {vm.notify(it.message?:"Не удалось сохранить коллекцию")}
+        }
+    }
+    val portableImportLauncher=rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()) { uri:Uri? ->
+        if(uri!=null) scope.launch {
+            runCatching {
+                withContext(Dispatchers.IO) {
+                    val bytes=ByteArrayOutputStream()
+                    val input=context.contentResolver.openInputStream(uri)
+                        ?: error("Невозможно прочитать файл")
+                    input.use { stream ->
+                        val chunk=ByteArray(8192)
+                        while(true) {
+                            val count=stream.read(chunk)
+                            if(count<0) break
+                            bytes.write(chunk,0,count)
+                            require(bytes.size()<=256_000) { "Файл слишком большой" }
+                        }
+                    }
+                    PresetTransfer.decode(bytes.toString(Charsets.UTF_8.name()))
+                }
+            }.onSuccess {vm.importPortable(it)}
+             .onFailure {vm.notify(it.message?:"Ошибка импорта")}
+        }
+    }
     fun openStudio(c:SceneConfig,id:Long=0,name:String="") {
         editing=c.normalized()
         history=EditHistory.start(editing)
@@ -143,7 +184,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                         Text("NOX",fontSize=31.sp,fontWeight=FontWeight.Black,color=TextWhite,letterSpacing=4.sp)
                         Text("LIVING LIGHT STUDIO",fontSize=9.sp,color=Cyan,letterSpacing=2.sp)
                     }
-                    Text("1.4",fontSize=12.sp,color=Muted)
+                    Text("1.5",fontSize=12.sp,color=Muted)
                 }
                 when(tab) {
                     Tab.HOME -> HomeScreen(homeScene,active,homeDraft,settings.fps,settings.gyroEnabled,
@@ -185,7 +226,15 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                     Tab.LIBRARY -> LibraryScreen(presets,settings.activeId,
                         onEdit={openStudio(it.scene,it.id,it.name)},onUse={vm.use(it)},
                         onDuplicate={vm.duplicate(it)},onDelete={vm.delete(it)})
-                    Tab.SETTINGS -> SettingsScreen(settings.fps,settings.gyroEnabled,vm::setFps,vm::setGyro)
+                    Tab.SETTINGS -> SettingsScreen(settings.fps,settings.gyroEnabled,vm::setFps,vm::setGyro,
+                        presetCount=presets.size,
+                        onExportPresets={
+                            if(presets.isEmpty()) vm.notify("Пока нет пресетов для экспорта")
+                            else portableExportLauncher.launch("NOX-presets.nox")
+                        },
+                        onImportPresets={
+                            portableImportLauncher.launch(arrayOf("*/*"))
+                        })
                 }
             }
             vm.message?.let { message ->
@@ -608,11 +657,17 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
     var confirming by remember { mutableStateOf<NoxPreset?>(null) }
     var query by remember { mutableStateOf("") }
     var filterScene by remember { mutableStateOf("ALL") }
-    val filtered=remember(presets,query,filterScene) {
-        presets.filter { preset ->
+    var sortOrder by remember { mutableStateOf("Недавние") }
+    val filtered=remember(presets,query,filterScene,sortOrder) {
+        val matches=presets.filter { preset ->
             (filterScene=="ALL" || preset.scene.sceneId==filterScene) &&
             (preset.name.contains(query.trim(),ignoreCase=true) ||
                 preset.scene.sceneId.contains(query.trim(),ignoreCase=true))
+        }
+        when(sortOrder) {
+            "По имени" -> matches.sortedBy { it.name.lowercase() }
+            "По сцене" -> matches.sortedWith(compareBy({it.scene.sceneId},{it.name.lowercase()}))
+            else -> matches.sortedByDescending {it.id}
         }
     }
     Column(Modifier.fillMaxSize().padding(horizontal=18.dp)) {
@@ -654,7 +709,27 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                         labelColor=Muted))
             }
         }
-        Spacer(Modifier.height(8.dp))
+        Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,
+            horizontalArrangement=Arrangement.End) {
+            Box {
+                var sortMenu by remember { mutableStateOf(false) }
+                TextButton(onClick={sortMenu=true},contentPadding=PaddingValues(horizontal=9.dp,vertical=0.dp)) {
+                    Icon(Icons.Outlined.Sort,contentDescription=null,modifier=Modifier.size(17.dp),
+                        tint=Muted)
+                    Spacer(Modifier.width(7.dp))
+                    Text(sortOrder,color=Muted,fontSize=11.sp)
+                    Icon(Icons.Outlined.KeyboardArrowDown,contentDescription=null,
+                        modifier=Modifier.size(17.dp),tint=Muted)
+                }
+                DropdownMenu(expanded=sortMenu,onDismissRequest={sortMenu=false}) {
+                    listOf("Недавние","По имени","По сцене").forEach { option ->
+                        DropdownMenuItem(text={Text(option)},onClick={
+                            sortOrder=option;sortMenu=false
+                        })
+                    }
+                }
+            }
+        }
         if(filtered.isEmpty()) {
             Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {
                 Column(horizontalAlignment=Alignment.CenterHorizontally) {
@@ -800,7 +875,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
     }
 }
 
-@Composable private fun SettingsScreen(fps:Int,gyro:Boolean,onFps:(Int)->Unit,onGyro:(Boolean)->Unit) {
+@Composable private fun SettingsScreen(fps:Int,gyro:Boolean,onFps:(Int)->Unit,onGyro:(Boolean)->Unit, presetCount:Int, onExportPresets:()->Unit,onImportPresets:()->Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())
         .padding(horizontal=20.dp)) {
         Text("Устройство и свет",fontSize=27.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
@@ -913,12 +988,42 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                 if(index<2) HorizontalDivider(color=Color(0xFF253541))
             }
         }
+        Spacer(Modifier.height(22.dp))
+        Row(verticalAlignment=Alignment.CenterVertically) {
+            Icon(Icons.Outlined.FolderShared,contentDescription=null,tint=Cyan,
+                modifier=Modifier.size(21.dp))
+            Spacer(Modifier.width(10.dp))
+            Text("Перенос коллекции",fontSize=18.sp,fontWeight=FontWeight.SemiBold,
+                color=TextWhite)
+        }
+        Spacer(Modifier.height(8.dp))
+        Text("Переноси пресеты между установками NOX через локальный файл. "+
+            "Импорт добавляет сцены, не удаляя существующие.",
+            color=Muted,fontSize=12.sp)
+        Spacer(Modifier.height(11.dp))
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)) {
+            OutlinedButton(onClick=onExportPresets,modifier=Modifier.weight(1f).height(50.dp),
+                shape=RoundedCornerShape(13.dp),
+                enabled=presetCount>0) {
+                Icon(Icons.Outlined.FileUpload,contentDescription=null,modifier=Modifier.size(17.dp))
+                Spacer(Modifier.width(7.dp))
+                Text("Экспорт",fontSize=12.sp)
+            }
+            OutlinedButton(onClick=onImportPresets,modifier=Modifier.weight(1f).height(50.dp),
+                shape=RoundedCornerShape(13.dp)) {
+                Icon(Icons.Outlined.FileDownload,contentDescription=null,modifier=Modifier.size(17.dp))
+                Spacer(Modifier.width(7.dp))
+                Text("Импорт",fontSize=12.sp)
+            }
+        }
+        Text("В библиотеке: ${presetCount} · файл NOX-PRESETS/1",
+            color=Muted,fontSize=11.sp,modifier=Modifier.padding(top=8.dp))
         Spacer(Modifier.height(21.dp))
         HorizontalDivider(color=Color(0xFF253541))
         Spacer(Modifier.height(15.dp))
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,
             verticalAlignment=Alignment.CenterVertically) {
-            Text("NOX 1.4.1 Atelier",color=TextWhite,fontSize=12.sp,
+            Text("NOX 1.5 Portable",color=TextWhite,fontSize=12.sp,
                 fontWeight=FontWeight.Medium)
             Text("OpenGL ES live engine",color=Muted,fontSize=11.sp)
         }
