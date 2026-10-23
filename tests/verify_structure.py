@@ -24,6 +24,29 @@ class StructuralContracts(unittest.TestCase):
         source=self.read('feature/wallpaper/src/main/java/studio/nox/wallpaper/NoxWallpaperService.kt')
         for case in ['onSurfaceCreated','onSurfaceDestroyed','onVisibilityChanged','motion.stop()','setVisible(isVisible)']:
             self.assertIn(case,source)
+    def test_living_scenes_browse_six_with_scene_variants(self):
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        home=ui.split('@Composable private fun HomeScreen(',1)[1].split('@Composable private fun StudioScreen(',1)[0]
+        self.assertIn('horizontalScroll(rememberScrollState())',home)
+        self.assertIn('SceneRegistry.get(id)?.isNew',home)
+        self.assertIn('ScenePresets.forScene(scene)',home)
+        self.assertIn('onVariant(variant)',home)
+        self.assertIn('homeDraft=variant.config',ui)
+        self.assertIn('onExport(config)',home)
+        self.assertIn('LivePreview(config,fps,gyro,Modifier.fillMaxSize())',home)
+
+    def test_new_scenes_use_canvas_minis_and_category_filter(self):
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        thumb=ui.split('@Composable private fun Miniature(',1)[1].split('@Composable private fun SettingsScreen(',1)[0]
+        gallery=ui.split('@Composable private fun SearchableLibrary(',1)[1].split('@Composable private fun Miniature(',1)[0]
+        for scene in ('"AURORA" ->', '"PULSE" ->', '"COMET" ->'):
+            self.assertIn(scene,thumb)
+        self.assertIn('SceneRegistry.get(preset.scene.sceneId)?.category',gallery)
+        self.assertIn('filterCategory',gallery)
+        self.assertIn('SceneCategory.AMBIENT',gallery)
+        self.assertIn('filterFavorites',gallery)
+        self.assertIn('GridItemSpan(2)',gallery)
+
     def test_living_scenes_gl_modes_and_legacy_branch(self):
         shader=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
         for mode in ('"FLUX"->0f','"HALO"->1f','"NEBULA"->2f',
