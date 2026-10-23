@@ -113,6 +113,12 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('onImportPresets',settings)
         self.assertIn('NOX 1.5',ui)
 
+    def test_version_header_tracks_build_config(self):
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        app=self.read('app/build.gradle.kts')
+        self.assertIn('BuildConfig.VERSION_NAME',ui)
+        self.assertIn('buildConfig = true',app)
+
     def test_nebula_uses_trig_free_hash(self):
         src=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
         self.assertIn('float hash(vec2 p)',src)
