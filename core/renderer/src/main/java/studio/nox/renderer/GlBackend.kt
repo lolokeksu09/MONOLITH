@@ -111,7 +111,12 @@ varying vec2 vUv;
 uniform float uTime, uMode, uGlow, uDensity, uSeed;
 uniform vec2 uResolution, uMotion, uTouch;
 uniform vec3 uColorA, uColorB;
-float hash(vec2 p) { return fract(sin(dot(p,vec2(127.1,311.7)) + uSeed * 0.01)*43758.5453); }
+// Bounded, trig-free lattice hash: avoids huge sin() inputs that can vary on mobile GPUs.
+float hash(vec2 p) {
+  vec3 q=fract(vec3(p.xyx)*0.1031+fract(uSeed*0.00013));
+  q+=dot(q,q.yzx+33.33);
+  return fract((q.x+q.y)*q.z);
+}
 float lightline(float dist, float thickness) { return exp(-abs(dist)*thickness); }
 void main() {
   vec2 uv = vUv;
