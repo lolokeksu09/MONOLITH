@@ -114,12 +114,12 @@ class StructuralContracts(unittest.TestCase):
     def test_premium_studio_11_tools(self):
         ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
         for symbol in ['SceneLooks.looks', 'SceneLooks.shuffle(', 'FullscreenPreview(',
-                       'SceneCatalog.fromHex(', 'Поиск по пресетам', 'SearchableLibrary']:
+                       'SceneCatalog.fromHex(', 'Найти композицию', 'SearchableLibrary']:
             self.assertIn(symbol, ui, 'NOX 1.1 must expose real editor or discovery functionality: ' + symbol)
     def test_app_upgrades_existing_install_in_place(self):
         app=self.read('app/build.gradle.kts')
-        for contract in ['applicationId = "studio.nox.light"', 'applicationIdSuffix = ".signature"', 'versionCode = 5',
-                         'versionName = "1.3.0"']:
+        for contract in ['applicationId = "studio.nox.light"', 'applicationIdSuffix = ".atelier"', 'versionCode = 6',
+                         'versionName = "1.4.0"']:
             self.assertIn(contract, app)
     def test_build_workflow_creates_apk(self):
         workflow=self.read('.github/workflows/android.yml')
