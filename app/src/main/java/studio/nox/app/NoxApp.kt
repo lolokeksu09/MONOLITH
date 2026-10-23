@@ -769,11 +769,13 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
     var confirming by remember { mutableStateOf<NoxPreset?>(null) }
     var query by remember { mutableStateOf("") }
     var filterScene by remember { mutableStateOf("ALL") }
+    var filterCategory by remember { mutableStateOf<SceneCategory?>(null) }
     var filterFavorites by remember { mutableStateOf(false) }
     var sortOrder by remember { mutableStateOf("Недавние") }
-    val filtered=remember(presets,query,filterScene,sortOrder,filterFavorites,favoriteIds) {
+    val filtered=remember(presets,query,filterScene,filterCategory,sortOrder,filterFavorites,favoriteIds) {
         val matches=presets.filter { preset ->
             (filterScene=="ALL" || preset.scene.sceneId==filterScene) &&
+            (filterCategory==null || SceneRegistry.get(preset.scene.sceneId)?.category==filterCategory) &&
             (!filterFavorites || preset.id in favoriteIds) &&
             (preset.name.contains(query.trim(),ignoreCase=true) ||
                 preset.scene.sceneId.contains(query.trim(),ignoreCase=true))
@@ -829,7 +831,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                     labelColor=Muted))
             Spacer(Modifier.width(3.dp))
             (listOf("ALL")+SceneCatalog.ids).forEach { key ->
-                FilterChip(selected=filterScene==key,onClick={filterScene=key},
+                FilterChip(selected=filterScene==key,onClick={filterScene=key;filterCategory=null},
                     modifier=Modifier.height(39.dp),
                     label={Text(if(key=="ALL") "Все" else key,fontSize=11.sp)},
                     shape=RoundedCornerShape(11.dp),
@@ -837,6 +839,27 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                         selectedContainerColor=Color(0xFF163747),
                         selectedLabelColor=Cyan,containerColor=Color(0xFF0D141C),
                         labelColor=Muted))
+            }
+        }
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement=Arrangement.spacedBy(7.dp)) {
+            val categories=listOf(
+                "Все категории" to null,
+                "Signature" to SceneCategory.SIGNATURE,
+                "Ambient" to SceneCategory.AMBIENT,
+                "Tech" to SceneCategory.TECH,
+                "Cosmic" to SceneCategory.COSMIC
+            )
+            categories.forEach { (label,category) ->
+                FilterChip(selected=filterCategory==category,
+                    onClick={filterCategory=category;filterScene="ALL"},
+                    modifier=Modifier.height(36.dp),
+                    label={Text(label,fontSize=11.sp)},
+                    shape=RoundedCornerShape(11.dp),
+                    colors=FilterChipDefaults.filterChipColors(
+                        selectedContainerColor=Color(0xFF163747),
+                        selectedLabelColor=Cyan,
+                        containerColor=Color(0xFF0D141C),labelColor=Muted))
             }
         }
         Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,
@@ -989,6 +1012,47 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                 drawCircle(b.copy(alpha=.75f),radius=size.minDimension*.22f,
                     style=Stroke(width=1.5f))
                 drawCircle(b.copy(alpha=.20f),radius=size.minDimension*.18f)
+            }
+            "AURORA" -> {
+                for(i in 0 until 5) {
+                    val n=i.toFloat()
+                    val path=Path().apply {
+                        moveTo(size.width*(.18f+n*.11f),size.height*1.08f)
+                        cubicTo(size.width*(.46f+n*.09f),size.height*.73f,
+                            size.width*(-.05f+n*.14f),size.height*.25f,
+                            size.width*(.23f+n*.12f),-size.height*.1f)
+                    }
+                    drawPath(path,if(i%2==0)a.copy(alpha=.12f) else b.copy(alpha=.10f),
+                        style=Stroke(width=size.minDimension*.21f))
+                    drawPath(path,if(i%2==0)a else b,
+                        style=Stroke(width=size.minDimension*.016f),alpha=.74f)
+                }
+            }
+            "PULSE" -> {
+                val centre=Offset(size.width*.50f,size.height*.52f)
+                for(i in 0 until 5) {
+                    val radius=size.minDimension*(.11f+i*.075f)
+                    drawCircle(if(i%2==0)a else b,radius=radius,
+                        center=centre,alpha=.13f,
+                        style=Stroke(width=size.minDimension*.045f))
+                    drawCircle(if(i%2==0)a else b,radius=radius,
+                        center=centre,alpha=.83f,
+                        style=Stroke(width=size.minDimension*.009f))
+                }
+            }
+            "COMET" -> {
+                for(i in 0 until 5) {
+                    val x=size.width*(.17f+i*.19f)
+                    val y=size.height*(.17f+(i*3%5)*.15f)
+                    val start=Offset(x-size.width*.23f,y+size.height*.12f)
+                    val end=Offset(x,y)
+                    drawLine(if(i%2==0)a else b, start,end,
+                        strokeWidth=size.minDimension*.026f,alpha=.16f)
+                    drawLine(if(i%2==0)a else b,start,end,
+                        strokeWidth=size.minDimension*.009f,alpha=.77f)
+                    drawCircle(if(i%2==0)a else b,radius=size.minDimension*.02f,
+                        center=end,alpha=.92f)
+                }
             }
             "NEBULA" -> {
                 for(i in 0 until 29) {
