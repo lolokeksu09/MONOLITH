@@ -1,3 +1,16 @@
+# NOX 1.7 Living Scenes — design proposal
+
+**Status: SPEC + IMPLEMENTATION PLAN ONLY; NO 1.7 APK OR NEW SHADERS YET.** Proposed: AURORA, PULSE, COMET (6 scenes total), 9 named appearance variations, category filters and six-scene premium navigation.
+
+- [NOX 1.7 architecture and UX specification](docs/superpowers/specs/2026-10-23-nox-1-7-living-scenes-design.md)
+- [Five-patch test-first implementation plan](docs/superpowers/plans/2026-10-23-nox-1-7-living-scenes.md)
+- [Patch changelog](docs/CHANGELOG.md)
+- [Mandatory GitHub commits and documentation policy](AGENTS.md) / [full workflow](docs/DEVELOPMENT_WORKFLOW.md)
+
+Every completed patch must update the changelog and be committed to GitHub. The baseline 1.6 build is preserved, and all future code/QA status must be checked rather than inferred.
+
+---
+
 # NOX 1.6 Curated — Premium Live Light Studio
 
 Native AMOLED scene editor for Lenovo Legion Y70 2026 and Android 16. Adds **two new offline editing features** without touching OpenGL shaders, Room presets, WallpaperService or pinned studio preview.
