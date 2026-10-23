@@ -7,7 +7,7 @@
 - Updated versionName to `1.7.1`, versionCode to `11`, independent debug application ID `studio.nox.light.lumina`, launcher `NOX 1.7.1 Light Dynamics`; CI uploads `NOX-1.7.1-light-dynamics-APK`.
 - Updated structural regression tests for package, version and newly described COMET branch. Build commits: `081f2678`, `f86c0923`, `8ffcdc35`, `59ec7a87`; regression correction: `52d29d96`.
 - Source shader changes from Patch 1 persist; FLUX/HALO/NEBULA remain unchanged. README now documents user-visible improvements and preserving previous APKs.
-- **Verification:** full NOX 1.7.1 CI pending at time of this note; Android/GL runtime QA on Lenovo unverified.
+- **Verification:** [GitHub Actions #40008408749](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40008408749) passed structural tests, Kotlin unit tests, Android assembleDebug and artifact upload for commit `574a4d32d907f1567bc8ccefc77b8c3047d48ca8`. Artifact ID `12525875176`, `NOX-1.7.1-light-dynamics-APK`. Extracted APK `19478319` bytes, SHA-256 `ff3ece7f5326f14656f84f16753bba00f768dcd7afea4fc6d8725ecb6e90147f`; ZIP/APK integrity and AndroidManifest/classes.dex/resources.arsc verified. GLES/runtime/thermals on Lenovo remain untested.
 
 ## [1.7.1 / Patch 1] — Light Dynamics shader refinement (2026-10-23)
 
