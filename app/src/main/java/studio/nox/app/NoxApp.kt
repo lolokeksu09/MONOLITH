@@ -45,14 +45,16 @@ import studio.nox.model.SceneCatalog
 import studio.nox.model.SceneConfig
 import studio.nox.model.SceneLooks
 import studio.nox.model.ColorHarmony
+import studio.nox.model.EditHistory
+import kotlin.math.roundToInt
 import studio.nox.renderer.MotionSensor
 import studio.nox.renderer.NoxSurfaceView
 import studio.nox.renderer.OffscreenExporter
 
 private val Ink=Color(0xFF000000)
-private val Surface=Color(0xFF111A26)
+private val Surface=Color(0xFF101923)
 private val Cyan=Color(0xFF30D9FF)
-private val Muted=Color(0xFF99ACC1)
+private val Muted=Color(0xFF9EAFC1)
 private val TextWhite=Color(0xFFF2F6FF)
 private val palettes=listOf(0x30D9FF,0x8C73FF,0xFF689E,0xE0EEFF,0x45FFCF,0xFFC177)
 private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
@@ -63,6 +65,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
     var tab by remember { mutableStateOf(Tab.HOME) }
     var homeScene by remember { mutableStateOf("FLUX") }
     var editing by remember { mutableStateOf(SceneCatalog.default("FLUX")) }
+    var history by remember { mutableStateOf(EditHistory.start(SceneCatalog.default("FLUX"))) }
     var editId by remember { mutableLongStateOf(0) }
     var editName by remember { mutableStateOf("Blue Current") }
     var pendingExport by remember { mutableStateOf<SceneConfig?>(null) }
@@ -90,7 +93,15 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
         }
     }
     fun openStudio(c:SceneConfig,id:Long=0,name:String="") {
-        editing=c.normalized();editId=id;editName=name.ifBlank {"${c.sceneId} custom"};tab=Tab.STUDIO
+        editing=c.normalized()
+        history=EditHistory.start(editing)
+        editId=id
+        editName=name.ifBlank {"${c.sceneId} custom"}
+        tab=Tab.STUDIO
+    }
+    fun editScene(c:SceneConfig) {
+        editing=c.normalized()
+        history=history.record(editing)
     }
     fun export(c:SceneConfig) { pendingExport=c;exportLauncher.launch("NOX-${c.sceneId.lowercase()}.png") }
     fun applySafely() { runCatching {onApply()}.onFailure {vm.notify(it.message?:"Ошибка открытия системных обоев")} }
@@ -125,7 +136,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                         Text("NOX",fontSize=31.sp,fontWeight=FontWeight.Black,color=TextWhite,letterSpacing=4.sp)
                         Text("LIVING LIGHT STUDIO",fontSize=9.sp,color=Cyan,letterSpacing=2.sp)
                     }
-                    Text("1.2",fontSize=12.sp,color=Muted)
+                    Text("1.3",fontSize=12.sp,color=Muted)
                 }
                 when(tab) {
                     Tab.HOME -> HomeScreen(homeScene,active,settings.fps,settings.gyroEnabled,
@@ -135,7 +146,21 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                             else vm.saveAndApply("${homeScene} default", if(active?.scene?.sceneId==homeScene) active.scene else SceneCatalog.default(homeScene)) {applySafely()}
                         },onExport={export(it)})
                     Tab.STUDIO -> StudioScreen(editing,editName,settings.fps,settings.gyroEnabled,
-                        onEdit={editing=it},onName={editName=it},onSave={vm.save(editName,editing,editId) { editId=it }},
+                        canUndo=history.canUndo,canRedo=history.canRedo,
+                        onUndo={
+                            val next=history.undo()
+                            history=next
+                            editing=next.current
+                        },
+                        onRedo={
+                            val next=history.redo()
+                            history=next
+                            editing=next.current
+                        },
+                        onEdit={editScene(it)},
+                        onLiveEdit={editing=it.normalized()},
+                        onLiveCommit={history=history.record(editing)},
+                        onName={editName=it},onSave={vm.save(editName,editing,editId) { editId=it }},
                         onExport={export(editing)},onApply={
                             vm.saveAndApply(editName,editing,editId,onSaved={editId=it}) {applySafely()}
                         })
@@ -210,7 +235,15 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
     }
 }
 
-@Composable private fun StudioScreen(config:SceneConfig,name:String,fps:Int,gyro:Boolean,onEdit:(SceneConfig)->Unit,onName:(String)->Unit,onSave:()->Unit,onExport:()->Unit,onApply:()->Unit) {
+@Composable private fun StudioScreen(
+    config:SceneConfig, name:String, fps:Int, gyro:Boolean,
+    canUndo:Boolean, canRedo:Boolean,
+    onUndo:()->Unit, onRedo:()->Unit,
+    onEdit:(SceneConfig)->Unit,
+    onLiveEdit:(SceneConfig)->Unit, onLiveCommit:()->Unit,
+    onName:(String)->Unit, onSave:()->Unit,
+    onExport:()->Unit, onApply:()->Unit
+) {
     var immersive by remember { mutableStateOf(false) }
     var compareOriginal by remember { mutableStateOf(false) }
     var compactPreview by remember { mutableStateOf(false) }
@@ -220,9 +253,17 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
             (maxHeight * 0.25f).coerceIn(122.dp, 192.dp)
         else (maxHeight * 0.39f).coerceIn(144.dp, 315.dp)
         Column(Modifier.fillMaxSize().padding(horizontal=18.dp)) {
-        Text("Студия света",color=TextWhite,fontSize=27.sp,fontWeight=FontWeight.SemiBold)
-        Text("Точность света. Свобода цвета.",color=Muted,fontSize=12.sp)
-        Spacer(Modifier.height(16.dp))
+        Row(Modifier.fillMaxWidth().padding(top=2.dp),verticalAlignment=Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Студия света",color=TextWhite,fontSize=27.sp,fontWeight=FontWeight.SemiBold)
+                Text("Точность света. Свобода цвета.",color=Muted,fontSize=12.sp)
+            }
+            Box(Modifier.clip(RoundedCornerShape(20.dp)).background(Color(0xFF102D3B))
+                .padding(horizontal=13.dp,vertical=7.dp)) {
+                Text("SIGNATURE",color=Cyan,fontSize=10.sp,fontWeight=FontWeight.SemiBold,letterSpacing=1.sp)
+            }
+        }
+        Spacer(Modifier.height(13.dp))
         Box(Modifier.fillMaxWidth().height(previewHeight).clip(RoundedCornerShape(22.dp))
             .border(1.dp,Color(0xFF233748),RoundedCornerShape(22.dp))) {
             if(!immersive) LivePreview(displayConfig,fps,gyro,Modifier.fillMaxSize())
@@ -254,6 +295,21 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                         Icon(Icons.Outlined.Fullscreen,contentDescription="На весь экран",tint=TextWhite)
                     }
                 }
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp))
+            .background(Color(0xFF101924))
+            .border(1.dp,Color(0xFF203746),RoundedCornerShape(15.dp))
+            .padding(horizontal=8.dp,vertical=5.dp),
+            verticalAlignment=Alignment.CenterVertically) {
+            Text("ИСТОРИЯ",fontSize=10.sp,color=Muted,letterSpacing=1.2.sp,
+                modifier=Modifier.weight(1f).padding(start=10.dp))
+            IconButton(onClick=onUndo,enabled=canUndo) {
+                Icon(Icons.Outlined.Undo,contentDescription="Отменить",tint=if(canUndo) Cyan else Color(0xFF465460))
+            }
+            IconButton(onClick=onRedo,enabled=canRedo) {
+                Icon(Icons.Outlined.Redo,contentDescription="Повторить",tint=if(canRedo) Cyan else Color(0xFF465460))
             }
         }
         Spacer(Modifier.height(8.dp))
@@ -332,12 +388,26 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
         PaletteChoices(config.secondary) { onEdit(config.copy(secondary=it)) }
         HexColorField(config.secondary) { onEdit(config.copy(secondary=it)) }
         Spacer(Modifier.height(20.dp))
-        Text("Движение и свечение",fontSize=18.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
-        Spacer(Modifier.height(12.dp))
-        Parameter("Скорость",config.speed){onEdit(config.copy(speed=it))}
-        Parameter("Свечение",config.glow){onEdit(config.copy(glow=it))}
-        Parameter("Плотность",config.density){onEdit(config.copy(density=it))}
-        Parameter("Параллакс",config.motion){onEdit(config.copy(motion=it))}
+        Text("Точная настройка",fontSize=19.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
+        Spacer(Modifier.height(4.dp))
+        Text("±1% кнопками или плавная настройка ползунком",fontSize=12.sp,color=Muted)
+        Spacer(Modifier.height(14.dp))
+        Parameter("Скорость",config.speed,
+            onValueChange={onLiveEdit(config.copy(speed=it))},
+            onValueCommit=onLiveCommit,
+            onStep={onEdit(config.copy(speed=it))})
+        Parameter("Свечение",config.glow,
+            onValueChange={onLiveEdit(config.copy(glow=it))},
+            onValueCommit=onLiveCommit,
+            onStep={onEdit(config.copy(glow=it))})
+        Parameter("Плотность",config.density,
+            onValueChange={onLiveEdit(config.copy(density=it))},
+            onValueCommit=onLiveCommit,
+            onStep={onEdit(config.copy(density=it))})
+        Parameter("Параллакс",config.motion,
+            onValueChange={onLiveEdit(config.copy(motion=it))},
+            onValueCommit=onLiveCommit,
+            onStep={onEdit(config.copy(motion=it))})
         Spacer(Modifier.height(22.dp))
         Button(onClick=onSave,enabled=name.trim().isNotBlank()&&name.trim().length<=48,
             modifier=Modifier.fillMaxWidth().height(54.dp),shape=RoundedCornerShape(14.dp),
@@ -396,13 +466,46 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
     }
 }
 
-@Composable private fun Parameter(name:String,value:Float,onValueChange:(Float)->Unit) {
-    Column {
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
-            Text(name,color=TextWhite,fontSize=14.sp)
-            Text("${(value*100).toInt()}%",color=Cyan,fontSize=13.sp)
+@Composable private fun Parameter(
+    name:String, value:Float,
+    onValueChange:(Float)->Unit,
+    onValueCommit:()->Unit,
+    onStep:(Float)->Unit
+) {
+    val percentage=(value*100f).roundToInt().coerceIn(0,100)
+    Column(Modifier.fillMaxWidth().padding(bottom=11.dp)
+        .clip(RoundedCornerShape(16.dp))
+        .background(Color(0xFF0D151E))
+        .border(1.dp,Color(0xFF1C303F),RoundedCornerShape(16.dp))
+        .padding(horizontal=15.dp,vertical=13.dp)) {
+        Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,
+            horizontalArrangement=Arrangement.SpaceBetween) {
+            Text(name,color=TextWhite,fontSize=14.sp,fontWeight=FontWeight.Medium)
+            Text("${percentage}%",color=Cyan,fontSize=15.sp,fontWeight=FontWeight.SemiBold)
         }
-        Slider(value=value,onValueChange=onValueChange,valueRange=0f..1f,modifier=Modifier.fillMaxWidth())
+        Spacer(Modifier.height(7.dp))
+        Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,
+            horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            IconButton(onClick={onStep(((percentage-1).coerceAtLeast(0))/100f)},
+                enabled=percentage>0,modifier=Modifier.size(46.dp)
+                    .background(Color(0xFF192938),RoundedCornerShape(13.dp))) {
+                Icon(Icons.Outlined.Remove,contentDescription="Уменьшить ${name} на 1%",tint=if(percentage>0) TextWhite else Muted)
+            }
+            Slider(value=value.coerceIn(0f,1f),
+                onValueChange=onValueChange,
+                onValueChangeFinished=onValueCommit,
+                valueRange=0f..1f,
+                modifier=Modifier.weight(1f),
+                colors=SliderDefaults.colors(
+                    thumbColor=Cyan,activeTrackColor=Cyan,
+                    inactiveTrackColor=Color(0xFF334358)
+                ))
+            IconButton(onClick={onStep(((percentage+1).coerceAtMost(100))/100f)},
+                enabled=percentage<100,modifier=Modifier.size(46.dp)
+                    .background(Color(0xFF192938),RoundedCornerShape(13.dp))) {
+                Icon(Icons.Outlined.Add,contentDescription="Увеличить ${name} на 1%",tint=if(percentage<100) TextWhite else Muted)
+            }
+        }
     }
 }
 
