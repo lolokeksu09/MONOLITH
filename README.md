@@ -1,3 +1,22 @@
+# NOX 1.7.1 — Light Dynamics
+
+A renderer-focused improvement to the six-scene offline AMOLED live-wallpaper studio.
+
+**Updated live effects**:
+- **AURORA** — multilayer curtains, spectral glow, fine inner filaments and smoothly evolving folds
+- **PULSE** — outward-traveling rings with seamless fade, controllable color density and an interactive center that follows touch
+- **COMET** — individually angled, depth-layered trails with variable length/velocity and smooth cycle fades
+
+Existing **FLUX, HALO and NEBULA shaders are intentionally unchanged**. The current pinned Studio preview, editor sliders, presets, offline `.nox` import/export, favorites and Home six-scene navigation are preserved. No new permissions, accounts, network calls or Room migrations.
+
+**Installation:** NOX 1.7.1 has Android debug package `studio.nox.light.lumina`, version `1.7.1` (code 11), and installs *beside* NOX 1.7. Data does not sync between debug builds; keep your working install and its presets. Artifact name: `NOX-1.7.1-light-dynamics-APK`.
+
+**Verification:** Gradle/JUnit and structural tests run through GitHub Actions; the mobile GPU GLSL compilation, visual quality, frame rates and thermal performance remain device-QA tasks until exercised on Lenovo Legion Y70.
+
+[Design and rendering constraints](docs/superpowers/specs/2026-10-23-nox-1-7-1-light-dynamics-design.md) · [Implementation plan](docs/superpowers/plans/2026-10-23-nox-1-7-1-light-dynamics.md) · [Per-patch changelog](docs/CHANGELOG.md).
+
+---
+
 # NOX 1.7 Living Scenes — Native AMOLED wallpapers
 
 **Status:** feature branch release candidate. Automated build and Lenovo hardware QA must be checked independently. The existing NOX 1.6 installation and stored presets remain untouched.
