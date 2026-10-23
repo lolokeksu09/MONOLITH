@@ -56,6 +56,17 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('previewHeight', studio)
         self.assertIn('FullscreenPreview(config,fps,gyro', studio)
 
+    def test_palette_lab_and_pinned_preview_tools(self):
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        studio=ui.split('@Composable private fun StudioScreen(',1)[1].split('@Composable private fun FullscreenPreview(',1)[0]
+        for item in ('ColorHarmony.Mode.entries', 'ColorHarmony.apply(config, mode)',
+                     'compareOriginal', 'compactPreview', 'Оригинал',
+                     'previewHeight = if (compactPreview)', 'LivePreview(displayConfig'):
+            self.assertIn(item,studio)
+        self.assertIn('Column(Modifier.weight(1f).verticalScroll(rememberScrollState()))',studio)
+        self.assertEqual(studio.count('verticalScroll(rememberScrollState())'),1)
+        self.assertLess(studio.index('LivePreview(displayConfig'),studio.index('Column(Modifier.weight(1f).verticalScroll(rememberScrollState()))'))
+
     def test_premium_studio_11_tools(self):
         ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
         for symbol in ['SceneLooks.looks', 'SceneLooks.shuffle(', 'FullscreenPreview(',
