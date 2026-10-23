@@ -214,9 +214,9 @@ void main() {
       vec2 head=direction*travel+perp*transverse;
       vec2 difference=p-head;
       float along=dot(difference,direction);
-      float cross=abs(dot(difference,perp));
+      float perpendicularDistance=abs(dot(difference,perp));
       float width=0.0017+0.0026*uDensity;
-      float streak=exp(-cross*cross/(width*width));
+      float streak=exp(-perpendicularDistance*perpendicularDistance/(width*width));
       float behind=(1.0-smoothstep(-0.006,0.009,along));
       float tail=exp(min(0.0,along)*(22.0-13.0*uDensity));
       float headGlow=exp(-length(difference)*175.0);
