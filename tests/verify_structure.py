@@ -99,6 +99,26 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('Switch(checked=gyro,onCheckedChange=onGyro',section)
         self.assertIn('if(gyro) "Включено" else "Выключено"',section)
 
+    def test_portable_preset_actions_and_gallery_sort(self):
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        vm=self.read('app/src/main/java/studio/nox/app/NoxViewModel.kt')
+        gallery=ui.split('@Composable private fun SearchableLibrary(',1)[1].split('@Composable private fun Miniature(',1)[0]
+        settings=ui.split('@Composable private fun SettingsScreen(',1)[1].split('@Composable private fun LivePreview(',1)[0]
+        for fragment in ('PresetTransfer.encode(', 'PresetTransfer.decode(',
+                         'CreateDocument("text/plain")', 'OpenDocument()','importPortable('):
+            self.assertIn(fragment,ui+vm)
+        self.assertIn('sortOrder',gallery)
+        self.assertIn('sortedBy',gallery)
+        self.assertIn('onExportPresets',settings)
+        self.assertIn('onImportPresets',settings)
+        self.assertIn('NOX 1.5',ui)
+
+    def test_nebula_uses_trig_free_hash(self):
+        src=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
+        self.assertIn('float hash(vec2 p)',src)
+        h=src.split('float hash(vec2 p)',1)[1].split('float lightline',1)[0]
+        self.assertNotIn('sin(',h,'Randomized stars must avoid sin*large multiplication unstable on mobile GPUs')
+
     def test_atelier_gallery_is_filterable_visual_grid(self):
         ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
         library=ui.split('@Composable private fun SearchableLibrary(',1)[1].split('@Composable private fun Miniature(',1)[0]
