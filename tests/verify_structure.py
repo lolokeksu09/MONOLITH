@@ -99,6 +99,32 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('Switch(checked=gyro,onCheckedChange=onGyro',section)
         self.assertIn('if(gyro) "Включено" else "Выключено"',section)
 
+    def test_curated_favorites_are_persistent_and_wired(self):
+        data=self.read('core/data/src/main/java/studio/nox/data/SettingsRepository.kt')
+        vm=self.read('app/src/main/java/studio/nox/app/NoxViewModel.kt')
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        gallery=ui.split('@Composable private fun SearchableLibrary(',1)[1].split('@Composable private fun Miniature(',1)[0]
+        self.assertIn('stringSetPreferencesKey("favorite_ids")',data)
+        self.assertIn('suspend fun setFavorite(',data)
+        self.assertIn('favoriteIds',data)
+        self.assertIn('fun toggleFavorite(',vm)
+        self.assertIn('filterFavorites',gallery)
+        self.assertIn('Избранное',gallery)
+        self.assertIn('onToggleFavorite(preset)',gallery)
+        self.assertIn('Icons.Outlined.Star',gallery)
+        self.assertIn('favoriteIds=settings.favoriteIds',ui)
+
+    def test_curated_home_quick_looks_use_scene_draft(self):
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        home=ui.split('@Composable private fun HomeScreen(',1)[1].split('@Composable private fun SceneMiniature(',1)[0]
+        self.assertIn('onLook',home)
+        self.assertIn('ModalBottomSheet(',home)
+        self.assertIn('SceneLooks.looks.forEach',home)
+        self.assertIn('onLook(look)',home)
+        self.assertIn('homeDraft=SceneLooks.apply(previewHomeConfig,look)',ui)
+        self.assertIn('onExport(config)',home)
+        self.assertIn('onRemix',home)
+
     def test_portable_preset_actions_and_gallery_sort(self):
         ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
         vm=self.read('app/src/main/java/studio/nox/app/NoxViewModel.kt')
