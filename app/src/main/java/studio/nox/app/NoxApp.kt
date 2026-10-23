@@ -44,6 +44,7 @@ import studio.nox.data.NoxPreset
 import studio.nox.model.SceneCatalog
 import studio.nox.model.SceneConfig
 import studio.nox.model.SceneLooks
+import studio.nox.model.ColorHarmony
 import studio.nox.renderer.MotionSensor
 import studio.nox.renderer.NoxSurfaceView
 import studio.nox.renderer.OffscreenExporter
@@ -124,7 +125,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                         Text("NOX",fontSize=31.sp,fontWeight=FontWeight.Black,color=TextWhite,letterSpacing=4.sp)
                         Text("LIVING LIGHT STUDIO",fontSize=9.sp,color=Cyan,letterSpacing=2.sp)
                     }
-                    Text("1.1",fontSize=12.sp,color=Muted)
+                    Text("1.2",fontSize=12.sp,color=Muted)
                 }
                 when(tab) {
                     Tab.HOME -> HomeScreen(homeScene,active,settings.fps,settings.gyroEnabled,
@@ -211,23 +212,48 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
 
 @Composable private fun StudioScreen(config:SceneConfig,name:String,fps:Int,gyro:Boolean,onEdit:(SceneConfig)->Unit,onName:(String)->Unit,onSave:()->Unit,onExport:()->Unit,onApply:()->Unit) {
     var immersive by remember { mutableStateOf(false) }
+    var compareOriginal by remember { mutableStateOf(false) }
+    var compactPreview by remember { mutableStateOf(false) }
+    val displayConfig = if (compareOriginal) SceneCatalog.default(config.sceneId) else config
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val previewHeight = (maxHeight * 0.39f).coerceIn(144.dp, 315.dp)
+        val previewHeight = if (compactPreview)
+            (maxHeight * 0.25f).coerceIn(122.dp, 192.dp)
+        else (maxHeight * 0.39f).coerceIn(144.dp, 315.dp)
         Column(Modifier.fillMaxSize().padding(horizontal=18.dp)) {
         Text("Студия света",color=TextWhite,fontSize=27.sp,fontWeight=FontWeight.SemiBold)
-        Text("Форма, цвет и движение — в твоих руках.",color=Muted,fontSize=12.sp)
+        Text("Точность света. Свобода цвета.",color=Muted,fontSize=12.sp)
         Spacer(Modifier.height(16.dp))
         Box(Modifier.fillMaxWidth().height(previewHeight).clip(RoundedCornerShape(22.dp))
             .border(1.dp,Color(0xFF233748),RoundedCornerShape(22.dp))) {
-            if(!immersive) LivePreview(config,fps,gyro,Modifier.fillMaxSize())
+            if(!immersive) LivePreview(displayConfig,fps,gyro,Modifier.fillMaxSize())
             Row(Modifier.align(Alignment.TopStart).padding(16.dp),verticalAlignment=Alignment.CenterVertically) {
                 Box(Modifier.size(6.dp).background(Cyan,CircleShape))
                 Spacer(Modifier.width(8.dp))
                 Text(config.sceneId, fontSize=11.sp,color=TextWhite,letterSpacing=1.5.sp)
             }
-            IconButton(onClick={immersive=true},modifier=Modifier.align(Alignment.BottomEnd).padding(12.dp)
-                .background(Color(0xCC162536),CircleShape)) {
-                Icon(Icons.Outlined.Fullscreen,contentDescription="На весь экран",tint=TextWhite)
+            Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(Color.Transparent,Color(0xD9000000))))
+                .padding(start=10.dp,end=10.dp,bottom=8.dp,top=14.dp),
+                verticalAlignment=Alignment.CenterVertically,
+                horizontalArrangement=Arrangement.SpaceBetween) {
+                TextButton(onClick={compareOriginal=!compareOriginal},
+                    colors=ButtonDefaults.textButtonColors(contentColor=if(compareOriginal) Cyan else TextWhite)) {
+                    Icon(Icons.Outlined.CompareArrows,contentDescription=null,
+                        modifier=Modifier.size(18.dp))
+                    Spacer(Modifier.width(5.dp))
+                    Text(if(compareOriginal) "Моя сцена" else "Оригинал",fontSize=12.sp)
+                }
+                Row(verticalAlignment=Alignment.CenterVertically) {
+                    IconButton(onClick={compactPreview=!compactPreview}) {
+                        Icon(if(compactPreview) Icons.Outlined.Expand else Icons.Outlined.Compress,
+                            contentDescription=if(compactPreview) "Увеличить превью" else "Уменьшить превью",
+                            tint=TextWhite)
+                    }
+                    IconButton(onClick={immersive=true},
+                        modifier=Modifier.background(Color(0xC11B2938),CircleShape)) {
+                        Icon(Icons.Outlined.Fullscreen,contentDescription="На весь экран",tint=TextWhite)
+                    }
+                }
             }
         }
         Spacer(Modifier.height(8.dp))
@@ -263,6 +289,33 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                 }
             }
         }
+        Spacer(Modifier.height(24.dp))
+        Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Palette,contentDescription=null,tint=Cyan,modifier=Modifier.size(21.dp))
+            Spacer(Modifier.width(9.dp))
+            Text("Цветовые гармонии",fontSize=18.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
+        }
+        Spacer(Modifier.height(5.dp))
+        Text("Создай сочетание из своего основного цвета",fontSize=12.sp,color=Muted)
+        Spacer(Modifier.height(12.dp))
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            ColorHarmony.Mode.entries.forEach { mode ->
+                val candidate = ColorHarmony.apply(config, mode)
+                Column(Modifier.weight(1f).clip(RoundedCornerShape(15.dp))
+                    .background(Surface).border(1.dp,Color(0xFF263746),RoundedCornerShape(15.dp))
+                    .clickable { onEdit(ColorHarmony.apply(config, mode)) }
+                    .padding(9.dp),horizontalAlignment=Alignment.CenterHorizontally) {
+                    Box(Modifier.fillMaxWidth().height(37.dp).clip(RoundedCornerShape(10.dp))
+                        .background(Brush.horizontalGradient(listOf(
+                            Color(0xFF000000.toInt() or config.primary),
+                            Color(0xFF000000.toInt() or candidate.secondary)))))
+                    Spacer(Modifier.height(7.dp))
+                    Text(mode.title,color=TextWhite,fontSize=12.sp,maxLines=1)
+                }
+            }
+        }
+        Text("Меняется только второй цвет — остальная сцена остаётся прежней",
+            fontSize=11.sp,color=Muted,modifier=Modifier.padding(top=8.dp))
         Spacer(Modifier.height(25.dp))
         Text("Свой стиль",fontSize=18.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
         Spacer(Modifier.height(12.dp))
