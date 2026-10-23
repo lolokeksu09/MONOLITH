@@ -28,9 +28,9 @@ class StructuralContracts(unittest.TestCase):
         source=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
         for symbol in ('SceneLooks','SceneLook','ScenePresets','SceneRegistry',
                        'SceneCategory','NamedScenePreset'):
-            self.assertEqual(source.count('import studio.nox.model.'+symbol+'\\n'),1,
+            self.assertEqual(source.count('import studio.nox.model.'+symbol+'\n'),1,
                              symbol+' import must be present exactly once')
-        self.assertNotIn('import studio.nox.model.NamedScenePresets\\n',source)
+        self.assertNotIn('import studio.nox.model.NamedScenePresets\n',source)
 
     def test_living_scenes_browse_six_with_scene_variants(self):
         ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
