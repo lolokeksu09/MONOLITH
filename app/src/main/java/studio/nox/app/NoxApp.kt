@@ -599,65 +599,136 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
     SearchableLibrary(presets,active,onEdit,onUse,onDuplicate,onDelete)
 }
 
-@Composable private fun SearchableLibrary(presets:List<NoxPreset>,active:Long?,onEdit:(NoxPreset)->Unit,onUse:(NoxPreset)->Unit,onDuplicate:(NoxPreset)->Unit,onDelete:(NoxPreset)->Unit) {
+@Composable private fun SearchableLibrary(
+    presets:List<NoxPreset>,active:Long?,
+    onEdit:(NoxPreset)->Unit,onUse:(NoxPreset)->Unit,
+    onDuplicate:(NoxPreset)->Unit,onDelete:(NoxPreset)->Unit
+) {
     var confirming by remember { mutableStateOf<NoxPreset?>(null) }
     var query by remember { mutableStateOf("") }
-    val filtered = remember(presets,query) {
-        presets.filter { it.name.contains(query.trim(),ignoreCase=true) ||
-            it.scene.sceneId.contains(query.trim(),ignoreCase=true) }
+    var filterScene by remember { mutableStateOf("ALL") }
+    val filtered=remember(presets,query,filterScene) {
+        presets.filter { preset ->
+            (filterScene=="ALL" || preset.scene.sceneId==filterScene) &&
+            (preset.name.contains(query.trim(),ignoreCase=true) ||
+                preset.scene.sceneId.contains(query.trim(),ignoreCase=true))
+        }
     }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=18.dp)) {
-        Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+    Column(Modifier.fillMaxSize().padding(horizontal=18.dp)) {
+        Row(Modifier.fillMaxWidth().padding(top=4.dp),verticalAlignment=Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Коллекция",color=TextWhite,fontSize=27.sp,fontWeight=FontWeight.SemiBold)
-                Text("Сохранённые сцены и твои эксперименты",color=Muted,fontSize=12.sp)
+                Text("Коллекция",fontSize=27.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
+                Text("Твои уникальные композиции",color=Muted,fontSize=12.sp)
             }
-            Text(filtered.size.toString().padStart(2,'0'),color=Cyan,fontSize=20.sp,fontWeight=FontWeight.SemiBold)
+            Text("\${filtered.size} работ",fontSize=12.sp,color=Cyan)
         }
-        Spacer(Modifier.height(18.dp))
-        OutlinedTextField(value=query,onValueChange={query=it},singleLine=true,
-            label={Text("Поиск по пресетам")},
-            leadingIcon={Icon(Icons.Outlined.Search,contentDescription=null)},
-            modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(14.dp))
-        Spacer(Modifier.height(18.dp))
-        if(presets.isEmpty()) {
-            Text("Пока нет сохранённых пресетов. Создай первый в Студии.",color=Muted)
-        } else if(filtered.isEmpty()) {
-            Text("Нет совпадений. Измени запрос.",color=Muted)
+        Spacer(Modifier.height(13.dp))
+        OutlinedTextField(
+            value=query,onValueChange={query=it},singleLine=true,
+            placeholder={Text("Найти композицию",color=Muted,fontSize=14.sp)},
+            leadingIcon={Icon(Icons.Outlined.Search,contentDescription=null,tint=Muted)},
+            modifier=Modifier.fillMaxWidth().height(56.dp),
+            shape=RoundedCornerShape(15.dp)
+        )
+        Spacer(Modifier.height(10.dp))
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            (listOf("ALL")+SceneCatalog.ids).forEach { key ->
+                FilterChip(selected=filterScene==key,onClick={filterScene=key},
+                    label={Text(if(key=="ALL") "Все" else key,fontSize=12.sp)},
+                    colors=FilterChipDefaults.filterChipColors(
+                        selectedContainerColor=Color(0xFF163747),
+                        selectedLabelColor=Cyan,containerColor=Color(0xFF0D141C),
+                        labelColor=Muted))
+            }
         }
-        filtered.forEach { preset ->
-            Row(Modifier.fillMaxWidth().padding(bottom=12.dp)
-                .clip(RoundedCornerShape(19.dp)).background(Surface).border(1.dp,Color(0xFF24303B),RoundedCornerShape(19.dp))
-                .padding(12.dp),verticalAlignment=Alignment.CenterVertically) {
-                Miniature(preset.scene,Modifier.size(width=91.dp,height=116.dp)
-                    .clip(RoundedCornerShape(13.dp)).background(Ink))
-                Column(Modifier.weight(1f).padding(start=14.dp)) {
-                    Text(preset.name,fontWeight=FontWeight.SemiBold,color=TextWhite,fontSize=16.sp,
-                        maxLines=1,overflow=TextOverflow.Ellipsis)
-                    Spacer(Modifier.height(3.dp))
-                    Text(preset.scene.sceneId,color=Muted,fontSize=11.sp,letterSpacing=1.2.sp)
-                    if(preset.id==active) Text("● На рабочем столе",color=Cyan,fontSize=11.sp)
-                    Spacer(Modifier.height(5.dp))
-                    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick={onEdit(preset)},contentPadding=PaddingValues(0.dp)) {
-                            Text("Редактор",fontSize=12.sp,color=Cyan)
+        Spacer(Modifier.height(9.dp))
+        if(filtered.isEmpty()) {
+            Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {
+                Column(horizontalAlignment=Alignment.CenterHorizontally) {
+                    Icon(Icons.Outlined.CollectionsBookmark,contentDescription=null,
+                        tint=Muted,modifier=Modifier.size(40.dp))
+                    Spacer(Modifier.height(13.dp))
+                    Text(if(presets.isEmpty()) "Сохрани первую композицию в Студии"
+                         else "В этой подборке пока ничего нет",
+                        color=Muted,fontSize=14.sp)
+                }
+            }
+        } else {
+            LazyVerticalGrid(
+                columns=GridCells.Fixed(2),
+                modifier=Modifier.fillMaxSize(),
+                horizontalArrangement=Arrangement.spacedBy(11.dp),
+                verticalArrangement=Arrangement.spacedBy(15.dp),
+                contentPadding=PaddingValues(bottom=22.dp)
+            ) {
+                items(filtered,key={it.id}) { preset ->
+                    var menuExpanded by remember { mutableStateOf(false) }
+                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
+                        .background(Color(0xFF101923))
+                        .border(1.dp,if(preset.id==active) Color(0xFF2C7692)
+                            else Color(0xFF263747),RoundedCornerShape(18.dp))) {
+                        Box(Modifier.fillMaxWidth().height(187.dp)
+                            .clip(RoundedCornerShape(topStart=17.dp,topEnd=17.dp))
+                            .background(Ink).clickable {onEdit(preset)}) {
+                            Miniature(preset.scene,Modifier.fillMaxSize())
+                            Box(Modifier.fillMaxWidth().height(65.dp)
+                                .align(Alignment.BottomCenter)
+                                .background(Brush.verticalGradient(
+                                    listOf(Color.Transparent,Ink.copy(alpha=.86f)))))
+                            if(preset.id==active) {
+                                Row(Modifier.align(Alignment.TopStart).padding(10.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xD9113544))
+                                    .padding(horizontal=8.dp,vertical=5.dp),
+                                    verticalAlignment=Alignment.CenterVertically) {
+                                    Box(Modifier.size(5.dp).background(Cyan,CircleShape))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Активно",color=Cyan,fontSize=10.sp)
+                                }
+                            }
+                            Box(Modifier.align(Alignment.TopEnd).padding(7.dp)) {
+                                IconButton(onClick={menuExpanded=true},
+                                    modifier=Modifier.size(43.dp)
+                                        .background(Color(0xB7111D2A),CircleShape)) {
+                                    Icon(Icons.Outlined.MoreVert,
+                                        contentDescription="Действия с пресетом",
+                                        tint=TextWhite)
+                                }
+                                DropdownMenu(expanded=menuExpanded,
+                                    onDismissRequest={menuExpanded=false}) {
+                                    DropdownMenuItem(text={Text("В редактор")},
+                                        onClick={menuExpanded=false;onEdit(preset)},
+                                        leadingIcon={Icon(Icons.Outlined.Tune,null)})
+                                    DropdownMenuItem(text={Text("Выбрать")},
+                                        onClick={menuExpanded=false;onUse(preset)},
+                                        leadingIcon={Icon(Icons.Outlined.CheckCircle,null)})
+                                    DropdownMenuItem(text={Text("Создать копию")},
+                                        onClick={menuExpanded=false;onDuplicate(preset)},
+                                        leadingIcon={Icon(Icons.Outlined.ContentCopy,null)})
+                                    DropdownMenuItem(text={Text("Удалить")},
+                                        onClick={menuExpanded=false;confirming=preset},
+                                        leadingIcon={Icon(Icons.Outlined.DeleteOutline,null)})
+                                }
+                            }
+                            Column(Modifier.align(Alignment.BottomStart).padding(13.dp)) {
+                                Text(preset.scene.sceneId,color=Cyan,fontSize=10.sp,
+                                    fontWeight=FontWeight.SemiBold,letterSpacing=1.sp)
+                            }
                         }
-                        TextButton(onClick={onUse(preset)},contentPadding=PaddingValues(0.dp)) {
-                            Text("Выбрать",fontSize=12.sp,color=TextWhite)
-                        }
-                    }
-                    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick={onDuplicate(preset)},contentPadding=PaddingValues(0.dp)) {
-                            Text("Копия",fontSize=12.sp,color=Muted)
-                        }
-                        TextButton(onClick={confirming=preset},contentPadding=PaddingValues(0.dp)) {
-                            Text("Удалить",fontSize=12.sp,color=Color(0xFFFF8392))
+                        Column(Modifier.fillMaxWidth().clickable{onEdit(preset)}
+                            .padding(horizontal=13.dp,vertical=12.dp)) {
+                            Text(preset.name,color=TextWhite,fontSize=14.sp,
+                                fontWeight=FontWeight.SemiBold,maxLines=1,
+                                overflow=TextOverflow.Ellipsis)
+                            Spacer(Modifier.height(3.dp))
+                            Text(if(preset.id==active) "На рабочем столе" else "Открыть в Студии",
+                                color=Muted,fontSize=11.sp)
                         }
                     }
                 }
             }
         }
-        Spacer(Modifier.height(20.dp))
     }
     confirming?.let { preset ->
         AlertDialog(onDismissRequest={confirming=null},title={Text("Удалить пресет?")},
