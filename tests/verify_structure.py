@@ -86,7 +86,7 @@ class StructuralContracts(unittest.TestCase):
             self.assertIn(mode,shader)
         for branch in ('if(uMode < 0.5)','else if (uMode < 1.5)',
                        'else if (uMode < 2.5)','else if (uMode < 3.5)',
-                       'else if (uMode < 4.5)','COMET:'):
+                       'else if (uMode < 4.5)','COMET 1.7.1:'):
             self.assertIn(branch,shader)
         self.assertIn('GL_TRIANGLE_STRIP',shader)
         self.assertIn('uMotion',shader)
