@@ -805,69 +805,126 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
         .padding(horizontal=20.dp)) {
         Text("Устройство и свет",fontSize=27.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
         Text("Тонкая настройка графического движка",color=Muted,fontSize=12.sp)
-        Spacer(Modifier.height(26.dp))
+        Spacer(Modifier.height(27.dp))
+
         Row(verticalAlignment=Alignment.CenterVertically) {
-            Icon(Icons.Outlined.Speed,contentDescription=null,tint=Cyan,modifier=Modifier.size(20.dp))
+            Icon(Icons.Outlined.Speed,contentDescription=null,tint=Cyan,modifier=Modifier.size(21.dp))
             Spacer(Modifier.width(10.dp))
-            Text("Плавность анимации",fontSize=18.sp,color=TextWhite,fontWeight=FontWeight.SemiBold)
+            Text("Производительность",fontSize=19.sp,color=TextWhite,
+                fontWeight=FontWeight.SemiBold)
         }
-        Spacer(Modifier.height(8.dp))
-        Text("Выбери максимальную частоту кадров.",color=Muted,fontSize=13.sp)
-        Spacer(Modifier.height(15.dp))
+        Spacer(Modifier.height(7.dp))
+        Text("Ограничение частоты кадров для живого света",color=Muted,fontSize=12.sp)
+        Spacer(Modifier.height(14.dp))
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)) {
             listOf(30,60,120).forEach { cap ->
-                val selected = fps==cap
-                Column(Modifier.weight(1f).height(75.dp)
+                val selected=fps==cap
+                val mode=when(cap) {
+                    30->"Экономия"
+                    60->"Баланс"
+                    else->"Максимум"
+                }
+                Column(Modifier.weight(1f).height(93.dp)
                     .clip(RoundedCornerShape(15.dp))
                     .background(if(selected) Color(0xFF143543) else Color(0xFF101923))
-                    .border(1.dp,if(selected) Cyan.copy(alpha=.68f) else Color(0xFF253541),
-                        RoundedCornerShape(15.dp))
-                    .clickable{onFps(cap)},horizontalAlignment=Alignment.CenterHorizontally,
+                    .border(1.dp,if(selected) Cyan.copy(alpha=.76f)
+                        else Color(0xFF233747),RoundedCornerShape(15.dp))
+                    .clickable {onFps(cap)},
+                    horizontalAlignment=Alignment.CenterHorizontally,
                     verticalArrangement=Arrangement.Center) {
                     Text(cap.toString(),color=if(selected) Cyan else TextWhite,
-                        fontWeight=FontWeight.Bold,fontSize=24.sp)
-                    Text("FPS",color=Muted,fontSize=10.sp,letterSpacing=1.sp)
+                        fontWeight=FontWeight.Bold,fontSize=25.sp)
+                    Text("FPS",color=Muted,fontSize=9.sp)
+                    Spacer(Modifier.height(3.dp))
+                    Text(mode,color=if(selected) TextWhite else Muted,fontSize=10.sp,
+                        maxLines=1)
                 }
             }
         }
-        Spacer(Modifier.height(10.dp))
-        Text("При нагреве или экономии энергии NOX автоматически снижает частоту.",
+        Spacer(Modifier.height(12.dp))
+        Text("При нагреве и экономии энергии система может снижать фактический FPS.",
             color=Muted,fontSize=12.sp)
-        Spacer(Modifier.height(28.dp))
-        Row(Modifier.fillMaxWidth().heightIn(min=88.dp)
-            .clip(RoundedCornerShape(16.dp)).background(Color(0xFF101923))
-            .border(1.dp,Color(0xFF253541),RoundedCornerShape(16.dp))
-            .padding(horizontal=17.dp,vertical=13.dp),
+
+        Spacer(Modifier.height(27.dp))
+        HorizontalDivider(color=Color(0xFF253541))
+        Spacer(Modifier.height(23.dp))
+
+        Row(verticalAlignment=Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Explore,contentDescription=null,tint=Cyan,modifier=Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Text("Интерактивность",fontSize=19.sp,color=TextWhite,
+                fontWeight=FontWeight.SemiBold)
+        }
+        Spacer(Modifier.height(13.dp))
+        Row(Modifier.fillMaxWidth().heightIn(min=91.dp)
+            .clip(RoundedCornerShape(15.dp)).background(Color(0xFF101923))
+            .border(1.dp,Color(0xFF233747),RoundedCornerShape(15.dp))
+            .padding(horizontal=16.dp,vertical=11.dp),
             verticalAlignment=Alignment.CenterVertically) {
-            Icon(Icons.Outlined.Explore,contentDescription=null,
-                tint=Cyan,modifier=Modifier.size(22.dp))
-            Spacer(Modifier.width(13.dp))
             Column(Modifier.weight(1f)) {
-                Text("Движение устройства",color=TextWhite,fontSize=15.sp,
+                Text("Реакция на движение",color=TextWhite,fontSize=15.sp,
                     fontWeight=FontWeight.SemiBold)
-                Spacer(Modifier.height(3.dp))
-                Text("Реакция света на наклоны",fontSize=12.sp,color=Muted)
+                Spacer(Modifier.height(4.dp))
+                Text("Свет реагирует на наклон устройства",
+                    fontSize=12.sp,color=Muted)
+                Spacer(Modifier.height(5.dp))
+                Row(verticalAlignment=Alignment.CenterVertically) {
+                    Box(Modifier.size(5.dp).background(if(gyro) Cyan else Muted,CircleShape))
+                    Spacer(Modifier.width(7.dp))
+                    Text(if(gyro) "Включено" else "Выключено",
+                        fontSize=11.sp,color=if(gyro) Cyan else Muted)
+                }
             }
             Switch(checked=gyro,onCheckedChange=onGyro,
                 colors=SwitchDefaults.colors(checkedThumbColor=Ink,checkedTrackColor=Cyan))
         }
-        Spacer(Modifier.height(28.dp))
+
+        Spacer(Modifier.height(27.dp))
+        HorizontalDivider(color=Color(0xFF253541))
+        Spacer(Modifier.height(23.dp))
+
         Row(verticalAlignment=Alignment.CenterVertically) {
-            Icon(Icons.Outlined.Shield,contentDescription=null,tint=Cyan,modifier=Modifier.size(19.dp))
-            Spacer(Modifier.width(9.dp))
-            Text("Приватность",fontSize=18.sp,color=TextWhite,fontWeight=FontWeight.SemiBold)
+            Icon(Icons.Outlined.Shield,contentDescription=null,
+                tint=Cyan,modifier=Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Text("Конфиденциальность и движок",color=TextWhite,
+                fontSize=18.sp,fontWeight=FontWeight.SemiBold)
         }
-        Spacer(Modifier.height(12.dp))
-        Text("NOX работает без интернета и аккаунта. Пресеты хранятся только на устройстве.",
-            color=Muted,fontSize=13.sp)
-        Spacer(Modifier.height(18.dp))
-        HorizontalDivider(color=Color(0xFF243441))
-        Spacer(Modifier.height(17.dp))
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
-            Text("NOX 1.4 Atelier",color=Muted,fontSize=12.sp)
-            Text("OpenGL ES",color=Muted,fontSize=12.sp)
+        Spacer(Modifier.height(14.dp))
+        Column(Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(15.dp))
+            .background(Color(0xFF0D151D))
+            .border(1.dp,Color(0xFF203443),RoundedCornerShape(15.dp))
+            .padding(horizontal=16.dp,vertical=8.dp)) {
+            listOf(
+                Triple(Icons.Outlined.PersonOff,"Без аккаунта","Не нужна регистрация"),
+                Triple(Icons.Outlined.WifiOff,"Без интернета","Работает автономно"),
+                Triple(Icons.Outlined.FolderOutlined,"Локальное хранение","Пресеты на устройстве")
+            ).forEachIndexed { index,item ->
+                Row(Modifier.fillMaxWidth().heightIn(min=53.dp),
+                    verticalAlignment=Alignment.CenterVertically) {
+                    Icon(item.first,contentDescription=null,tint=Cyan.copy(alpha=.82f),
+                        modifier=Modifier.size(18.dp))
+                    Spacer(Modifier.width(13.dp))
+                    Text(item.second,color=TextWhite,fontSize=13.sp,
+                        modifier=Modifier.weight(1f))
+                    Text(item.third,color=Muted,fontSize=10.sp)
+                }
+                if(index<2) HorizontalDivider(color=Color(0xFF253541))
+            }
         }
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(21.dp))
+        HorizontalDivider(color=Color(0xFF253541))
+        Spacer(Modifier.height(15.dp))
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,
+            verticalAlignment=Alignment.CenterVertically) {
+            Text("NOX 1.4.1 Atelier",color=TextWhite,fontSize=12.sp,
+                fontWeight=FontWeight.Medium)
+            Text("OpenGL ES live engine",color=Muted,fontSize=11.sp)
+        }
+        Spacer(Modifier.height(4.dp))
+        Text("Локальная генерация световых сцен",fontSize=11.sp,color=Muted)
+        Spacer(Modifier.height(26.dp))
     }
 }
 
