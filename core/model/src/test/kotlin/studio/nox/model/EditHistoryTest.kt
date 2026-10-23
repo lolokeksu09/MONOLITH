@@ -33,7 +33,7 @@ class EditHistoryTest {
         for (i in 2..100) h=h.record(scene(i))
         assertEquals(5,h.past.size)
         repeat(5){h=h.undo()}
-        assertEquals(94,h.current.seed)
+        assertEquals(95,h.current.seed)
         assertFalse(h.canUndo)
         assertTrue(h.canRedo)
     }
