@@ -16,6 +16,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.layout.*
@@ -620,29 +621,40 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                 Text("Коллекция",fontSize=27.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
                 Text("Твои уникальные композиции",color=Muted,fontSize=12.sp)
             }
-            Text("${filtered.size} работ",fontSize=12.sp,color=Cyan)
+            Row(Modifier.clip(RoundedCornerShape(9.dp))
+                .background(Color(0xFF102632)).padding(horizontal=11.dp,vertical=7.dp),
+                verticalAlignment=Alignment.CenterVertically) {
+                Box(Modifier.size(5.dp).background(Cyan,CircleShape))
+                Spacer(Modifier.width(7.dp))
+                Text(filtered.size.toString()+" работ",fontSize=11.sp,
+                    color=Cyan,fontWeight=FontWeight.Medium)
+            }
         }
-        Spacer(Modifier.height(13.dp))
+        Spacer(Modifier.height(11.dp))
         OutlinedTextField(
             value=query,onValueChange={query=it},singleLine=true,
-            placeholder={Text("Найти композицию",color=Muted,fontSize=14.sp)},
-            leadingIcon={Icon(Icons.Outlined.Search,contentDescription=null,tint=Muted)},
-            modifier=Modifier.fillMaxWidth().height(56.dp),
-            shape=RoundedCornerShape(15.dp)
+            placeholder={Text("Найти композицию",color=Muted,fontSize=13.sp)},
+            leadingIcon={Icon(Icons.Outlined.Search,contentDescription=null,tint=Muted,
+                modifier=Modifier.size(20.dp))},
+            modifier=Modifier.fillMaxWidth().height(52.dp),
+            shape=RoundedCornerShape(13.dp),
+            textStyle=androidx.compose.ui.text.TextStyle(fontSize=14.sp,color=TextWhite)
         )
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-            horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            horizontalArrangement=Arrangement.spacedBy(7.dp)) {
             (listOf("ALL")+SceneCatalog.ids).forEach { key ->
                 FilterChip(selected=filterScene==key,onClick={filterScene=key},
-                    label={Text(if(key=="ALL") "Все" else key,fontSize=12.sp)},
+                    modifier=Modifier.height(39.dp),
+                    label={Text(if(key=="ALL") "Все" else key,fontSize=11.sp)},
+                    shape=RoundedCornerShape(11.dp),
                     colors=FilterChipDefaults.filterChipColors(
                         selectedContainerColor=Color(0xFF163747),
                         selectedLabelColor=Cyan,containerColor=Color(0xFF0D141C),
                         labelColor=Muted))
             }
         }
-        Spacer(Modifier.height(9.dp))
+        Spacer(Modifier.height(8.dp))
         if(filtered.isEmpty()) {
             Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {
                 Column(horizontalAlignment=Alignment.CenterHorizontally) {
@@ -658,28 +670,36 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
             LazyVerticalGrid(
                 columns=GridCells.Fixed(2),
                 modifier=Modifier.weight(1f),
-                horizontalArrangement=Arrangement.spacedBy(11.dp),
+                horizontalArrangement=Arrangement.spacedBy(12.dp),
                 verticalArrangement=Arrangement.spacedBy(15.dp),
                 contentPadding=PaddingValues(bottom=22.dp)
             ) {
-                items(filtered,key={it.id}) { preset ->
+                items(count=filtered.size,
+                    key={filtered[it].id},
+                    span={index ->
+                        if(filtered.size % 2 == 1 && index == filtered.lastIndex)
+                            GridItemSpan(2) else GridItemSpan(1)
+                    }
+                ) { index ->
+                    val preset=filtered[index]
+                    val fullWidth=filtered.size % 2 == 1 && index == filtered.lastIndex
                     var menuExpanded by remember { mutableStateOf(false) }
-                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
-                        .background(Color(0xFF101923))
-                        .border(1.dp,if(preset.id==active) Color(0xFF2C7692)
-                            else Color(0xFF263747),RoundedCornerShape(18.dp))) {
-                        Box(Modifier.fillMaxWidth().height(187.dp)
-                            .clip(RoundedCornerShape(topStart=17.dp,topEnd=17.dp))
+                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(17.dp))
+                        .background(Color(0xFF0E1823))
+                        .border(1.dp,if(preset.id==active) Color(0xFF29809B)
+                            else Color(0xFF213444),RoundedCornerShape(17.dp))) {
+                        Box(Modifier.fillMaxWidth().height(if(fullWidth) 228.dp else 205.dp)
+                            .clip(RoundedCornerShape(topStart=16.dp,topEnd=16.dp))
                             .background(Ink).clickable {onEdit(preset)}) {
                             Miniature(preset.scene,Modifier.fillMaxSize())
                             Box(Modifier.fillMaxWidth().height(65.dp)
                                 .align(Alignment.BottomCenter)
                                 .background(Brush.verticalGradient(
-                                    listOf(Color.Transparent,Ink.copy(alpha=.86f)))))
+                                    listOf(Color.Transparent,Ink.copy(alpha=.88f)))))
                             if(preset.id==active) {
                                 Row(Modifier.align(Alignment.TopStart).padding(10.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color(0xD9113544))
+                                    .clip(RoundedCornerShape(7.dp))
+                                    .background(Color(0xD20C2934))
                                     .padding(horizontal=8.dp,vertical=5.dp),
                                     verticalAlignment=Alignment.CenterVertically) {
                                     Box(Modifier.size(5.dp).background(Cyan,CircleShape))
@@ -689,41 +709,43 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                             }
                             Box(Modifier.align(Alignment.TopEnd).padding(7.dp)) {
                                 IconButton(onClick={menuExpanded=true},
-                                    modifier=Modifier.size(43.dp)
-                                        .background(Color(0xB7111D2A),CircleShape)) {
-                                    Icon(Icons.Outlined.MoreVert,
+                                    modifier=Modifier.size(44.dp)
+                                        .background(Color(0x8D101A24),CircleShape)) {
+                                    Icon(Icons.Outlined.MoreHoriz,
                                         contentDescription="Действия с пресетом",
-                                        tint=TextWhite)
+                                        tint=TextWhite,modifier=Modifier.size(21.dp))
                                 }
                                 DropdownMenu(expanded=menuExpanded,
-                                    onDismissRequest={menuExpanded=false}) {
-                                    DropdownMenuItem(text={Text("В редактор")},
+                                    onDismissRequest={menuExpanded=false},
+                                    containerColor=Color(0xFF15212E)) {
+                                    DropdownMenuItem(text={Text("Открыть в Студии")},
                                         onClick={menuExpanded=false;onEdit(preset)},
                                         leadingIcon={Icon(Icons.Outlined.Tune,null)})
-                                    DropdownMenuItem(text={Text("Выбрать")},
+                                    DropdownMenuItem(text={Text("Сделать активным")},
                                         onClick={menuExpanded=false;onUse(preset)},
                                         leadingIcon={Icon(Icons.Outlined.CheckCircle,null)})
                                     DropdownMenuItem(text={Text("Создать копию")},
                                         onClick={menuExpanded=false;onDuplicate(preset)},
                                         leadingIcon={Icon(Icons.Outlined.ContentCopy,null)})
-                                    DropdownMenuItem(text={Text("Удалить")},
+                                    HorizontalDivider(color=Color(0xFF2C3B48))
+                                    DropdownMenuItem(text={Text("Удалить",color=Color(0xFFFF8494))},
                                         onClick={menuExpanded=false;confirming=preset},
-                                        leadingIcon={Icon(Icons.Outlined.DeleteOutline,null)})
+                                        leadingIcon={Icon(Icons.Outlined.DeleteOutline,null,
+                                            tint=Color(0xFFFF8494))})
                                 }
                             }
-                            Column(Modifier.align(Alignment.BottomStart).padding(13.dp)) {
-                                Text(preset.scene.sceneId,color=Cyan,fontSize=10.sp,
-                                    fontWeight=FontWeight.SemiBold,letterSpacing=1.sp)
-                            }
+                            Text(preset.scene.sceneId,color=Cyan,fontSize=10.sp,
+                                letterSpacing=1.sp, fontWeight=FontWeight.Medium,
+                                modifier=Modifier.align(Alignment.BottomStart).padding(13.dp))
                         }
                         Column(Modifier.fillMaxWidth().clickable{onEdit(preset)}
-                            .padding(horizontal=13.dp,vertical=12.dp)) {
+                            .padding(horizontal=12.dp,vertical=10.dp)) {
                             Text(preset.name,color=TextWhite,fontSize=14.sp,
                                 fontWeight=FontWeight.SemiBold,maxLines=1,
                                 overflow=TextOverflow.Ellipsis)
-                            Spacer(Modifier.height(3.dp))
+                            Spacer(Modifier.height(2.dp))
                             Text(if(preset.id==active) "На рабочем столе" else "Открыть в Студии",
-                                color=Muted,fontSize=11.sp)
+                                color=Muted,fontSize=10.sp)
                         }
                     }
                 }
