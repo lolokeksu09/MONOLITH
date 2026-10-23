@@ -292,7 +292,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                     fontWeight=FontWeight.Black,letterSpacing=(-1f).sp)
                 Text(description,color=Muted,fontSize=13.sp)
             }
-            Text("NOX  /  01",color=Muted.copy(alpha=.7f),fontSize=10.sp,
+            Text("%02d / 03".format(SceneCatalog.ids.indexOf(scene)+1),color=Muted.copy(alpha=.7f),fontSize=10.sp,
                 modifier=Modifier.align(Alignment.BottomEnd).padding(24.dp))
         }
         Spacer(Modifier.height(13.dp))
@@ -1102,7 +1102,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
         Spacer(Modifier.height(15.dp))
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,
             verticalAlignment=Alignment.CenterVertically) {
-            Text("NOX 1.5 Portable",color=TextWhite,fontSize=12.sp,
+            Text("NOX ${BuildConfig.VERSION_NAME} Curated",color=TextWhite,fontSize=12.sp,
                 fontWeight=FontWeight.Medium)
             Text("OpenGL ES live engine",color=Muted,fontSize=11.sp)
         }
