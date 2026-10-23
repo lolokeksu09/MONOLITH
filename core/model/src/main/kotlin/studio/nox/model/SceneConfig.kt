@@ -25,10 +25,13 @@ data class SceneConfig(
 private fun Float.coerceFinite(fallback: Float): Float = if (isFinite()) coerceIn(0f, 1f) else fallback
 
 object SceneCatalog {
-    val ids = listOf("FLUX", "HALO", "NEBULA")
+    val ids = SceneRegistry.entries.map { it.id }
     fun default(id: String): SceneConfig = when (id) {
         "HALO" -> SceneConfig("HALO", 0x45C6FF, 0x9962FF, speed=0.32f, glow=0.78f, density=0.45f)
         "NEBULA" -> SceneConfig("NEBULA", 0x64DAFF, 0x3256EF, speed=0.20f, glow=0.50f, density=0.72f)
+        "AURORA" -> SceneConfig("AURORA", 0x6DEBFF, 0x59FFA9, speed=0.18f, glow=0.63f, density=0.44f, motion=0.16f)
+        "PULSE" -> SceneConfig("PULSE", 0x30D9FF, 0x315EFF, speed=0.30f, glow=0.66f, density=0.39f, motion=0.15f)
+        "COMET" -> SceneConfig("COMET", 0x589DFF, 0xA6CFFF, speed=0.27f, glow=0.60f, density=0.40f, motion=0.12f)
         else -> SceneConfig("FLUX")
     }
     fun validName(value: String): String? = value.trim().takeIf { it.isNotBlank() && it.length <= 48 }
