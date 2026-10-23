@@ -231,7 +231,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                 verticalAlignment=Alignment.CenterVertically) {
                 Box(Modifier.size(5.dp).background(Cyan,CircleShape))
                 Spacer(Modifier.width(9.dp))
-                Text("ATELIER    /    \${scene}",fontSize=11.sp,color=TextWhite,letterSpacing=1.1.sp)
+                Text("ATELIER    /    ${scene}",fontSize=11.sp,color=TextWhite,letterSpacing=1.1.sp)
             }
             Column(Modifier.align(Alignment.BottomStart).padding(22.dp)) {
                 Text(scene,color=TextWhite,fontSize=50.sp,
@@ -620,7 +620,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                 Text("Коллекция",fontSize=27.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
                 Text("Твои уникальные композиции",color=Muted,fontSize=12.sp)
             }
-            Text("\${filtered.size} работ",fontSize=12.sp,color=Cyan)
+            Text("${filtered.size} работ",fontSize=12.sp,color=Cyan)
         }
         Spacer(Modifier.height(13.dp))
         OutlinedTextField(
@@ -779,56 +779,72 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
 }
 
 @Composable private fun SettingsScreen(fps:Int,gyro:Boolean,onFps:(Int)->Unit,onGyro:(Boolean)->Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=18.dp)) {
-        Text("Настройки",fontSize=27.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
-        Text("Производительность без компромиссов с ресурсами.",fontSize=12.sp,color=Muted)
-        Spacer(Modifier.height(24.dp))
-        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Surface).padding(18.dp)) {
-            Row(verticalAlignment=Alignment.CenterVertically) {
-                Icon(Icons.Outlined.Speed,contentDescription=null,tint=Cyan,modifier=Modifier.size(25.dp))
-                Spacer(Modifier.width(12.dp))
-                Text("Частота кадров",fontSize=18.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
-            }
-            Spacer(Modifier.height(10.dp))
-            Text("NOX адаптируется к экономии заряда и температуре устройства.",
-                color=Muted,fontSize=12.sp)
-            Spacer(Modifier.height(14.dp))
-            Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                listOf(30,60,120).forEach { cap ->
-                    FilterChip(selected=fps==cap,onClick={onFps(cap)},label={Text(cap.toString()+" FPS")},
-                        colors=FilterChipDefaults.filterChipColors(selectedContainerColor=Color(0xFF173B4B),
-                            selectedLabelColor=Cyan,containerColor=Color(0xFF1A2430),labelColor=Muted))
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+        .padding(horizontal=20.dp)) {
+        Text("Устройство и свет",fontSize=27.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
+        Text("Тонкая настройка графического движка",color=Muted,fontSize=12.sp)
+        Spacer(Modifier.height(26.dp))
+        Row(verticalAlignment=Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Speed,contentDescription=null,tint=Cyan,modifier=Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Text("Плавность анимации",fontSize=18.sp,color=TextWhite,fontWeight=FontWeight.SemiBold)
+        }
+        Spacer(Modifier.height(8.dp))
+        Text("Выбери максимальную частоту кадров.",color=Muted,fontSize=13.sp)
+        Spacer(Modifier.height(15.dp))
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)) {
+            listOf(30,60,120).forEach { cap ->
+                val selected = fps==cap
+                Column(Modifier.weight(1f).height(75.dp)
+                    .clip(RoundedCornerShape(15.dp))
+                    .background(if(selected) Color(0xFF143543) else Color(0xFF101923))
+                    .border(1.dp,if(selected) Cyan.copy(alpha=.68f) else Color(0xFF253541),
+                        RoundedCornerShape(15.dp))
+                    .clickable{onFps(cap)},horizontalAlignment=Alignment.CenterHorizontally,
+                    verticalArrangement=Arrangement.Center) {
+                    Text(cap.toString(),color=if(selected) Cyan else TextWhite,
+                        fontWeight=FontWeight.Bold,fontSize=24.sp)
+                    Text("FPS",color=Muted,fontSize=10.sp,letterSpacing=1.sp)
                 }
             }
         }
-        Spacer(Modifier.height(14.dp))
-        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Surface)
-            .padding(18.dp),verticalAlignment=Alignment.CenterVertically) {
-            Icon(Icons.Outlined.Explore,contentDescription=null,tint=Cyan,modifier=Modifier.size(24.dp))
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text("Реакция на движение",color=TextWhite,fontSize=16.sp,fontWeight=FontWeight.SemiBold)
-                Spacer(Modifier.height(5.dp))
-                Text("Параллакс по датчику положения",color=Muted,fontSize=12.sp)
-            }
-            Switch(checked=gyro,onCheckedChange=onGyro)
-        }
-        Spacer(Modifier.height(20.dp))
-        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
-            .background(Brush.linearGradient(listOf(Color(0xFF10212C),Color(0xFF0B121C))))
-            .padding(20.dp)) {
-            Row(verticalAlignment=Alignment.CenterVertically) {
-                Icon(Icons.Outlined.Shield,contentDescription=null,tint=Cyan)
-                Spacer(Modifier.width(10.dp))
-                Text("Создано для приватности",fontWeight=FontWeight.SemiBold,color=TextWhite,fontSize=16.sp)
-            }
-            Spacer(Modifier.height(9.dp))
-            Text("Без аккаунта, интернета, трекеров и рекламных SDK. Все пресеты остаются локально.",
-                color=Muted,fontSize=13.sp)
-        }
-        Spacer(Modifier.height(16.dp))
-        Text("Когда обои скрыты, движок и датчики останавливаются. 120 FPS — верхняя цель, не гарантия.",
+        Spacer(Modifier.height(10.dp))
+        Text("При нагреве или экономии энергии NOX автоматически снижает частоту.",
             color=Muted,fontSize=12.sp)
+        Spacer(Modifier.height(28.dp))
+        Row(Modifier.fillMaxWidth().heightIn(min=88.dp)
+            .clip(RoundedCornerShape(16.dp)).background(Color(0xFF101923))
+            .border(1.dp,Color(0xFF253541),RoundedCornerShape(16.dp))
+            .padding(horizontal=17.dp,vertical=13.dp),
+            verticalAlignment=Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Explore,contentDescription=null,
+                tint=Cyan,modifier=Modifier.size(22.dp))
+            Spacer(Modifier.width(13.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Движение устройства",color=TextWhite,fontSize=15.sp,
+                    fontWeight=FontWeight.SemiBold)
+                Spacer(Modifier.height(3.dp))
+                Text("Реакция света на наклоны",fontSize=12.sp,color=Muted)
+            }
+            Switch(checked=gyro,onCheckedChange=onGyro,
+                colors=SwitchDefaults.colors(checkedThumbColor=Ink,checkedTrackColor=Cyan))
+        }
+        Spacer(Modifier.height(28.dp))
+        Row(verticalAlignment=Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Shield,contentDescription=null,tint=Cyan,modifier=Modifier.size(19.dp))
+            Spacer(Modifier.width(9.dp))
+            Text("Приватность",fontSize=18.sp,color=TextWhite,fontWeight=FontWeight.SemiBold)
+        }
+        Spacer(Modifier.height(12.dp))
+        Text("NOX работает без интернета и аккаунта. Пресеты хранятся только на устройстве.",
+            color=Muted,fontSize=13.sp)
+        Spacer(Modifier.height(18.dp))
+        HorizontalDivider(color=Color(0xFF243441))
+        Spacer(Modifier.height(17.dp))
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
+            Text("NOX 1.4 Atelier",color=Muted,fontSize=12.sp)
+            Text("OpenGL ES",color=Muted,fontSize=12.sp)
+        }
         Spacer(Modifier.height(28.dp))
     }
 }
