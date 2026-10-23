@@ -137,7 +137,7 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('sortedBy',gallery)
         self.assertIn('onExportPresets',settings)
         self.assertIn('onImportPresets',settings)
-        self.assertIn('NOX 1.5',ui)
+        self.assertIn('NOX ${BuildConfig.VERSION_NAME} Curated',ui)
 
     def test_version_header_tracks_build_config(self):
         ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
