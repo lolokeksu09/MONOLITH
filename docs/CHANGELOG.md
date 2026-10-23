@@ -2,6 +2,14 @@
 
 > Каждый следующий патч обязан обновлять этот файл и публиковаться коммитом в GitHub. См. [AGENTS.md](../AGENTS.md) и [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md).
 
+## [1.7.0 / Patch 2] — Procedural renderer (2026-10-23)
+
+- Added GPU modes 3=AURORA, 4=PULSE, 5=COMET in the shared `GlBackend.kt`, maintaining existing modes 0=FLUX, 1=HALO, 2=NEBULA.
+- New scenes use bounded iteration and existing colors, glow, motion and seed; old three shader branches retain their math.
+- Added structural tests checking distinct mode dispatch and legacy NEBULA branch.
+- Commit series: `34ab1c1` (red contracts), `6eb6297` (shader implementation).
+- **Verification:** Android shader compilation and hardware appearance are pending; GLES shader correctness must be verified on Lenovo Legion Y70.
+
 ## [1.7.0 / Patch 1] — Catalog (2026-10-23)
 
 - Added `SceneRegistry` / `SceneCategory` and registered AURORA, PULSE, COMET without changing the defaults of FLUX, HALO or NEBULA.
