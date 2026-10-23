@@ -55,6 +55,30 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('filterFavorites',gallery)
         self.assertIn('GridItemSpan(2)',gallery)
 
+    def test_light_dynamics_three_live_scenes(self):
+        src=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
+        for expected in (
+            '// AURORA 1.7.1: layered curtains',
+            'float curtainDepth',
+            'float innerFilament',
+            '// PULSE 1.7.1: traveling waves',
+            'float life=fract(',
+            'float cycleFade=',
+            'vec2 focus=',
+            '// COMET 1.7.1: depth-layered trails',
+            'float depth=',
+            'float active=step(',
+            'float trailFade='
+        ):
+            self.assertIn(expected,src)
+        # Preserve all existing modes and legacy scene shaders.
+        for mode in ('"FLUX"->0f','"HALO"->1f','"NEBULA"->2f',
+                     '"AURORA"->3f','"PULSE"->4f','"COMET"->5f'):
+            self.assertIn(mode,src)
+        self.assertIn('// FLUX: staggered luminous ribbons',src)
+        self.assertIn('// HALO: depth-stacked elliptical orbits',src)
+        self.assertIn('// NEBULA: stable star positions',src)
+
     def test_living_scenes_gl_modes_and_legacy_branch(self):
         shader=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
         for mode in ('"FLUX"->0f','"HALO"->1f','"NEBULA"->2f',
