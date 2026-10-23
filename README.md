@@ -1,3 +1,20 @@
+# NOX 1.6 Curated — Premium Live Light Studio
+
+Native AMOLED scene editor for Lenovo Legion Y70 2026 and Android 16. Adds **two new offline editing features** without touching OpenGL shaders, Room presets, WallpaperService or pinned studio preview.
+
+- **Favorites:** Tap the star on any preset gallery artwork. Your favorites are stored as local ID references in DataStore (no Room schema migration) and can be filtered together with scene type, name search and sorting. Deleting a preset also clears its favorite ID. Favorite status survives restarts in this NOX installation.
+- **Quick Looks:** From Home, select **Стили** to browse five curated appearance sets (Abyss, Ion Violet, Solar, Arctic, Chroma) in a native bottom sheet. Choose one to preview it immediately. This modifies only an unsaved scene draft until you explicitly edit, export or apply it, so the original saved preset remains unchanged.
+- **Premium finish:** Restrained graphite and cyan surfaces, compact palette swatches and precise stage numbering. The dynamic version footer remains accurate across builds.
+- **Safety:** no internet, analytics, root or new permissions; no Room migration or EGL engine changes.
+
+## Installation
+
+Preview version 1.6.0 uses debug package `studio.nox.light.curated`, separate from previous debug builds because GitHub Actions debug signing isn't stable between runners. **Do not uninstall your working 1.5**; private presets stay in their original app. If desired, transfer presets with 1.5's local `.nox` export/import feature. Favorited IDs are local to this app and intentionally not included in the `.nox` scene archive.
+
+CI artifact: `NOX-1.6-curated-APK` after Python structural checks, Kotlin JUnit and Android debug assembly. On-device animation, interactions and battery behavior require user verification.
+
+---
+
 # NOX 1.5 Portable Studio
 
 Native offline AMOLED live-wallpaper studio for Android 16. Preserves NOX's GPU effects, pinned preview, editor/history, curated palettes, local Room presets and system wallpaper integration.
