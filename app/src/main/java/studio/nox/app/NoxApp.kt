@@ -184,7 +184,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                         Text("NOX",fontSize=31.sp,fontWeight=FontWeight.Black,color=TextWhite,letterSpacing=4.sp)
                         Text("LIVING LIGHT STUDIO",fontSize=9.sp,color=Cyan,letterSpacing=2.sp)
                     }
-                    Text("1.5",fontSize=12.sp,color=Muted)
+                    Text(BuildConfig.VERSION_NAME.removeSuffix(".0"),fontSize=12.sp,color=Muted)
                 }
                 when(tab) {
                     Tab.HOME -> HomeScreen(homeScene,active,homeDraft,settings.fps,settings.gyroEnabled,
