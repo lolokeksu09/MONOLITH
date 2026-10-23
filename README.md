@@ -1,13 +1,34 @@
-# NOX 1.7 Living Scenes — design proposal
+# NOX 1.7 Living Scenes — Native AMOLED wallpapers
 
-**Status: SPEC + IMPLEMENTATION PLAN ONLY; NO 1.7 APK OR NEW SHADERS YET.** Proposed: AURORA, PULSE, COMET (6 scenes total), 9 named appearance variations, category filters and six-scene premium navigation.
+**Status:** feature branch release candidate. Automated build and Lenovo hardware QA must be checked independently. The existing NOX 1.6 installation and stored presets remain untouched.
 
-- [NOX 1.7 architecture and UX specification](docs/superpowers/specs/2026-10-23-nox-1-7-living-scenes-design.md)
-- [Five-patch test-first implementation plan](docs/superpowers/plans/2026-10-23-nox-1-7-living-scenes.md)
-- [Patch changelog](docs/CHANGELOG.md)
-- [Mandatory GitHub commits and documentation policy](AGENTS.md) / [full workflow](docs/DEVELOPMENT_WORKFLOW.md)
+NOX now includes **six procedural live scenes** using the existing OpenGL ES backend:
 
-Every completed patch must update the changelog and be committed to GitHub. The baseline 1.6 build is preserved, and all future code/QA status must be checked rather than inferred.
+- **FLUX / HALO / NEBULA** — original engines preserved.
+- **AURORA** — flowing polar curtains over true OLED black. Polar, Emerald, Violet Mist.
+- **PULSE** — concentric continuously moving energy rings. Cyan Beat, Crimson Core, Neon Echo.
+- **COMET** — slim comet trails and smooth star motion. Deep Space, White Tail, Blue Drift.
+
+### What's new
+
+- Home: horizontal six-scene catalog, `NEW` labels for new scenes, 3 named looks in a bottom-sheet selector for each new mode. All edits go into an **unsaved draft** unless explicitly saved/applied.
+- Gallery: categories Signature / Ambient / Tech / Cosmic, while retaining search, type filters, favorites, sorting, and duplicate/delete. Artwork thumbnails use **Canvas**, not extra EGL contexts.
+- Studio: pinned live GL preview stays visible above the scrolling controls, with undo/redo and fixed Save/PNG/Apply actions.
+- Settings: existing 30/60/120 FPS limits, sensor control and offline `.nox` import/export unchanged.
+- Safety: no network, root, database migrations, extra Android permissions or tracking. GPU shader work uses bounded loops.
+
+### Installation compatibility
+
+Version name `1.7.0`, code `10`, debug applicationId `studio.nox.light.livingscenes` (separate preview package from 1.6). Never uninstall older NOX instances to try this release: their private presets are not automatically migrated. Older NOX builds may explicitly reject `.nox` files containing unknown scene IDs AURORA/PULSE/COMET. Export from an older build with export support, import into 1.7.
+
+### Development documents
+
+- [Design and architecture](docs/superpowers/specs/2026-10-23-nox-1-7-living-scenes-design.md)
+- [Five-patch TDD implementation plan](docs/superpowers/plans/2026-10-23-nox-1-7-living-scenes.md)
+- [Per-patch changelog](docs/CHANGELOG.md)
+- [Mandatory patch commits/documentation](AGENTS.md) and [workflow](docs/DEVELOPMENT_WORKFLOW.md)
+
+GitHub Actions artifact after a successful build: `NOX-1.7-living-scenes-APK`. Test all six live shaders on Lenovo Legion Y70 (wallpaper setup, lock/unlock, screenshot artifacts, thermals) before treating the feature as hardware-verified.
 
 ---
 
