@@ -39,6 +39,10 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('compileSdk = 36', app)
         self.assertIn('compose-bom:2025.10.01', app,
                           'Compile SDK 36 / AGP 8.13 cannot build Compose BOM 2026.09 (Compose 1.12 needs SDK 37 / AGP 9.1)')
+    def test_room_supertype_visible_to_consuming_android_modules(self):
+        data=self.read('core/data/build.gradle.kts')
+        self.assertIn('api("androidx.room:room-runtime:2.8.5")', data,
+            'NoxDatabase publicly inherits RoomDatabase; its dependency must be api, not implementation')
     def test_build_workflow_creates_apk(self):
         workflow=self.read('.github/workflows/android.yml')
         self.assertIn('gradle :app:assembleDebug',workflow)
