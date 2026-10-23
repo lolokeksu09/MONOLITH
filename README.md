@@ -1,46 +1,45 @@
-# NOX 1.0 — Living Light Studio
+# NOX — Living Light Studio
 
-Offline Android live wallpaper studio for Lenovo Legion Y70 2026 (Motorola firmware, Android 16), built without root. Three generative GPU scenes: FLUX, HALO and NEBULA.
+Offline, native Android AMOLED live wallpaper studio for Lenovo Legion Y70 2026 / Android 16 (no root). Three original OpenGL ES scenes: **FLUX**, **HALO**, **NEBULA**.
 
-## Tech stack
-- Kotlin 2.3.20, Jetpack Compose (BOM 2026.09.00), Material 3
-- Android SDK 36, minimum Android 8.0 (API 26), Gradle 8.13, AGP 8.13.2, JDK 17
-- OpenGL ES 3 context with GLSL shaders, WallpaperService, Room and Preferences DataStore
-- App ID: `studio.nox.light`.
+## NOX 1.1 Preview
 
-## Building an APK
-Prerequisites: JDK 17+, Android SDK with platforms;android-36 and build-tools;36.0.0, Gradle 8.13. From project root:
+- Immersive black-on-black main screen, redesigned navigation, refined preset library and settings.
+- **Five curated looks:** Abyss, Ion Violet, Solar, Arctic and Chroma.
+- **New variant:** deterministic remix of palette, speed and shader seed; original scene is retained.
+- **Custom HEX color inputs** in addition to swatches.
+- Full-screen interactive preview and reset-to-scene-defaults.
+- Preset search by name or scene ID (case-insensitive); prior save, duplicate, edit, apply, delete remain available.
+- PNG export, Room presets, WallpaperService and GPU rendering are preserved.
 
-```bash
+### Important: existing NOX 1.0 installation
+
+GitHub Actions generates a fresh Android debug signing key unless the signer is persisted. That means a new Actions debug APK cannot be relied upon to update the old app in-place. **Never uninstall NOX 1.0 merely to try the preview; uninstalling deletes its private local presets.**
+
+The NOX 1.1 debug build therefore uses a separate package **`studio.nox.light.preview`**, with launcher name **NOX 1.1 Preview**, installed beside existing NOX 1.0 (`studio.nox.light`). Its saved presets are separate; it does not migrate the original app's private data. When applying wallpaper, Android asks which live wallpaper to use.
+
+### Build / tests
+
+GitHub Actions `Build NOX APK` runs Python structural checks, JUnit model tests, and Android debug APK compilation (Gradle 8.13, AGP 8.13.2, API 36, Kotlin 2.3.20, Jetpack Compose BOM 2025.10.01, Java 17). A successful workflow uploads `NOX-1.1-preview-APK`. This is a **debug** APK, not a release build with a stable owner-controlled signing key.
+
+```sh
+python3 -m unittest discover -s tests -p 'verify_structure.py' -v
 gradle :core:model:test :app:assembleDebug
 ```
 
-Output: `app/build/outputs/apk/debug/app-debug.apk`. Android debug signing is handled by Android Gradle Plugin; **this is a debug APK, not a production release signed with the owner's key**.
+Output: `app/build/outputs/apk/debug/app-debug.apk`.
 
-### Build through GitHub Actions (easiest without PC)
-1. Create a NEW repository for NOX. Do not upload NOX into any preexisting unrelated project.
-2. Upload this entire source tree, including `.github/workflows/android.yml`, to the repository's `main` branch.
-3. Open Actions > Build NOX APK > Run workflow; once green, download `NOX-1.0-debug-APK` workflow artifact. Extract the ZIP to get the APK.
-4. Transfer the APK to your device's Download folder and open it to install; allow installation for the file manager only if prompted. Keep ownership of your signing keys private.
+**Hardware validation still required:** preview/rendering, battery and thermal response, movement sensor, touch in launcher, system live-wallpaper selection and export on real Lenovo Legion Y70 2026.
 
-GitHub Actions runs `gradle :core:model:test :app:assembleDebug` with SDK 36. NOX has **not been verified on the target phone** in this environment; Android SDK and Gradle are not installed here and network downloads are unavailable. No prebuilt APK is included in the source archive.
+## Core capabilities
 
-## Features / expected behavior
-- Home: live interactive scene preview and switch between all three scenes.
-- Studio: edit color palette, speed, glow, density and parallax; save named presets.
-- Library: locally stored presets; select, edit, duplicate or delete with confirmation.
-- Settings: target 30/60/120 FPS (capped under thermal stress and battery saver); sensor toggle.
-- Export: Android document picker writes a full-resolution PNG to selected URI.
-- Apply: standard Android live wallpaper confirmation (`ACTION_CHANGE_LIVE_WALLPAPER`), never silent system changes.
-- No network, contacts, microphone, photo permissions, background location, or private Android APIs.
+- 3 realtime programmable scenes, touch and gravity-based parallax.
+- 30, 60 or up-to-120 FPS request, thermally throttled and suspended when not visible.
+- Offline storage via Room and DataStore; Android system confirmation for wallpaper installation.
+- No internet, account, ads, analytics, location, media-library permission or root.
 
-## Important limits
-- Live wallpaper can only be installed with Android's system confirmation. Lock-screen behavior and touch forwarding depend on Motorola launcher and OS.
-- Sensor parallax derives from gravity/accelerometer, not gyroscope angular velocity; this yields stable device tilt for wallpaper effects.
-- 120 FPS is a maximum requested cadence, not a guarantee. Battery saver reduces it to <=30 FPS, severe thermal load to <=15 FPS.
-- Surface, EGL thread and gravity sensor are released/stopped when wallpaper is hidden or surface destroyed. Graphic actual FPS and long-run battery consumption need hardware QA.
-- PRISM, video export, accounts, and cloud gallery intentionally excluded from v1.0.
+## Architecture
 
-## Design and plan
-- `docs/superpowers/specs/2026-10-23-nox-1.0-design.md`
-- `docs/superpowers/plans/2026-10-23-nox-1.0.md`
+`:app` Compose app, `:core:model` value models/looks and frame budget, `:core:renderer` OpenGL renderer, `:core:data` persisted presets/settings, `:feature:wallpaper` Android WallpaperService.
+
+Specifications and plans: `docs/superpowers/specs/` and `docs/superpowers/plans/`.
