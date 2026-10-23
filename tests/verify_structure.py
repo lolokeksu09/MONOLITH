@@ -43,6 +43,16 @@ class StructuralContracts(unittest.TestCase):
         data=self.read('core/data/build.gradle.kts')
         self.assertIn('api("androidx.room:room-runtime:2.8.5")', data,
             'NoxDatabase publicly inherits RoomDatabase; its dependency must be api, not implementation')
+    def test_premium_studio_11_tools(self):
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        for symbol in ['SceneLooks.looks', 'SceneLooks.shuffle(', 'FullscreenPreview(',
+                       'SceneCatalog.fromHex(', 'Поиск по пресетам', 'SearchableLibrary']:
+            self.assertIn(symbol, ui, 'NOX 1.1 must expose real editor or discovery functionality: ' + symbol)
+    def test_app_upgrades_existing_install_in_place(self):
+        app=self.read('app/build.gradle.kts')
+        for contract in ['applicationId = "studio.nox.light"', 'versionCode = 2',
+                         'versionName = "1.1.0"']:
+            self.assertIn(contract, app)
     def test_build_workflow_creates_apk(self):
         workflow=self.read('.github/workflows/android.yml')
         self.assertIn('gradle :app:assembleDebug',workflow)
