@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.window.Dialog
@@ -247,6 +248,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable private fun HomeScreen(
     scene:String, active:NoxPreset?, draft:SceneConfig?, fps:Int, gyro:Boolean,
     onScene:(String)->Unit, onRemix:()->Unit, onLook:(SceneLook)->Unit,
