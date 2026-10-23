@@ -49,12 +49,12 @@ import kotlinx.coroutines.withContext
 import studio.nox.data.NoxPreset
 import studio.nox.model.SceneCatalog
 import studio.nox.model.SceneConfig
+import studio.nox.model.SceneLooks
 import studio.nox.model.SceneLook
 import studio.nox.model.ScenePresets
 import studio.nox.model.SceneRegistry
 import studio.nox.model.SceneCategory
-import studio.nox.model.NamedScenePresets
-import studio.nox.model.SceneLook
+import studio.nox.model.NamedScenePreset
 import studio.nox.model.ColorHarmony
 import studio.nox.model.EditHistory
 import studio.nox.model.PortablePreset
