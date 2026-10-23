@@ -2,6 +2,18 @@
 
 Offline, native Android AMOLED live wallpaper studio for Lenovo Legion Y70 2026 / Android 16 (no root). Three original OpenGL ES scenes: **FLUX**, **HALO**, **NEBULA**.
 
+## NOX 1.2 Palette Lab (preview)
+
+New in 1.2:
+- **Harmonic palette lab:** one-tap analogous, complementary or triadic secondary color based on the current primary color. A grayscale primary still gets a visible secondary hue.
+- **Pinned before/after:** compare the editable scene with its untouched factory scene. The action only changes the GL preview; current unsaved edits stay unchanged.
+- **Two pinned preview sizes:** compact for editing on smaller screens, expanded for inspecting detail; both remain visible as controls scroll.
+- Refined controls, contrast and descriptive labels without new permissions, database migrations or rendering service changes.
+
+**Installation:** `NOX 1.2 Palette Lab` debug APK uses package `studio.nox.light.previewlab`, so it installs beside previous versions. Existing presets stay in their respective applications but do not automatically migrate between previews. Do not uninstall your working 1.1.1 to try 1.2. As with earlier CI builds, this APK is debug-signed, not an owner-signed release.
+
+Build artifact: `NOX-1.2-palette-lab-APK`. Installation and gesture/thermal behavior on actual Lenovo Legion Y70 2026 still require device QA.
+
 ## NOX 1.1 Preview
 
 - Immersive black-on-black main screen, redesigned navigation, refined preset library and settings.
