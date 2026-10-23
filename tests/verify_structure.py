@@ -56,6 +56,21 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('previewHeight', studio)
         self.assertIn('FullscreenPreview(config,fps,gyro', studio)
 
+    def test_signature_editor_undo_and_precision(self):
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        section=ui.split('@Composable private fun StudioScreen(',1)[1].split('@Composable private fun FullscreenPreview(',1)[0]
+        app=ui.split('@Composable fun NoxApp(',1)[1].split('@Composable private fun HomeScreen(',1)[0]
+        param=ui.split('@Composable private fun Parameter(',1)[1].split('@Composable private fun LibraryScreen(',1)[0]
+        for fragment in ('EditHistory.start(', 'history.record(', 'history.undo()', 'history.redo()'):
+            self.assertIn(fragment,app)
+        for fragment in ('canUndo', 'canRedo', 'onUndo', 'onRedo', 'onLiveCommit'):
+            self.assertIn(fragment,section)
+        self.assertIn('Slider(',param)
+        self.assertIn('onValueChangeFinished=onValueCommit',param)
+        self.assertIn('onStep(',param)
+        self.assertIn('LivePreview(displayConfig',section)
+        self.assertEqual(section.count('Column(Modifier.weight(1f).verticalScroll(rememberScrollState()))'),1)
+
     def test_palette_lab_and_pinned_preview_tools(self):
         ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
         studio=ui.split('@Composable private fun StudioScreen(',1)[1].split('@Composable private fun FullscreenPreview(',1)[0]
