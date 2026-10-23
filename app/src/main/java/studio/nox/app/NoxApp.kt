@@ -330,8 +330,9 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                 Text("На экран",color=TextWhite,fontWeight=FontWeight.SemiBold)
             }
         }
-        Row(Modifier.fillMaxWidth().padding(top=2.dp,bottom=5.dp),
-            horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+            .padding(top=2.dp,bottom=5.dp),
+            horizontalArrangement=Arrangement.spacedBy(5.dp),verticalAlignment=Alignment.CenterVertically) {
             TextButton(onClick=onRemix) {
                 Icon(Icons.Outlined.AutoAwesome,contentDescription=null,tint=Cyan,
                     modifier=Modifier.size(18.dp))
