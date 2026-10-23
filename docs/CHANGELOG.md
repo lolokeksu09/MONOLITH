@@ -2,6 +2,13 @@
 
 > Каждый следующий патч обязан обновлять этот файл и публиковаться коммитом в GitHub. См. [AGENTS.md](../AGENTS.md) и [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md).
 
+## [1.7.0 / Patch 1] — Catalog (2026-10-23)
+
+- Added `SceneRegistry` / `SceneCategory` and registered AURORA, PULSE, COMET without changing the defaults of FLUX, HALO or NEBULA.
+- Added `SceneRegistryTest` covering ordered IDs, categories, defaults and normalization.
+- Changes: `SceneRegistry.kt`, `SceneConfig.kt`, `SceneRegistryTest.kt`; commit series `91ef2e0`, `8b663b9`, `42e3871`.
+- **Verification:** GitHub Actions test run queued/in progress when this entry was written; no device tests. Shaders and UI not yet implemented.
+
 ## [1.7.0] — PLANNED / спецификация подготовлена (2026-10-23)
 
 - **Запланировано:** AURORA, PULSE, COMET; всего 6 сцен.
