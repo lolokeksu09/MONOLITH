@@ -2,6 +2,15 @@
 
 > Каждый следующий патч обязан обновлять этот файл и публиковаться коммитом в GitHub. См. [AGENTS.md](../AGENTS.md) и [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md).
 
+## [1.7.1 / Patch 1] — Light Dynamics shader refinement (2026-10-23)
+
+- **AURORA:** five multi-scale drifting light curtains with broad color veils, luminous cores and delicate filaments, preserving pure-black regions.
+- **PULSE:** six distinct outward-traveling waves; life-cycle edge fade avoids hard ring restarts, and active touch shifts the wave center.
+- **COMET:** seven deterministic particles with depth-based brightness, per-comet direction/speed and longer variable tails; density controls visibility, phase fade prevents hard reset.
+- Preserve existing FLUX, HALO, NEBULA shader branches, six scene IDs, Room schema and pinned Studio preview.
+- Code commit: `d93c8b8225e99792014b971de4e20f5a916f81ba`. Regression contract: `4e38fb65732875b8f79c67870730021826c37988` (expected red before implementation).
+- CI/build results: **not yet confirmed** for updated shader at this documentation commit. New shaders still require on-device GLSL, performance and visual validation.
+
 ## [1.7.0 / Patch 5] — Release candidate APK (2026-10-23)
 
 - Version `1.7.0` (`versionCode=10`), separate debug app ID `studio.nox.light.livingscenes`, launcher label `NOX 1.7 Living Scenes`.
