@@ -2,6 +2,13 @@
 
 > Каждый следующий патч обязан обновлять этот файл и публиковаться коммитом в GitHub. См. [AGENTS.md](../AGENTS.md) и [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md).
 
+## [1.7.1 / Patch 2] — Preview packaging and regression hardening (2026-10-23)
+
+- Updated versionName to `1.7.1`, versionCode to `11`, independent debug application ID `studio.nox.light.lumina`, launcher `NOX 1.7.1 Light Dynamics`; CI uploads `NOX-1.7.1-light-dynamics-APK`.
+- Updated structural regression tests for package, version and newly described COMET branch. Build commits: `081f2678`, `f86c0923`, `8ffcdc35`, `59ec7a87`; regression correction: `52d29d96`.
+- Source shader changes from Patch 1 persist; FLUX/HALO/NEBULA remain unchanged. README now documents user-visible improvements and preserving previous APKs.
+- **Verification:** full NOX 1.7.1 CI pending at time of this note; Android/GL runtime QA on Lenovo unverified.
+
 ## [1.7.1 / Patch 1] — Light Dynamics shader refinement (2026-10-23)
 
 - **AURORA:** five multi-scale drifting light curtains with broad color veils, luminous cores and delicate filaments, preserving pure-black regions.
