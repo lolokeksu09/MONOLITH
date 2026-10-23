@@ -472,21 +472,43 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
             onValueChange={onLiveEdit(config.copy(motion=it))},
             onValueCommit=onLiveCommit,
             onStep={onEdit(config.copy(motion=it))})
-        Spacer(Modifier.height(22.dp))
-        Button(onClick=onSave,enabled=name.trim().isNotBlank()&&name.trim().length<=48,
-            modifier=Modifier.fillMaxWidth().height(54.dp),shape=RoundedCornerShape(14.dp),
-            colors=ButtonDefaults.buttonColors(containerColor=Cyan,contentColor=Ink)) {
-            Text("Сохранить в коллекцию",fontWeight=FontWeight.Bold)
+        Spacer(Modifier.height(24.dp))
         }
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-            TextButton(onClick=onExport,modifier=Modifier.weight(1f)) {Text("Экспорт PNG",color=Cyan)}
-            TextButton(onClick=onApply,modifier=Modifier.weight(1f)) {Text("Установить обои",color=Cyan)}
-        }
-        Spacer(Modifier.height(25.dp))
-        }
+        SaveActionDock(
+            canSave=name.trim().isNotBlank() && name.trim().length<=48,
+            onSave=onSave,onExport=onExport,onApply=onApply
+        )
         }
     }
     if(immersive) FullscreenPreview(config,fps,gyro,onClose={immersive=false})
+}
+
+
+@Composable private fun SaveActionDock(
+    canSave:Boolean,onSave:()->Unit,onExport:()->Unit,onApply:()->Unit
+) {
+    Row(Modifier.fillMaxWidth().padding(top=10.dp,bottom=7.dp),
+        horizontalArrangement=Arrangement.spacedBy(9.dp),
+        verticalAlignment=Alignment.CenterVertically) {
+        Button(onClick=onSave,enabled=canSave,
+            modifier=Modifier.weight(1f).height(52.dp),
+            shape=RoundedCornerShape(14.dp),
+            colors=ButtonDefaults.buttonColors(containerColor=Cyan,contentColor=Ink)) {
+            Icon(Icons.Outlined.Save,contentDescription=null,modifier=Modifier.size(18.dp))
+            Spacer(Modifier.width(7.dp))
+            Text("Сохранить",fontWeight=FontWeight.Bold,fontSize=13.sp)
+        }
+        OutlinedIconButton(onClick=onExport,modifier=Modifier.size(52.dp),
+            border=androidx.compose.foundation.BorderStroke(1.dp,Color(0xFF304452)),
+            shape=RoundedCornerShape(14.dp)) {
+            Icon(Icons.Outlined.FileDownload,contentDescription="Экспорт PNG",tint=TextWhite)
+        }
+        OutlinedIconButton(onClick=onApply,modifier=Modifier.size(52.dp),
+            border=androidx.compose.foundation.BorderStroke(1.dp,Color(0xFF304452)),
+            shape=RoundedCornerShape(14.dp)) {
+            Icon(Icons.Outlined.Wallpaper,contentDescription="Установить обои",tint=TextWhite)
+        }
+    }
 }
 
 @Composable private fun FullscreenPreview(config:SceneConfig,fps:Int,gyro:Boolean,onClose:()->Unit) {
