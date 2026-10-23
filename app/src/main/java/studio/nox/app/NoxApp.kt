@@ -7,6 +7,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -38,14 +43,15 @@ import kotlinx.coroutines.withContext
 import studio.nox.data.NoxPreset
 import studio.nox.model.SceneCatalog
 import studio.nox.model.SceneConfig
+import studio.nox.model.SceneLooks
 import studio.nox.renderer.MotionSensor
 import studio.nox.renderer.NoxSurfaceView
 import studio.nox.renderer.OffscreenExporter
 
 private val Ink=Color(0xFF000000)
-private val Surface=Color(0xFF10141C)
+private val Surface=Color(0xFF111A26)
 private val Cyan=Color(0xFF30D9FF)
-private val Muted=Color(0xFF9CA9BA)
+private val Muted=Color(0xFF99ACC1)
 private val TextWhite=Color(0xFFF2F6FF)
 private val palettes=listOf(0x30D9FF,0x8C73FF,0xFF689E,0xE0EEFF,0x45FFCF,0xFFC177)
 private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
@@ -89,21 +95,36 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
     fun applySafely() { runCatching {onApply()}.onFailure {vm.notify(it.message?:"Ошибка открытия системных обоев")} }
     MaterialTheme(colorScheme=darkColorScheme(primary=Cyan,onPrimary=Ink,background=Ink,onBackground=TextWhite,surface=Surface,onSurface=TextWhite)) {
         Scaffold(containerColor=Ink, bottomBar={
-            NavigationBar(containerColor=Color(0xFF080B11)) {
+            NavigationBar(containerColor=Color(0xFF080D13), tonalElevation=0.dp) {
                 listOf(Tab.HOME,Tab.STUDIO,Tab.LIBRARY,Tab.SETTINGS).forEach { t ->
-                    NavigationBarItem(selected=tab==t,onClick={tab=t},icon={
-                        Text(when(t){Tab.HOME->"◇";Tab.STUDIO->"✦";Tab.LIBRARY->"▦";Tab.SETTINGS->"⚙"},fontSize=21.sp)
-                    },label={Text(when(t){Tab.HOME->"Главная";Tab.STUDIO->"Студия";Tab.LIBRARY->"Коллекция";Tab.SETTINGS->"Настройки"},fontSize=10.sp)},alwaysShowLabel=true)
+                    val selected = tab == t
+                    NavigationBarItem(selected=selected,onClick={tab=t},icon={
+                        Icon(imageVector=when(t){
+                            Tab.HOME -> Icons.Outlined.Home
+                            Tab.STUDIO -> Icons.Outlined.AutoAwesome
+                            Tab.LIBRARY -> Icons.Outlined.CollectionsBookmark
+                            Tab.SETTINGS -> Icons.Outlined.Tune
+                        },contentDescription=null,modifier=Modifier.size(23.dp))
+                    },label={Text(when(t){
+                        Tab.HOME->"Обзор"
+                        Tab.STUDIO->"Студия"
+                        Tab.LIBRARY->"Коллекция"
+                        Tab.SETTINGS->"Настройки"
+                    },fontSize=11.sp)},alwaysShowLabel=true,
+                        colors=NavigationBarItemDefaults.colors(
+                            selectedIconColor=Cyan, selectedTextColor=TextWhite,
+                            indicatorColor=Color(0xFF17303E), unselectedIconColor=Muted,
+                            unselectedTextColor=Muted))
                 }
             }
         }) { insets ->
             Column(Modifier.fillMaxSize().padding(insets).background(Ink)) {
                 Row(Modifier.fillMaxWidth().padding(start=22.dp,end=22.dp,top=14.dp,bottom=10.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
                     Column {
-                        Text("NOX",fontSize=29.sp,fontWeight=FontWeight.Black,color=TextWhite,letterSpacing=6.sp)
+                        Text("NOX",fontSize=31.sp,fontWeight=FontWeight.Black,color=TextWhite,letterSpacing=4.sp)
                         Text("LIVING LIGHT STUDIO",fontSize=9.sp,color=Cyan,letterSpacing=2.sp)
                     }
-                    Text("1.0",fontSize=12.sp,color=Muted)
+                    Text("1.1",fontSize=12.sp,color=Muted)
                 }
                 when(tab) {
                     Tab.HOME -> HomeScreen(homeScene,active,settings.fps,settings.gyroEnabled,
@@ -131,37 +152,60 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
 }
 
 @Composable private fun HomeScreen(scene:String,active:NoxPreset?,fps:Int,gyro:Boolean,onScene:(String)->Unit,onEdit:(SceneConfig)->Unit,onApply:()->Unit,onExport:(SceneConfig)->Unit) {
-    val c=if(active?.scene?.sceneId==scene)active.scene else SceneCatalog.default(scene)
+    val config = if(active?.scene?.sceneId == scene) active.scene else SceneCatalog.default(scene)
+    val subtitle = when(scene) {
+        "HALO" -> "Орбиты света"
+        "NEBULA" -> "Звёздная пыль"
+        else -> "Световые потоки"
+    }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=18.dp)) {
-        Row(Modifier.padding(vertical=12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
+        Row(Modifier.fillMaxWidth().padding(top=8.dp,bottom=14.dp), verticalAlignment=Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("LIGHT IN MOTION",fontSize=11.sp,letterSpacing=2.sp,color=Cyan)
-                Spacer(Modifier.height(4.dp))
-                Text("Создавай свет.",fontSize=25.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
+                Text("Свет, который живёт.",fontSize=24.sp,color=TextWhite,fontWeight=FontWeight.SemiBold)
+                Text("Твоя сцена. Твои правила.",fontSize=13.sp,color=Muted)
             }
-            Text("01 / 03",fontSize=12.sp,color=Muted)
+            Text((SceneCatalog.ids.indexOf(scene)+1).toString().padStart(2,'0')+" / 03",
+                fontSize=12.sp,color=Cyan,letterSpacing=1.sp)
         }
-        Box(Modifier.fillMaxWidth().height(390.dp).clip(RoundedCornerShape(22.dp)).background(Ink).border(1.dp,Color(0xFF202D3C),RoundedCornerShape(22.dp))) {
-            LivePreview(c,fps,gyro,Modifier.fillMaxSize())
-            Column(Modifier.align(Alignment.TopStart).padding(18.dp)) {
-                Text(scene,fontSize=13.sp,letterSpacing=3.sp,color=TextWhite,fontWeight=FontWeight.Bold)
-                Text("REAL-TIME GENERATIVE LIGHT",fontSize=9.sp,color=Muted,letterSpacing=1.sp)
+        Box(Modifier.fillMaxWidth().height(468.dp).clip(RoundedCornerShape(24.dp)).background(Ink)
+            .border(1.dp,Color(0xFF1B3244),RoundedCornerShape(24.dp))) {
+            LivePreview(config,fps,gyro,Modifier.fillMaxSize())
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
+                0f to Color.Black.copy(alpha=0.40f),
+                0.47f to Color.Transparent,
+                1f to Color.Black.copy(alpha=0.92f))))
+            Row(Modifier.align(Alignment.TopStart).padding(20.dp),verticalAlignment=Alignment.CenterVertically) {
+                Box(Modifier.size(6.dp).background(Cyan,CircleShape))
+                Spacer(Modifier.width(9.dp))
+                Text("LIVE ENGINE",fontSize=10.sp,letterSpacing=1.5.sp,color=TextWhite)
             }
-            Text("TOUCH TO INTERACT",modifier=Modifier.align(Alignment.BottomStart).padding(18.dp),fontSize=9.sp,letterSpacing=1.sp,color=Muted)
+            Column(Modifier.align(Alignment.BottomStart).padding(22.dp)) {
+                Text(subtitle,color=Muted,fontSize=13.sp)
+                Text(scene,fontSize=42.sp,color=TextWhite,fontWeight=FontWeight.Black,letterSpacing=2.sp)
+                Spacer(Modifier.height(5.dp))
+                Text("OpenGL · касайся и двигай свет",fontSize=12.sp,color=Muted)
+            }
         }
         Spacer(Modifier.height(15.dp))
-        Row(horizontalArrangement=Arrangement.spacedBy(9.dp)) {
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             SceneCatalog.ids.forEach { id ->
-                FilterChip(selected=id==scene,onClick={onScene(id)},label={Text(id,fontSize=12.sp)})
+                FilterChip(selected=id==scene,onClick={onScene(id)},
+                    label={Text(id,fontSize=12.sp,fontWeight=FontWeight.SemiBold)},
+                    colors=FilterChipDefaults.filterChipColors(selectedContainerColor=Color(0xFF153544),
+                        selectedLabelColor=Cyan,containerColor=Surface,labelColor=Muted))
             }
         }
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-            Button(onClick={onEdit(c)},modifier=Modifier.weight(1f).height(50.dp),shape=RoundedCornerShape(13.dp)) { Text("Открыть студию") }
-            OutlinedButton(onClick=onApply,modifier=Modifier.weight(1f).height(50.dp),shape=RoundedCornerShape(13.dp)) { Text("Установить") }
+            Button(onClick={onEdit(config)},modifier=Modifier.weight(1f).height(54.dp),
+                shape=RoundedCornerShape(15.dp),colors=ButtonDefaults.buttonColors(containerColor=Cyan,contentColor=Ink)) {
+                Text("Создать свой",fontWeight=FontWeight.Bold)
+            }
+            OutlinedButton(onClick=onApply,modifier=Modifier.weight(1f).height(54.dp),
+                shape=RoundedCornerShape(15.dp)) { Text("На экран",color=TextWhite) }
         }
-        TextButton(onClick={onExport(c)},modifier=Modifier.align(Alignment.End)) { Text("Экспорт PNG ↗") }
-        Spacer(Modifier.height(12.dp))
+        TextButton(onClick={onExport(config)},modifier=Modifier.align(Alignment.End)) { Text("Сохранить кадр PNG ↗",color=Cyan) }
+        Spacer(Modifier.height(14.dp))
     }
 }
 
