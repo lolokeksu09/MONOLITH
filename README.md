@@ -2,6 +2,18 @@
 
 Offline, native Android AMOLED live wallpaper studio for Lenovo Legion Y70 2026 / Android 16 (no root). Three original OpenGL ES scenes: **FLUX**, **HALO**, **NEBULA**.
 
+## NOX 1.3 Signature Studio (preview)
+
+The latest release candidate is a native offline AMOLED editor, carrying forward the pinned live wallpaper preview and all 1.2 features.
+
+- **Undo / Redo:** bounded 40-step history for scene modifications; redo resets on a divergent edit and reset is undoable. History starts fresh when opening a scene or saved preset.
+- **Precision controls:** motion, density, glow, and speed each have one-percent decrement/increment buttons. Slider gestures update the OpenGL scene instantly and create one undo checkpoint on release.
+- **Signature design:** compact history action bar under pinned preview; grouped precision control panels, cyan state, graphite surfaces, more legible hierarchy. The pinned preview stays outside the scrolling settings.
+- **Compatibility:** preserve wallpaper engine, Room schema, presets, offline design, permissions and export. No additional network.
+- **Side-by-side install:** debug package `studio.nox.light.signature`, launcher name `NOX 1.3 Signature`. Do not uninstall previous working versions; their data does not migrate into this separate preview.
+- **Build:** GitHub Actions artifact `NOX-1.3-signature-APK`, versionName 1.3.0 / versionCode 5. Debug-signed preview; no stable release signing.
+- **Hardware QA:** UI interaction, sustained GL FPS, thermals, touch, wallpaper installation and file export must still be checked on the Lenovo Legion Y70 2026.
+
 ## NOX 1.2 Palette Lab (preview)
 
 New in 1.2:
