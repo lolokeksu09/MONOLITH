@@ -348,33 +348,72 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
 }
 
 @Composable private fun LibraryScreen(presets:List<NoxPreset>,active:Long?,onEdit:(NoxPreset)->Unit,onUse:(NoxPreset)->Unit,onDuplicate:(NoxPreset)->Unit,onDelete:(NoxPreset)->Unit) {
-    var confirming by remember {mutableStateOf<NoxPreset?>(null)}
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=20.dp)) {
-        Text("ТВОИ КОМПОЗИЦИИ",color=Cyan,fontSize=11.sp,letterSpacing=2.sp)
-        Spacer(Modifier.height(15.dp))
-        if(presets.isEmpty()) Text("Пока нет сохранённых пресетов. Создай первый в Студии.",color=Muted)
-        presets.forEach { preset ->
-            Row(Modifier.fillMaxWidth().padding(bottom=10.dp).background(Surface,RoundedCornerShape(17.dp)).padding(12.dp),verticalAlignment=Alignment.CenterVertically) {
-                Miniature(preset.scene,Modifier.size(width=86.dp,height=102.dp).clip(RoundedCornerShape(12.dp)).background(Ink))
-                Column(Modifier.weight(1f).padding(start=13.dp)) {
-                    Text(preset.name,fontWeight=FontWeight.SemiBold,color=TextWhite,fontSize=15.sp,maxLines=1,overflow=TextOverflow.Ellipsis)
-                    Text(preset.scene.sceneId,color=Muted,fontSize=11.sp)
-                    if(preset.id==active) Text("● Активный",color=Cyan,fontSize=11.sp)
-                    Row(horizontalArrangement=Arrangement.spacedBy(3.dp)) {
-                        TextButton(onClick={onEdit(preset)},contentPadding=PaddingValues(4.dp)){Text("Править",fontSize=11.sp)}
-                        TextButton(onClick={onUse(preset)},contentPadding=PaddingValues(4.dp)){Text("Выбрать",fontSize=11.sp)}
+    SearchableLibrary(presets,active,onEdit,onUse,onDuplicate,onDelete)
+}
+
+@Composable private fun SearchableLibrary(presets:List<NoxPreset>,active:Long?,onEdit:(NoxPreset)->Unit,onUse:(NoxPreset)->Unit,onDuplicate:(NoxPreset)->Unit,onDelete:(NoxPreset)->Unit) {
+    var confirming by remember { mutableStateOf<NoxPreset?>(null) }
+    var query by remember { mutableStateOf("") }
+    val filtered = remember(presets,query) {
+        presets.filter { it.name.contains(query.trim(),ignoreCase=true) ||
+            it.scene.sceneId.contains(query.trim(),ignoreCase=true) }
+    }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=18.dp)) {
+        Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Коллекция",color=TextWhite,fontSize=27.sp,fontWeight=FontWeight.SemiBold)
+                Text("Сохранённые сцены и твои эксперименты",color=Muted,fontSize=12.sp)
+            }
+            Text(filtered.size.toString().padStart(2,'0'),color=Cyan,fontSize=20.sp,fontWeight=FontWeight.SemiBold)
+        }
+        Spacer(Modifier.height(18.dp))
+        OutlinedTextField(value=query,onValueChange={query=it},singleLine=true,
+            label={Text("Поиск по пресетам")},
+            leadingIcon={Icon(Icons.Outlined.Search,contentDescription=null)},
+            modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(14.dp))
+        Spacer(Modifier.height(18.dp))
+        if(presets.isEmpty()) {
+            Text("Пока нет сохранённых пресетов. Создай первый в Студии.",color=Muted)
+        } else if(filtered.isEmpty()) {
+            Text("Нет совпадений. Измени запрос.",color=Muted)
+        }
+        filtered.forEach { preset ->
+            Row(Modifier.fillMaxWidth().padding(bottom=12.dp)
+                .clip(RoundedCornerShape(19.dp)).background(Surface).border(1.dp,Color(0xFF24303B),RoundedCornerShape(19.dp))
+                .padding(12.dp),verticalAlignment=Alignment.CenterVertically) {
+                Miniature(preset.scene,Modifier.size(width=91.dp,height=116.dp)
+                    .clip(RoundedCornerShape(13.dp)).background(Ink))
+                Column(Modifier.weight(1f).padding(start=14.dp)) {
+                    Text(preset.name,fontWeight=FontWeight.SemiBold,color=TextWhite,fontSize=16.sp,
+                        maxLines=1,overflow=TextOverflow.Ellipsis)
+                    Spacer(Modifier.height(3.dp))
+                    Text(preset.scene.sceneId,color=Muted,fontSize=11.sp,letterSpacing=1.2.sp)
+                    if(preset.id==active) Text("● На рабочем столе",color=Cyan,fontSize=11.sp)
+                    Spacer(Modifier.height(5.dp))
+                    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick={onEdit(preset)},contentPadding=PaddingValues(0.dp)) {
+                            Text("Редактор",fontSize=12.sp,color=Cyan)
+                        }
+                        TextButton(onClick={onUse(preset)},contentPadding=PaddingValues(0.dp)) {
+                            Text("Выбрать",fontSize=12.sp,color=TextWhite)
+                        }
                     }
-                    Row(horizontalArrangement=Arrangement.spacedBy(3.dp)) {
-                        TextButton(onClick={onDuplicate(preset)},contentPadding=PaddingValues(4.dp)){Text("Копия",fontSize=11.sp)}
-                        TextButton(onClick={confirming=preset},contentPadding=PaddingValues(4.dp)){Text("Удалить",fontSize=11.sp,color=Color(0xFFFF8392))}
+                    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick={onDuplicate(preset)},contentPadding=PaddingValues(0.dp)) {
+                            Text("Копия",fontSize=12.sp,color=Muted)
+                        }
+                        TextButton(onClick={confirming=preset},contentPadding=PaddingValues(0.dp)) {
+                            Text("Удалить",fontSize=12.sp,color=Color(0xFFFF8392))
+                        }
                     }
                 }
             }
         }
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(20.dp))
     }
     confirming?.let { preset ->
-        AlertDialog(onDismissRequest={confirming=null},title={Text("Удалить пресет?")},text={Text("«${preset.name}» будет удалён без возможности восстановления.")},
+        AlertDialog(onDismissRequest={confirming=null},title={Text("Удалить пресет?")},
+            text={Text("«"+preset.name+"» будет удалён без возможности восстановления.")},
             confirmButton={TextButton(onClick={onDelete(preset);confirming=null}){Text("Удалить")}},
             dismissButton={TextButton(onClick={confirming=null}){Text("Отмена")}})
     }
