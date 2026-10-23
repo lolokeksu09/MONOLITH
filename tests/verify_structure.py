@@ -34,6 +34,11 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('compress(Bitmap.CompressFormat.PNG',ui)
         repo=self.read('core/data/src/main/java/studio/nox/data/PresetEntity.kt')
         for case in ['@Database','@Dao','fun save(','fun duplicate(','fun delete(']:self.assertIn(case,repo)
+    def test_compose_bom_compatible_with_compile_sdk36(self):
+        app=self.read('app/build.gradle.kts')
+        self.assertIn('compileSdk = 36', app)
+        self.assertIn('compose-bom:2025.10.01', app,
+                          'Compile SDK 36 / AGP 8.13 cannot build Compose BOM 2026.09 (Compose 1.12 needs SDK 37 / AGP 9.1)')
     def test_build_workflow_creates_apk(self):
         workflow=self.read('.github/workflows/android.yml')
         self.assertIn('gradle :app:assembleDebug',workflow)
