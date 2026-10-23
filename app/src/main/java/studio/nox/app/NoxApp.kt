@@ -368,7 +368,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                                 fontWeight=FontWeight.SemiBold)
                             Spacer(Modifier.height(3.dp))
                             Text("ПРИМЕНИТЬ К СЦЕНЕ",color=Muted,fontSize=10.sp,
-                                letterSpacing=0.65.sp)
+                                letterSpacing=0.65f.sp)
                         }
                         Icon(Icons.Outlined.ArrowForwardIos,contentDescription=null,
                             tint=Muted,modifier=Modifier.size(16.dp))
