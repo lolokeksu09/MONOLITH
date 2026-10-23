@@ -1,3 +1,21 @@
+# NOX 1.7.1 — Light Dynamics QA, 2026-10-23
+
+## Verified in GitHub Actions
+
+- Renderer changes to AURORA/PULSE/COMET committed in `d93c8b8225e99792014b971de4e20f5a916f81ba`. No changes to legacy FLUX/HALO/NEBULA shader branches; their code was compared directly and found byte-identical.
+- Run [#40008408749](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40008408749) — `success` at SHA `574a4d32d907f1567bc8ccefc77b8c3047d48ca8`.
+- Structural tests: pass; Kotlin model unit tests: pass; `:app:assembleDebug`: pass; APK upload: pass.
+- Artifact `NOX-1.7.1-light-dynamics-APK` ID `12525875176`. APK 19,478,319 bytes, SHA-256 `ff3ece7f5326f14656f84f16753bba00f768dcd7afea4fc6d8725ecb6e90147f`.
+- Tested ZIP/embedded APK CRC integrity; AndroidManifest.xml, classes.dex and resources.arsc present.
+
+## Hardware tests still required on Lenovo Legion Y70
+
+- Actual GPU shader compilation and appearance of AURORA filaments, PULSE outward wave fade and touch-centered waves, COMET tail lifecycles; Gradle compilation does not execute GLES shader.
+- 60/120 FPS under normal and power-save conditions, screen lock/unlock and orientation transitions, battery/thermals, PNG export/live wallpaper service and preset continuity.
+- The previous NOX versions install side by side under different package names, so their private databases are not migrated. **Do not uninstall the working 1.7 build.**
+
+---
+
 # NOX 1.7 Living Scenes — release-candidate verification, 2026-10-23
 
 ## Verified
