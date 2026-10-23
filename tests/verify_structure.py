@@ -48,7 +48,7 @@ class StructuralContracts(unittest.TestCase):
         studio = source.split('@Composable private fun StudioScreen(', 1)[1].split('@Composable private fun FullscreenPreview(', 1)[0]
         self.assertIn('BoxWithConstraints(Modifier.fillMaxSize())', studio)
         self.assertIn('Column(Modifier.fillMaxSize().padding(horizontal=18.dp))', studio)
-        pinned_preview = studio.index('LivePreview(config,fps,gyro,Modifier.fillMaxSize())')
+        pinned_preview = studio.index('LivePreview(displayConfig,fps,gyro,Modifier.fillMaxSize())')
         scrollable_controls = studio.index('Column(Modifier.weight(1f).verticalScroll(rememberScrollState()))')
         self.assertLess(pinned_preview, scrollable_controls)
         self.assertEqual(studio.count('verticalScroll(rememberScrollState())'), 1,
@@ -74,8 +74,8 @@ class StructuralContracts(unittest.TestCase):
             self.assertIn(symbol, ui, 'NOX 1.1 must expose real editor or discovery functionality: ' + symbol)
     def test_app_upgrades_existing_install_in_place(self):
         app=self.read('app/build.gradle.kts')
-        for contract in ['applicationId = "studio.nox.light"', 'applicationIdSuffix = ".previewpinned"', 'versionCode = 3',
-                         'versionName = "1.1.1"']:
+        for contract in ['applicationId = "studio.nox.light"', 'applicationIdSuffix = ".previewlab"', 'versionCode = 4',
+                         'versionName = "1.2.0"']:
             self.assertIn(contract, app)
     def test_build_workflow_creates_apk(self):
         workflow=self.read('.github/workflows/android.yml')
