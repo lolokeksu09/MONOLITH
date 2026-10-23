@@ -1,9 +1,11 @@
 # NOX 1.0 — Living Light Studio
 
+> **Repository workflow:** Every completed NOX patch must have a GitHub commit **and** updated documentation. Read [AGENTS.md](AGENTS.md), [Development workflow](docs/DEVELOPMENT_WORKFLOW.md), and [Changelog](docs/CHANGELOG.md). The `main` branch contains the NOX 1.0 base; later previews (including proposed 1.7) are developed on separate feature branches.
+
 Offline Android live wallpaper studio for Lenovo Legion Y70 2026 (Motorola firmware, Android 16), built without root. Three generative GPU scenes: FLUX, HALO and NEBULA.
 
 ## Tech stack
-- Kotlin 2.3.20, Jetpack Compose (BOM 2026.09.00), Material 3
+- Kotlin 2.3.20, Jetpack Compose (BOM 2025.10.01), Material 3
 - Android SDK 36, minimum Android 8.0 (API 26), Gradle 8.13, AGP 8.13.2, JDK 17
 - OpenGL ES 3 context with GLSL shaders, WallpaperService, Room and Preferences DataStore
 - App ID: `studio.nox.light`.
@@ -18,8 +20,8 @@ gradle :core:model:test :app:assembleDebug
 Output: `app/build/outputs/apk/debug/app-debug.apk`. Android debug signing is handled by Android Gradle Plugin; **this is a debug APK, not a production release signed with the owner's key**.
 
 ### Build through GitHub Actions (easiest without PC)
-1. Create a NEW repository for NOX. Do not upload NOX into any preexisting unrelated project.
-2. Upload this entire source tree, including `.github/workflows/android.yml`, to the repository's `main` branch.
+1. Use this existing `lolokeksu09/NOX-LEGION` repository; work in the intended branch, not a new unrelated repository.
+2. Confirm that `.github/workflows/android.yml` exists in the selected branch.
 3. Open Actions > Build NOX APK > Run workflow; once green, download `NOX-1.0-debug-APK` workflow artifact. Extract the ZIP to get the APK.
 4. Transfer the APK to your device's Download folder and open it to install; allow installation for the file manager only if prompted. Keep ownership of your signing keys private.
 
