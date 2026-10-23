@@ -1,7 +1,7 @@
 # NOX 1.7 — Living Scenes: спецификация дизайна и архитектуры
 
 **Дата:** 2026-10-23  
-**Статус:** DRAFT / подготовлено для утверждения владельцем; **сцены ещё не реализованы**.  
+**Статус:** IMPLEMENTED RELEASE CANDIDATE / успешная сборка в CI; **аппаратная проверка GLSL и визуального качества ещё не выполнена**.  
 **Базовая ветка:** `feature/nox-1-6-curated` (в момент подготовки); **ветка спецификации:** `feature/nox-1-7-living-scenes`.  
 **Продукт:** нативный NOX для Lenovo Legion Y70 2026, Android 16, глобальная Motorola-прошивка, без root.
 
@@ -96,7 +96,7 @@
 
 ## 8. Релиз и дисциплина коммитов
 
-- **Плановая версия:** `1.7.0`, `versionCode = 10`, отдельный debug applicationId `studio.nox.light.livingscenes`, имя `NOX 1.7 Living Scenes`. Фактическую конфигурацию подтвердить при реализации; APK не существует на стадии этой спецификации.
+- **Плановая версия:** `1.7.0`, `versionCode = 10`, отдельный debug applicationId `studio.nox.light.livingscenes`, имя `NOX 1.7 Living Scenes`. Фактическая конфигурация: проверенная сборка `1.7.0` / код `10`, debug ID `studio.nox.light.livingscenes`; артефакт `NOX-1.7-living-scenes-APK`, [CI #40004992732](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40004992732), sha256 APK `bd69e94cbe6185baf5bfe2fcb31474a40b2866f767f2e382a56c4c645cfe5072`.
 - Патчи разделяются по независимым этапам: каталог → графика → интерфейс/превью → пресеты → QA/сборка.
 - **После КАЖДОГО патча:** commit в GitHub + обновление `docs/CHANGELOG.md` и затронутой документации в том же (или парном) коммите, подтверждение SHA и CI-статуса. См. корневой `AGENTS.md` и `docs/DEVELOPMENT_WORKFLOW.md`.
 - Никаких скрытых merge в `main`; публикация подписанного релиза отдельно от debug APK.
