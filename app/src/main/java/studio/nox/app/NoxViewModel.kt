@@ -38,12 +38,14 @@ class NoxViewModel(application: Application): AndroidViewModel(application) {
         }.onSuccess {onSaved(it);onReady()}.onFailure {message=it.message?:"Не удалось применить сцену"}
     }
     fun use(preset:NoxPreset) = viewModelScope.launch { settingsRepo.setActive(preset.id); message="Выбрано: ${preset.name}" }
+    fun toggleFavorite(preset:NoxPreset) = viewModelScope.launch {settingsRepo.toggleFavorite(preset.id)}
     fun duplicate(preset:NoxPreset) = viewModelScope.launch {
         runCatching {presetsRepo.duplicate(preset)}.onSuccess {message="Создана копия"}.onFailure {message=it.message}
     }
     fun delete(preset:NoxPreset) = viewModelScope.launch {
         if(settings.value.activeId==preset.id)settingsRepo.setActive(null)
         presetsRepo.delete(preset.id)
+        settingsRepo.setFavorite(preset.id,false)
         message="Пресет удалён"
     }
     fun importPortable(items:List<PortablePreset>)=viewModelScope.launch {
