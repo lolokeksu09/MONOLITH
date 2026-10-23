@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 >
-> **Status: PLANNED, awaiting design/plan review.** This file is an implementation plan, **not** evidence of implemented or built scenes.
+> **Status: CI-BUILT PREVIEW.** All five source/CI patches implemented; [Android CI #40004992732](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40004992732) passed. Actual GLES rendering and performance **have not been verified on Lenovo**.
 
 **Goal:** Ship native, offline NOX 1.7 with three new premium procedural live wallpapers (AURORA, PULSE, COMET), category navigation and nine ready-made looks, preserving all NOX 1.6 behaviors and data.
 
@@ -48,11 +48,11 @@
 - `SceneCatalog.ids` returns the ordered six IDs, preserving the original order `FLUX,HALO,NEBULA`, appending `AURORA,PULSE,COMET`.
 - `SceneCatalog.default(id:String)` returns scene-specific parameter/color defaults for AURORA, PULSE, COMET without changing existing defaults.
 
-- [ ] Add tests asserting exact six IDs, unique IDs, categories, `isNew` only for three 1.7 IDs, normalization of each new ID, and legacy defaults unchanged.
-- [ ] Run `gradle :core:model:test --stacktrace`, observe red tests.
-- [ ] Implement registry and defaults.
-- [ ] Re-run model tests to green. Run `python3 -m unittest discover -s tests -p 'verify_structure.py' -v`.
-- [ ] Update changelog with **catalog added**, tests actually run, compatibility note. Commit `feat(catalog): register AURORA PULSE COMET and scene categories`. Verify SHA.
+- [x] Add tests asserting exact six IDs, unique IDs, categories, `isNew` only for three 1.7 IDs, normalization of each new ID, and legacy defaults unchanged.
+- [x] Run `gradle :core:model:test --stacktrace`, observe red tests.
+- [x] Implement registry and defaults.
+- [x] Re-run model tests to green. Run `python3 -m unittest discover -s tests -p 'verify_structure.py' -v`.
+- [x] Update changelog with **catalog added**, tests actually run, compatibility note. Commit `feat(catalog): register AURORA PULSE COMET and scene categories`. Verify SHA.
 
 ## Task 2 — GPU modes and renderer safety (Patch 2)
 
@@ -66,11 +66,11 @@
 - Existing GLSL uniforms retain their names; `FRAGMENT` keeps dedicated explicit branches for each mode.
 - All modes are procedural, deterministic from `uSeed`, time continuous and use bounded iteration counts.
 
-- [ ] Add red structural tests for all six `uMode` cases, separate NEBULA branch, unchanged `GL_TRIANGLE_STRIP` and GLSL uniforms.
-- [ ] Run Python structural tests and confirm red.
-- [ ] Implement AURORA smooth ribbons, PULSE non-strobing radial rings and COMET moving heads/trails in the shared shader. Maintain aspect ratio and `uTouch/uMotion`.
-- [ ] Re-run structural tests; run CI `gradle :app:assembleDebug --stacktrace` to catch GLSL integration/code compile issues. **A passing Kotlin build does not prove GLSL compiles on the device**; verify shader logs / visual on-phone later.
-- [ ] Update changelog with GPU-mode changes and known unverified device risks. Commit `feat(renderer): add three procedural living scene shaders`. Verify SHA.
+- [x] Add red structural tests for all six `uMode` cases, separate NEBULA branch, unchanged `GL_TRIANGLE_STRIP` and GLSL uniforms.
+- [x] Run Python structural tests and confirm red.
+- [x] Implement AURORA smooth ribbons, PULSE non-strobing radial rings and COMET moving heads/trails in the shared shader. Maintain aspect ratio and `uTouch/uMotion`.
+- [x] Re-run structural tests; run CI `gradle :app:assembleDebug --stacktrace` to catch GLSL integration/code compile issues. **A passing Kotlin build does not prove GLSL compiles on the device**; verify shader logs / visual on-phone later.
+- [x] Update changelog with GPU-mode changes and known unverified device risks. Commit `feat(renderer): add three procedural living scene shaders`. Verify SHA.
 
 ## Task 3 — Nine launch looks and portable scenes (Patch 3)
 
@@ -86,10 +86,10 @@
 - For AURORA: Polar, Emerald, Violet Mist; PULSE: Cyan Beat, Crimson Core, Neon Echo; COMET: Deep Space, White Tail, Blue Drift.
 - Preset values use `SceneConfig` fields and colors from spec; no Room insert until user chooses to save.
 
-- [ ] Add tests for exactly three unique names per new scene, all nine scenes' config IDs/colors/value ranges, deterministic seeds, and no unexpected edits to existing presets.
-- [ ] Add `.nox` export/import round-trip tests for all three new IDs; older-version rejection of unknown IDs is an acknowledged compatibility limitation, not an implicit conversion.
-- [ ] Run red tests; implement `ScenePresets`; run green tests and CI.
-- [ ] Update changelog and README with compatibility/export behavior. Commit `feat(presets): add nine scene-native appearance variants`. Verify SHA.
+- [x] Add tests for exactly three unique names per new scene, all nine scenes' config IDs/colors/value ranges, deterministic seeds, and no unexpected edits to existing presets.
+- [x] Add `.nox` export/import round-trip tests for all three new IDs; older-version rejection of unknown IDs is an acknowledged compatibility limitation, not an implicit conversion.
+- [x] Run red tests; implement `ScenePresets`; run green tests and CI.
+- [x] Update changelog and README with compatibility/export behavior. Commit `feat(presets): add nine scene-native appearance variants`. Verify SHA.
 
 ## Task 4 — Premium navigation, previews and editor integration (Patch 4)
 
@@ -105,10 +105,11 @@
 - User can apply a named variant to `homeDraft`, immediately preview it, edit it, export PNG or explicitly save/apply it. No implicit overwrite; preserve current Quick Looks/Remix.
 - Existing scene filters, search, favorites, two-column gallery, sorting, pinned Studio and fixed action dock keep working.
 
-- [ ] Add red UI structural tests for six-scene selector scrolling, three new Canvas miniatures, category mapping, draft not auto-saved, pinned preview and action dock.
-- [ ] Run red structural tests; implement UI changes in small private helpers without inventing additional activities.
-- [ ] Run structural tests and Android build. Visually inspect on a real phone before treating UX/performance as verified.
-- [ ] Update changelog and UI notes. Commit `feat(ui): explore and edit six scenes with premium catalog`. Verify SHA.
+- [x] Add red UI structural tests for six-scene selector scrolling, three new Canvas miniatures, category mapping, draft not auto-saved, pinned preview and action dock.
+- [x] Run red structural tests; implement UI changes in small private helpers without inventing additional activities.
+- [x] Run structural tests and Android build (CI #40004992732 passed).
+- [ ] Visually inspect on a real phone before treating UX/performance as verified.
+- [x] Update changelog and UI notes. Commit `feat(ui): explore and edit six scenes with premium catalog`. Verify SHA.
 
 ## Task 5 — Release qualification and APK (Patch 5)
 
@@ -118,11 +119,11 @@
 - Modify: `.github/workflows/android.yml` (artifact name).
 - Update: `README.md`, `docs/CHANGELOG.md`, relevant spec/plan statuses, optionally `docs/QA_STATUS.md`.
 
-- [ ] Review lossless legacy FLUX/HALO/NEBULA playback; confirm no Room migration and no additional Android permissions.
-- [ ] Run full Python structure tests: `python3 -m unittest discover -s tests -p 'verify_structure.py' -v`.
-- [ ] Run `gradle :core:model:test --stacktrace` and `gradle :app:assembleDebug --stacktrace` in GitHub Actions. Require all success and an uploaded, non-expired APK artifact.
-- [ ] Verify artifact originates from the intended commit SHA; extract ZIP, inspect APK ZIP integrity, `AndroidManifest.xml`, DEX and Android app ID/version if tooling available. Never deliver a renamed or unverified path.
-- [ ] Update CHANGELOG with evidence and hardware QA limitations. Commit `build(release): package NOX 1.7 living scenes preview`. Verify SHA, open/mark ready PR after review.
+- [x] Review lossless legacy FLUX/HALO/NEBULA playback; confirm no Room migration and no additional Android permissions.
+- [x] Run full Python structure tests: `python3 -m unittest discover -s tests -p 'verify_structure.py' -v`.
+- [x] Run `gradle :core:model:test --stacktrace` and `gradle :app:assembleDebug --stacktrace` in GitHub Actions. Require all success and an uploaded, non-expired APK artifact.
+- [x] Verify artifact originates from the intended commit SHA; extract ZIP, inspect APK ZIP integrity, `AndroidManifest.xml`, DEX and Android app ID/version if tooling available. Never deliver a renamed or unverified path.
+- [x] Update CHANGELOG with evidence and hardware QA limitations. Commit `build(release): package NOX 1.7 living scenes preview`. Verify SHA, open/mark ready PR after review.
 - [ ] Only after an on-device test, add runtime QA results (installation, 6 scenes, wallpaper/PNG, 10–15 min per new scene, screen lock/unlock and thermals) in a **separate follow-up QA commit**. Until then clearly state *not tested on device*.
 
 ## Patch completion output contract
@@ -131,3 +132,5 @@ After **each** task, send a concise report with:
 `Patch` — `What changed` — `Branch` — `Commit SHA/link` — `Docs updated` — `Tests/CI evidence` — `Device limitations`.
 
 **Never** mark a task complete from documentation or source alone. Do not merge into `main` without explicit approval.
+
+**Verified build SHA:** `0446ab267d63d664d7091f6007d121acadcb498d`. **APK SHA-256:** `bd69e94cbe6185baf5bfe2fcb31474a40b2866f767f2e382a56c4c645cfe5072`. The remaining unchecked boxes are hardware QA only.
