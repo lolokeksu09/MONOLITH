@@ -43,6 +43,19 @@ class StructuralContracts(unittest.TestCase):
         data=self.read('core/data/build.gradle.kts')
         self.assertIn('api("androidx.room:room-runtime:2.8.5")', data,
             'NoxDatabase publicly inherits RoomDatabase; its dependency must be api, not implementation')
+    def test_studio_preview_remains_visible_while_controls_scroll(self):
+        source = self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        studio = source.split('@Composable private fun StudioScreen(', 1)[1].split('@Composable private fun FullscreenPreview(', 1)[0]
+        self.assertIn('BoxWithConstraints(Modifier.fillMaxSize())', studio)
+        self.assertIn('Column(Modifier.fillMaxSize().padding(horizontal=18.dp))', studio)
+        pinned_preview = studio.index('LivePreview(config,fps,gyro,Modifier.fillMaxSize())')
+        scrollable_controls = studio.index('Column(Modifier.weight(1f).verticalScroll(rememberScrollState()))')
+        self.assertLess(pinned_preview, scrollable_controls)
+        self.assertEqual(studio.count('verticalScroll(rememberScrollState())'), 1,
+                         'Only editing controls must scroll, not the preview or header')
+        self.assertIn('previewHeight', studio)
+        self.assertIn('FullscreenPreview(config,fps,gyro', studio)
+
     def test_premium_studio_11_tools(self):
         ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
         for symbol in ['SceneLooks.looks', 'SceneLooks.shuffle(', 'FullscreenPreview(',
