@@ -56,6 +56,35 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('previewHeight', studio)
         self.assertIn('FullscreenPreview(config,fps,gyro', studio)
 
+    def test_atelier_cinematic_home_with_working_remix(self):
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        home=ui.split('@Composable private fun HomeScreen(',1)[1].split('@Composable private fun StudioScreen(',1)[0]
+        app=ui.split('@Composable fun NoxApp(',1)[1].split('@Composable private fun HomeScreen(',1)[0]
+        self.assertIn('homeDraft',app)
+        self.assertIn('SceneLooks.shuffle(',app)
+        self.assertIn('onRemix',home)
+        self.assertIn('Modifier.weight(1f)',home)
+        self.assertIn('onExport(config)',home)
+        self.assertIn('SceneMiniature(',home)
+        self.assertIn('saveAndApply',app)
+        self.assertIn('onApply=',app)
+
+    def test_atelier_studio_actions_fixed_below_controls(self):
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        studio=ui.split('@Composable private fun StudioScreen(',1)[1].split('@Composable private fun FullscreenPreview(',1)[0]
+        self.assertIn('Column(Modifier.weight(1f).verticalScroll(rememberScrollState()))',studio)
+        self.assertIn('SaveActionDock(',studio)
+        self.assertLess(studio.index('Column(Modifier.weight(1f).verticalScroll(rememberScrollState()))'),studio.index('SaveActionDock('))
+        self.assertIn('LivePreview(displayConfig',studio)
+
+    def test_atelier_gallery_is_filterable_visual_grid(self):
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        library=ui.split('@Composable private fun SearchableLibrary(',1)[1].split('@Composable private fun Miniature(',1)[0]
+        for fragment in ('LazyVerticalGrid(', 'GridCells.Fixed(2)', 'filterScene',
+                         'SceneCatalog.ids', 'DropdownMenu(', 'onDuplicate(preset)',
+                         'onUse(preset)', 'confirming=preset'):
+            self.assertIn(fragment,library,fragment)
+
     def test_signature_editor_undo_and_precision(self):
         ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
         section=ui.split('@Composable private fun StudioScreen(',1)[1].split('@Composable private fun FullscreenPreview(',1)[0]
