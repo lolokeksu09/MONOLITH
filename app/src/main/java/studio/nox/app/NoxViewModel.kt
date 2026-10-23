@@ -14,6 +14,7 @@ import studio.nox.data.NoxPreset
 import studio.nox.data.PresetRepository
 import studio.nox.data.SettingsRepository
 import studio.nox.model.SceneConfig
+import studio.nox.model.PortablePreset
 
 class NoxViewModel(application: Application): AndroidViewModel(application) {
     private val presetsRepo = PresetRepository(NoxDatabase.get(application).presetDao())
@@ -44,6 +45,15 @@ class NoxViewModel(application: Application): AndroidViewModel(application) {
         if(settings.value.activeId==preset.id)settingsRepo.setActive(null)
         presetsRepo.delete(preset.id)
         message="Пресет удалён"
+    }
+    fun importPortable(items:List<PortablePreset>)=viewModelScope.launch {
+        runCatching {
+            require(items.isNotEmpty()) { "Файл не содержит пресетов" }
+            require(items.size<=100) { "Слишком много пресетов" }
+            items.forEach { item -> presetsRepo.save(item.name,item.scene) }
+        }.onSuccess {
+            message="Импортировано пресетов: ${items.size}"
+        }.onFailure { message=it.message?:"Не удалось импортировать пресеты" }
     }
     fun setFps(value:Int)=viewModelScope.launch {settingsRepo.setFps(value)}
     fun setGyro(enabled:Boolean)=viewModelScope.launch {settingsRepo.setGyro(enabled)}
