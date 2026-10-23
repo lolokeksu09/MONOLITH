@@ -210,32 +210,122 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
 }
 
 @Composable private fun StudioScreen(config:SceneConfig,name:String,fps:Int,gyro:Boolean,onEdit:(SceneConfig)->Unit,onName:(String)->Unit,onSave:()->Unit,onExport:()->Unit,onApply:()->Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=20.dp)) {
-        Text("РЕДАКТОР СЦЕНЫ",fontSize=11.sp,color=Cyan,letterSpacing=2.sp)
-        Spacer(Modifier.height(11.dp))
-        Box(Modifier.fillMaxWidth().height(310.dp).clip(RoundedCornerShape(20.dp)).border(1.dp,Color(0xFF1C2937),RoundedCornerShape(20.dp))) {
-            LivePreview(config,fps,gyro,Modifier.fillMaxSize())
-            Text(config.sceneId,Modifier.align(Alignment.TopStart).padding(16.dp),fontSize=16.sp,color=TextWhite,letterSpacing=3.sp)
+    var immersive by remember { mutableStateOf(false) }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=18.dp)) {
+        Text("Студия света",color=TextWhite,fontSize=27.sp,fontWeight=FontWeight.SemiBold)
+        Text("Форма, цвет и движение — в твоих руках.",color=Muted,fontSize=12.sp)
+        Spacer(Modifier.height(16.dp))
+        Box(Modifier.fillMaxWidth().height(345.dp).clip(RoundedCornerShape(22.dp))
+            .border(1.dp,Color(0xFF233748),RoundedCornerShape(22.dp))) {
+            if(!immersive) LivePreview(config,fps,gyro,Modifier.fillMaxSize())
+            Row(Modifier.align(Alignment.TopStart).padding(16.dp),verticalAlignment=Alignment.CenterVertically) {
+                Box(Modifier.size(6.dp).background(Cyan,CircleShape))
+                Spacer(Modifier.width(8.dp))
+                Text(config.sceneId, fontSize=11.sp,color=TextWhite,letterSpacing=1.5.sp)
+            }
+            IconButton(onClick={immersive=true},modifier=Modifier.align(Alignment.BottomEnd).padding(12.dp)
+                .background(Color(0xCC162536),CircleShape)) {
+                Icon(Icons.Outlined.Fullscreen,contentDescription="На весь экран",tint=TextWhite)
+            }
         }
-        Spacer(Modifier.height(18.dp))
-        OutlinedTextField(name,onName,label={Text("Название пресета")},singleLine=true,modifier=Modifier.fillMaxWidth(),isError=name.trim().isEmpty()||name.trim().length>48)
-        Spacer(Modifier.height(18.dp))
-        Text("ОСНОВНОЙ ЦВЕТ",color=Muted,fontSize=11.sp,letterSpacing=2.sp)
+        Spacer(Modifier.height(15.dp))
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+            OutlinedButton(onClick={onEdit(SceneLooks.shuffle(config))},modifier=Modifier.weight(1f),
+                shape=RoundedCornerShape(13.dp)) {
+                Icon(Icons.Outlined.Casino,contentDescription=null,modifier=Modifier.size(19.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Новый вариант",fontSize=12.sp)
+            }
+            OutlinedButton(onClick={onEdit(SceneCatalog.default(config.sceneId))},
+                modifier=Modifier.weight(1f),shape=RoundedCornerShape(13.dp)) {
+                Icon(Icons.Outlined.RestartAlt,contentDescription=null,modifier=Modifier.size(19.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Сбросить",fontSize=12.sp)
+            }
+        }
+        Spacer(Modifier.height(24.dp))
+        Text("Цветовые коллекции",fontSize=18.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
+        Text("Авторские сочетания для каждой сцены",fontSize=12.sp,color=Muted)
+        Spacer(Modifier.height(10.dp))
+        Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+            SceneLooks.looks.forEach { look ->
+                Column(Modifier.width(112.dp).clip(RoundedCornerShape(14.dp))
+                    .background(Surface).clickable { onEdit(SceneLooks.apply(config, look)) }.padding(9.dp)) {
+                    Box(Modifier.fillMaxWidth().height(52.dp).clip(RoundedCornerShape(9.dp))
+                        .background(Brush.linearGradient(listOf(Color(0xFF000000),Color(0xFF000000.toInt() or look.secondary),
+                            Color(0xFF000000.toInt() or look.primary)))))
+                    Spacer(Modifier.height(8.dp))
+                    Text(look.label,color=TextWhite,fontSize=12.sp,maxLines=1)
+                }
+            }
+        }
+        Spacer(Modifier.height(25.dp))
+        Text("Свой стиль",fontSize=18.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(name,onName,label={Text("Название пресета")},
+            singleLine=true,modifier=Modifier.fillMaxWidth(),
+            isError=name.trim().isEmpty()||name.trim().length>48,
+            shape=RoundedCornerShape(14.dp))
+        Spacer(Modifier.height(17.dp))
+        Text("Основной цвет",color=TextWhite,fontSize=14.sp)
         PaletteChoices(config.primary) { onEdit(config.copy(primary=it)) }
-        Text("ДОПОЛНИТЕЛЬНЫЙ ЦВЕТ",color=Muted,fontSize=11.sp,letterSpacing=2.sp)
+        HexColorField(config.primary) { onEdit(config.copy(primary=it)) }
+        Spacer(Modifier.height(18.dp))
+        Text("Дополнительный цвет",color=TextWhite,fontSize=14.sp)
         PaletteChoices(config.secondary) { onEdit(config.copy(secondary=it)) }
+        HexColorField(config.secondary) { onEdit(config.copy(secondary=it)) }
+        Spacer(Modifier.height(20.dp))
+        Text("Движение и свечение",fontSize=18.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
+        Spacer(Modifier.height(12.dp))
         Parameter("Скорость",config.speed){onEdit(config.copy(speed=it))}
         Parameter("Свечение",config.glow){onEdit(config.copy(glow=it))}
         Parameter("Плотность",config.density){onEdit(config.copy(density=it))}
         Parameter("Параллакс",config.motion){onEdit(config.copy(motion=it))}
-        Spacer(Modifier.height(13.dp))
-        Button(onClick=onSave,enabled=name.trim().isNotBlank()&&name.trim().length<=48,modifier=Modifier.fillMaxWidth().height(52.dp),shape=RoundedCornerShape(14.dp)) {Text("Сохранить пресет")}
-        Row(horizontalArrangement=Arrangement.spacedBy(10.dp),modifier=Modifier.fillMaxWidth()) {
-            TextButton(onClick=onExport,modifier=Modifier.weight(1f)) {Text("Экспорт PNG")}
-            TextButton(onClick=onApply,modifier=Modifier.weight(1f)) {Text("Установить обои")}
+        Spacer(Modifier.height(22.dp))
+        Button(onClick=onSave,enabled=name.trim().isNotBlank()&&name.trim().length<=48,
+            modifier=Modifier.fillMaxWidth().height(54.dp),shape=RoundedCornerShape(14.dp),
+            colors=ButtonDefaults.buttonColors(containerColor=Cyan,contentColor=Ink)) {
+            Text("Сохранить в коллекцию",fontWeight=FontWeight.Bold)
         }
-        Spacer(Modifier.height(24.dp))
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            TextButton(onClick=onExport,modifier=Modifier.weight(1f)) {Text("Экспорт PNG",color=Cyan)}
+            TextButton(onClick=onApply,modifier=Modifier.weight(1f)) {Text("Установить обои",color=Cyan)}
+        }
+        Spacer(Modifier.height(25.dp))
     }
+    if(immersive) FullscreenPreview(config,fps,gyro,onClose={immersive=false})
+}
+
+@Composable private fun FullscreenPreview(config:SceneConfig,fps:Int,gyro:Boolean,onClose:()->Unit) {
+    Dialog(onDismissRequest=onClose,properties=DialogProperties(usePlatformDefaultWidth=false)) {
+        Box(Modifier.fillMaxSize().background(Ink)) {
+            LivePreview(config,fps,gyro,Modifier.fillMaxSize())
+            Box(Modifier.fillMaxWidth().height(135.dp).align(Alignment.BottomCenter)
+                .background(Brush.verticalGradient(listOf(Color.Transparent,Ink))))
+            Row(Modifier.fillMaxWidth().align(Alignment.TopCenter).padding(24.dp),
+                horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
+                Text("NOX / "+config.sceneId,color=TextWhite,fontSize=13.sp,letterSpacing=2.sp)
+                IconButton(onClick=onClose,modifier=Modifier.background(Color(0xC51A2635),CircleShape)) {
+                    Icon(Icons.Outlined.Close,contentDescription="Закрыть",tint=TextWhite)
+                }
+            }
+            Text("Прикоснись к свету",modifier=Modifier.align(Alignment.BottomCenter).padding(28.dp),
+                color=Muted,fontSize=13.sp)
+        }
+    }
+}
+
+@Composable private fun HexColorField(selected:Int,onSelect:(Int)->Unit) {
+    var value by remember(selected) { mutableStateOf(selected.toString(16).padStart(6,'0').uppercase()) }
+    val valid = SceneCatalog.fromHex(value)!=null
+    OutlinedTextField(value=value,onValueChange={ typed ->
+        val next=typed.removePrefix("#").take(6).uppercase()
+        if(next.all { it in '0'..'9' || it in 'A'..'F' }) {
+            value=next
+            SceneCatalog.fromHex(next)?.let(onSelect)
+        }
+    },label={Text("HEX · RRGGBB")},prefix={Text("#")},singleLine=true,
+        isError=!valid,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(12.dp))
 }
 
 @Composable private fun PaletteChoices(selected:Int,onSelect:(Int)->Unit) {
