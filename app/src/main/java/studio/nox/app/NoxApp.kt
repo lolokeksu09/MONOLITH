@@ -421,43 +421,96 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
 
 @Composable private fun Miniature(config:SceneConfig,modifier:Modifier=Modifier) {
     Canvas(modifier) {
-        val c=Color(0xFF000000.toInt() or config.primary)
-        for (i in 0..3) {
-            val path=Path().apply {
-                moveTo(-size.width*0.18f,size.height*(0.75f-i*0.07f))
-                cubicTo(size.width*0.7f,size.height*(0.85f-i*0.22f),size.width*0.1f,size.height*0.12f,size.width*1.2f,size.height*(0.15f+i*0.04f))
+        val a=Color(0xFF000000.toInt() or config.primary)
+        val b=Color(0xFF000000.toInt() or config.secondary)
+        when(config.sceneId) {
+            "HALO" -> {
+                drawCircle(a.copy(alpha=.16f),radius=size.minDimension*.37f,
+                    style=Stroke(width=15f))
+                drawCircle(a.copy(alpha=.9f),radius=size.minDimension*.35f,
+                    style=Stroke(width=2.5f))
+                drawCircle(b.copy(alpha=.75f),radius=size.minDimension*.22f,
+                    style=Stroke(width=1.5f))
+                drawCircle(b.copy(alpha=.20f),radius=size.minDimension*.18f)
             }
-            drawPath(path,color=c.copy(alpha=0.1f),style=Stroke(width=13f))
-            drawPath(path,color=c.copy(alpha=0.75f),style=Stroke(width=1.8f))
+            "NEBULA" -> {
+                for(i in 0 until 29) {
+                    val fx=((i*37+config.seed%97+97)%97)/97f
+                    val fy=((i*59+config.seed%83+83)%83)/83f
+                    val center=Offset(size.width*fx,size.height*fy)
+                    drawCircle(if(i%2==0)a else b, radius=if(i%5==0)3.4f else 1.8f,
+                        center=center,alpha=.7f)
+                    if(i%7==0)drawCircle(a.copy(alpha=.12f),radius=12f,center=center)
+                }
+            }
+            else -> {
+                for (i in 0..3) {
+                    val path=Path().apply {
+                        moveTo(-size.width*.18f,size.height*(.75f-i*.07f))
+                        cubicTo(size.width*.7f,size.height*(.85f-i*.22f),
+                            size.width*.1f,size.height*.12f,
+                            size.width*1.2f,size.height*(.15f+i*.04f))
+                    }
+                    drawPath(path,color=a.copy(alpha=.12f),style=Stroke(width=13f))
+                    drawPath(path,color=if(i%2==0)a else b,style=Stroke(width=1.8f))
+                }
+            }
         }
     }
 }
 
 @Composable private fun SettingsScreen(fps:Int,gyro:Boolean,onFps:(Int)->Unit,onGyro:(Boolean)->Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=20.dp)) {
-        Text("ПАРАМЕТРЫ NOX",fontSize=11.sp,color=Cyan,letterSpacing=2.sp)
-        Spacer(Modifier.height(20.dp))
-        Text("Производительность",color=TextWhite,fontSize=23.sp,fontWeight=FontWeight.SemiBold)
-        Text("Целевая частота кадров. Реальная зависит от Android, энергосбережения и нагрева.",color=Muted,fontSize=13.sp)
-        Spacer(Modifier.height(16.dp))
-        Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-            listOf(30,60,120).forEach { cap ->
-                FilterChip(selected=fps==cap,onClick={onFps(cap)},label={Text("$cap FPS")})
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=18.dp)) {
+        Text("Настройки",fontSize=27.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
+        Text("Производительность без компромиссов с ресурсами.",fontSize=12.sp,color=Muted)
+        Spacer(Modifier.height(24.dp))
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Surface).padding(18.dp)) {
+            Row(verticalAlignment=Alignment.CenterVertically) {
+                Icon(Icons.Outlined.Speed,contentDescription=null,tint=Cyan,modifier=Modifier.size(25.dp))
+                Spacer(Modifier.width(12.dp))
+                Text("Частота кадров",fontSize=18.sp,fontWeight=FontWeight.SemiBold,color=TextWhite)
+            }
+            Spacer(Modifier.height(10.dp))
+            Text("NOX адаптируется к экономии заряда и температуре устройства.",
+                color=Muted,fontSize=12.sp)
+            Spacer(Modifier.height(14.dp))
+            Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                listOf(30,60,120).forEach { cap ->
+                    FilterChip(selected=fps==cap,onClick={onFps(cap)},label={Text(cap.toString()+" FPS")},
+                        colors=FilterChipDefaults.filterChipColors(selectedContainerColor=Color(0xFF173B4B),
+                            selectedLabelColor=Cyan,containerColor=Color(0xFF1A2430),labelColor=Muted))
+                }
             }
         }
-        Spacer(Modifier.height(24.dp))
-        HorizontalDivider(color=Color(0xFF24303B))
-        Row(Modifier.fillMaxWidth().padding(vertical=18.dp),verticalAlignment=Alignment.CenterVertically) {
+        Spacer(Modifier.height(14.dp))
+        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Surface)
+            .padding(18.dp),verticalAlignment=Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Explore,contentDescription=null,tint=Cyan,modifier=Modifier.size(24.dp))
+            Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Движение устройства",color=TextWhite,fontSize=17.sp)
-                Text("Параллакс на основе датчика гравитации",color=Muted,fontSize=12.sp)
+                Text("Реакция на движение",color=TextWhite,fontSize=16.sp,fontWeight=FontWeight.SemiBold)
+                Spacer(Modifier.height(5.dp))
+                Text("Параллакс по датчику положения",color=Muted,fontSize=12.sp)
             }
             Switch(checked=gyro,onCheckedChange=onGyro)
         }
-        HorizontalDivider(color=Color(0xFF24303B))
-        Spacer(Modifier.height(24.dp))
-        Text("Без интернета, без учётной записи и фонового трекинга.",color=Muted,fontSize=13.sp)
-        Text("При скрытии обоев GPU-рендеринг и датчик движения отключаются.",color=Muted,fontSize=13.sp,modifier=Modifier.padding(top=9.dp))
+        Spacer(Modifier.height(20.dp))
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
+            .background(Brush.linearGradient(listOf(Color(0xFF10212C),Color(0xFF0B121C))))
+            .padding(20.dp)) {
+            Row(verticalAlignment=Alignment.CenterVertically) {
+                Icon(Icons.Outlined.Shield,contentDescription=null,tint=Cyan)
+                Spacer(Modifier.width(10.dp))
+                Text("Создано для приватности",fontWeight=FontWeight.SemiBold,color=TextWhite,fontSize=16.sp)
+            }
+            Spacer(Modifier.height(9.dp))
+            Text("Без аккаунта, интернета, трекеров и рекламных SDK. Все пресеты остаются локально.",
+                color=Muted,fontSize=13.sp)
+        }
+        Spacer(Modifier.height(16.dp))
+        Text("Когда обои скрыты, движок и датчики останавливаются. 120 FPS — верхняя цель, не гарантия.",
+            color=Muted,fontSize=12.sp)
+        Spacer(Modifier.height(28.dp))
     }
 }
 
