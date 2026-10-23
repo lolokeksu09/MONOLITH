@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+    <service android:name="studio.nox.wallpaper.NoxWallpaperService" android:permission="android.permission.BIND_WALLPAPER" android:exported="true" android:label="NOX Living Light">
+      <intent-filter><action android:name="android.service.wallpaper.WallpaperService" /></intent-filter>
+      <meta-data android:name="android.service.wallpaper" android:resource="@xml/nox_wallpaper"/>
+    </service>
+  </application>
+</manifest>
