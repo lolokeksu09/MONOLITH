@@ -49,7 +49,11 @@ import kotlinx.coroutines.withContext
 import studio.nox.data.NoxPreset
 import studio.nox.model.SceneCatalog
 import studio.nox.model.SceneConfig
-import studio.nox.model.SceneLooks
+import studio.nox.model.SceneLook
+import studio.nox.model.ScenePresets
+import studio.nox.model.SceneRegistry
+import studio.nox.model.SceneCategory
+import studio.nox.model.NamedScenePresets
 import studio.nox.model.SceneLook
 import studio.nox.model.ColorHarmony
 import studio.nox.model.EditHistory
@@ -193,6 +197,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                         onScene={homeScene=it;homeDraft=null},
                         onRemix={homeDraft=SceneLooks.shuffle(previewHomeConfig)},
                         onLook={look->homeDraft=SceneLooks.apply(previewHomeConfig,look)},
+                        onVariant={variant->homeDraft=variant.config},
                         onEdit={config->
                             val current=active?.takeIf {p->p.scene==config}
                             openStudio(config,current?.id?:0,current?.name?:"")
@@ -252,14 +257,19 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
 @Composable private fun HomeScreen(
     scene:String, active:NoxPreset?, draft:SceneConfig?, fps:Int, gyro:Boolean,
     onScene:(String)->Unit, onRemix:()->Unit, onLook:(SceneLook)->Unit,
+    onVariant:(NamedScenePreset)->Unit,
     onEdit:(SceneConfig)->Unit, onApply:()->Unit, onExport:(SceneConfig)->Unit
 ) {
     var showLooks by remember { mutableStateOf(false) }
+    var showVariants by remember { mutableStateOf(false) }
     val config = draft?.takeIf { it.sceneId == scene }
         ?: if(active?.scene?.sceneId==scene) active.scene else SceneCatalog.default(scene)
     val description = when(scene) {
         "HALO" -> "Свет в бесконечном вращении"
         "NEBULA" -> "Тихое движение звёзд"
+        "AURORA" -> "Северное сияние в движении"
+        "PULSE" -> "Ритм электрического света"
+        "COMET" -> "Тонкие следы далёких комет"
         else -> "Линии, которые чувствуют движение"
     }
     Column(Modifier.fillMaxSize().padding(horizontal=18.dp)) {
@@ -294,13 +304,14 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                     fontWeight=FontWeight.Black,letterSpacing=(-1f).sp)
                 Text(description,color=Muted,fontSize=13.sp)
             }
-            Text("%02d / 03".format(SceneCatalog.ids.indexOf(scene)+1),color=Muted.copy(alpha=.7f),fontSize=10.sp,
+            Text("%02d / %02d".format(SceneCatalog.ids.indexOf(scene)+1,SceneCatalog.ids.size),color=Muted.copy(alpha=.7f),fontSize=10.sp,
                 modifier=Modifier.align(Alignment.BottomEnd).padding(24.dp))
         }
         Spacer(Modifier.height(13.dp))
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)) {
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement=Arrangement.spacedBy(9.dp)) {
             SceneCatalog.ids.forEach { id ->
-                SceneMiniature(id=id,selected=id==scene,modifier=Modifier.weight(1f),
+                SceneMiniature(id=id,selected=id==scene,modifier=Modifier.width(141.dp),
                     onClick={onScene(id)})
             }
         }
@@ -327,6 +338,14 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                 Spacer(Modifier.width(7.dp))
                 Text("Новый вариант",color=Cyan,fontSize=12.sp)
             }
+            if(ScenePresets.forScene(scene).isNotEmpty()) {
+                TextButton(onClick={showVariants=true}) {
+                    Icon(Icons.Outlined.AutoFixHigh,contentDescription=null,tint=Cyan,
+                        modifier=Modifier.size(17.dp))
+                    Spacer(Modifier.width(5.dp))
+                    Text("Варианты",color=Cyan,fontSize=12.sp)
+                }
+            }
             TextButton(onClick={showLooks=true}) {
                 Icon(Icons.Outlined.Palette,contentDescription=null,tint=TextWhite,
                     modifier=Modifier.size(18.dp))
@@ -338,6 +357,40 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                     modifier=Modifier.size(17.dp))
                 Spacer(Modifier.width(5.dp))
                 Text("PNG",color=Muted,fontSize=12.sp)
+            }
+        }
+    }
+    if(showVariants) {
+        ModalBottomSheet(onDismissRequest={showVariants=false},
+            containerColor=Color(0xFF0B121B)) {
+            Column(Modifier.fillMaxWidth().padding(horizontal=22.dp)) {
+                Text("Характер света",color=TextWhite,fontSize=24.sp,
+                    fontWeight=FontWeight.SemiBold)
+                Text("Авторские варианты. Твой пресет не изменяется.",
+                    color=Muted,fontSize=12.sp)
+                Spacer(Modifier.height(15.dp))
+                ScenePresets.forScene(scene).forEach { variant ->
+                    Row(Modifier.fillMaxWidth().padding(bottom=11.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Surface)
+                        .clickable {onVariant(variant);showVariants=false}
+                        .padding(12.dp),verticalAlignment=Alignment.CenterVertically) {
+                        Box(Modifier.size(width=102.dp,height=59.dp)
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(Brush.horizontalGradient(listOf(
+                                Color(0xFF000000.toInt() or variant.config.primary),
+                                Color(0xFF000000.toInt() or variant.config.secondary)))))
+                        Spacer(Modifier.width(15.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(variant.name,color=TextWhite,fontSize=16.sp,
+                                fontWeight=FontWeight.SemiBold)
+                            Text(scene,color=Muted,fontSize=10.sp,letterSpacing=1.sp)
+                        }
+                        Icon(Icons.Outlined.ArrowForwardIos,contentDescription=null,
+                            tint=Muted,modifier=Modifier.size(15.dp))
+                    }
+                }
+                Spacer(Modifier.height(22.dp))
             }
         }
     }
@@ -385,18 +438,25 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
 @Composable private fun SceneMiniature(
     id:String,selected:Boolean,modifier:Modifier=Modifier,onClick:()->Unit
 ) {
-    Row(modifier.height(66.dp).clip(RoundedCornerShape(14.dp))
+    Row(modifier.height(67.dp).clip(RoundedCornerShape(14.dp))
         .background(if(selected) Color(0xFF15303F) else Color(0xFF0D141C))
         .border(1.dp,if(selected) Cyan.copy(alpha=.65f) else Color(0xFF243644),
             RoundedCornerShape(14.dp))
         .clickable(onClick=onClick).padding(8.dp),
         verticalAlignment=Alignment.CenterVertically) {
-        Box(Modifier.size(35.dp).clip(RoundedCornerShape(9.dp)).background(Ink)) {
+        Box(Modifier.size(37.dp).clip(RoundedCornerShape(9.dp)).background(Ink)) {
             Miniature(SceneCatalog.default(id),Modifier.fillMaxSize())
         }
-        Spacer(Modifier.width(6.dp))
-        Text(id,fontSize=10.sp,fontWeight=FontWeight.SemiBold,
-            color=if(selected) Cyan else Muted,maxLines=1)
+        Spacer(Modifier.width(7.dp))
+        Column {
+            Text(id,fontSize=10.sp,fontWeight=FontWeight.SemiBold,
+                color=if(selected) Cyan else TextWhite,maxLines=1)
+            if(SceneRegistry.get(id)?.isNew==true) {
+                Spacer(Modifier.height(4.dp))
+                Text("NEW",fontSize=9.sp,color=Cyan,fontWeight=FontWeight.Bold,
+                    letterSpacing=1.sp)
+            }
+        }
     }
 }
 
