@@ -169,61 +169,88 @@ void main() {
     float cloud=0.5+0.5*sin(p.x*12.0 + p.y*7.0 + uTime*0.17)*sin(p.y*10.0-p.x*3.0);
     sum+=uColorB*pow(cloud,5.0)*0.022*uGlow;
   } else if (uMode < 3.5) {
-    // AURORA: slow luminous curtains, dark OLED background and soft depth.
-    for(int i=0; i<5; ++i) {
+    // AURORA 1.7.1: layered curtains with a quiet, silky inner structure.
+    float seedPhase=uSeed*0.0021;
+    float vertical=smoothstep(-0.59,-0.32,p.y)*
+                   (1.0-smoothstep(0.27,0.54,p.y));
+    for(int i=0;i<5;++i) {
       float n=float(i);
-      float phase=uTime*0.12 + n*1.12 + uSeed*0.003;
-      float ribbon=(n-2.0)*0.11 +
-        0.13*sin(p.y*3.3 + phase) + 0.045*sin(p.y*8.8-phase*0.63);
-      float d=abs(p.x-ribbon);
-      float fine=exp(-d*(52.0 + uDensity*30.0));
-      float veil=exp(-d*(13.0 + uDensity*12.0));
-      float folding=0.50+0.50*sin(p.y*5.0 - phase*0.37);
-      float vertical=smoothstep(-0.57,-0.27,p.y) *
-                     (1.0-smoothstep(0.28,0.61,p.y));
-      vec3 c=mix(uColorA,uColorB,n/4.0);
-      sum+=c*(fine*(0.095+0.25*uGlow)+veil*(0.014+0.052*uGlow))*
-        (0.35+0.65*folding)*vertical;
+      float phase=uTime*(0.16+0.012*n)+n*1.22+seedPhase;
+      float ribbon=(n-2.0)*0.115+
+          0.114*sin(p.y*3.1+phase)+
+          0.027*sin(p.y*9.4-phase*0.68);
+      float distanceToRibbon=abs(p.x-ribbon);
+      float curtainDepth=0.68+0.082*n;
+      float width=0.032+0.027*uDensity+0.003*n;
+      float broadCurtain=exp(-distanceToRibbon*distanceToRibbon/(width*width));
+      float luminousCore=exp(-distanceToRibbon*(55.0+31.0*uDensity));
+      float innerFilament=exp(-abs(p.x-ribbon-
+          0.008*sin(p.y*11.8+phase*0.67))*252.0);
+      float folding=0.48+0.52*pow(0.5+0.5*sin(p.y*6.2-phase*0.48),2.0);
+      float hue=mix(n/4.0,0.5+0.32*sin(p.y*1.4+phase*0.19),0.34);
+      vec3 spectral=mix(uColorA,uColorB,clamp(hue,0.0,1.0));
+      float energy=(broadCurtain*(0.019+0.061*uGlow)+
+          luminousCore*(0.033+0.092*uGlow)+
+          innerFilament*(0.039+0.068*uGlow));
+      sum+=spectral*energy*folding*curtainDepth*vertical;
     }
   } else if (uMode < 4.5) {
-    // PULSE: continuously moving, non-strobing energy rings.
-    vec2 centre=vec2(0.0,0.02);
-    float radial=length((p-centre)*vec2(1.03,1.0));
+    // PULSE 1.7.1: traveling waves fade into and out of deep black.
+    vec2 focus=vec2(0.0,0.015);
+    if(uTouch.x>=0.0) {
+      vec2 touchFocus=vec2((uTouch.x-0.5)*uResolution.x/uResolution.y,
+                           uTouch.y-0.5);
+      focus=mix(focus,touchFocus,0.78);
+    }
+    float radial=length((p-focus)*vec2(1.06,1.0));
     for(int i=0;i<6;++i) {
       float n=float(i);
-      float radius=0.055+n*(0.066+uDensity*0.008);
-      radius+=0.018*sin(uTime*0.26-n*0.72+uSeed*0.009);
+      float life=fract(uTime*0.25+n/6.0+uSeed*0.00017);
+      float radius=0.014+life*(0.30+0.14*uDensity);
       float delta=abs(radial-radius);
-      float core=exp(-delta*(255.0-uDensity*65.0));
-      float halo=exp(-delta*28.0);
-      float envelope=exp(-radius*0.86)*(0.76+0.24*cos(uTime*0.22-n*0.4));
-      vec3 c=mix(uColorA,uColorB,n/5.0);
-      sum+=c*(core*(0.26+uGlow*0.34)+halo*(0.017+uGlow*0.065))*envelope;
+      float cycleFade=smoothstep(0.015,0.16,life)*
+                      (1.0-smoothstep(0.78,1.0,life));
+      float core=exp(-delta*(244.0-69.0*uDensity));
+      float halo=exp(-delta*(28.0+9.0*uDensity));
+      float glowStrength=0.88+0.12*sin(uTime*0.24+n*0.7);
+      vec3 spectrum=mix(uColorA,uColorB,n/5.0);
+      sum+=spectrum*(core*(0.22+0.32*uGlow)+
+                     halo*(0.015+0.062*uGlow))*cycleFade*glowStrength;
     }
+    sum+=mix(uColorA,uColorB,0.32)*exp(-radial*45.0)*0.018*uGlow;
   } else {
-    // COMET: deterministic orbital traces with naturally fading tails.
-    vec2 direction=normalize(vec2(0.84,-0.54));
-    vec2 perp=vec2(-direction.y,direction.x);
+    // COMET 1.7.1: depth-layered trails with independent drift.
     for(int i=0;i<7;++i) {
       float n=float(i);
       float randA=hash(vec2(n+2.0,18.0));
       float randB=hash(vec2(5.0,n+7.0));
-      float phase=fract(randA+uTime*(0.024+0.006*randB));
-      float travel=(phase*2.0-1.0)*1.5;
-      float transverse=(randB-0.5)*(0.90+0.16*uDensity);
-      vec2 head=direction*travel+perp*transverse;
-      vec2 difference=p-head;
-      float along=dot(difference,direction);
-      float perpendicularDistance=abs(dot(difference,perp));
-      float width=0.0017+0.0026*uDensity;
-      float streak=exp(-perpendicularDistance*perpendicularDistance/(width*width));
-      float behind=(1.0-smoothstep(-0.006,0.009,along));
-      float tail=exp(min(0.0,along)*(22.0-13.0*uDensity));
-      float headGlow=exp(-length(difference)*175.0);
-      float halo=exp(-length(difference)*34.0);
-      vec3 c=mix(uColorA,uColorB,n/6.0);
-      sum+=c*(streak*behind*tail*(0.16+0.28*uGlow) +
-        headGlow*(0.46+0.40*uGlow)+halo*0.035*uGlow);
+      float depth=0.65+0.55*randB;
+      vec2 direction=normalize(vec2(0.77+0.20*randA,
+                                    -0.64+0.19*randB));
+      vec2 perp=vec2(-direction.y,direction.x);
+      float life=fract(randA+uTime*(0.059+0.020*randB));
+      float travel=(life*2.0-1.0)*1.42;
+      float sideways=(randB-0.5)*(0.85+0.18*uDensity);
+      vec2 head=direction*travel+perp*sideways;
+      vec2 delta=p-head;
+      float along=dot(delta,direction);
+      float perpendicularDistance=abs(dot(delta,perp));
+      float width=(0.0014+0.0026*uDensity)*depth;
+      float streak=exp(-perpendicularDistance*perpendicularDistance/
+                       (width*width));
+      float tailSpan=0.070+0.16*uDensity+0.035*randA;
+      float tail=exp(min(0.0,along)/tailSpan);
+      float behind=1.0-smoothstep(-0.005,0.009,along);
+      float trailFade=smoothstep(0.025,0.13,life)*
+                       (1.0-smoothstep(0.87,0.995,life));
+      float active=step(hash(vec2(n+31.0,53.0)),0.37+0.63*uDensity);
+      float distanceToHead=length(delta);
+      float headGlow=exp(-distanceToHead*(160.0-24.0*randB));
+      float softHalo=exp(-distanceToHead*35.0);
+      vec3 spectrum=mix(uColorA,uColorB,randB);
+      sum+=spectrum*(streak*behind*tail*(0.13+0.28*uGlow)+
+          headGlow*(0.41+0.37*uGlow)+
+          softHalo*(0.010+0.024*uGlow))*depth*trailFade*active;
     }
   }
   if(uTouch.x>=0.0) {
