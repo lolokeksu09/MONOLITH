@@ -77,6 +77,28 @@ class StructuralContracts(unittest.TestCase):
         self.assertLess(studio.index('Column(Modifier.weight(1f).verticalScroll(rememberScrollState()))'),studio.index('SaveActionDock('))
         self.assertIn('LivePreview(displayConfig',studio)
 
+    def test_collection_has_full_width_last_card_and_refined_menu(self):
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        section=ui.split('@Composable private fun SearchableLibrary(',1)[1].split('@Composable private fun Miniature(',1)[0]
+        self.assertIn('GridItemSpan(2)',section)
+        self.assertIn('filtered.size % 2 == 1',section)
+        self.assertIn('items(count=filtered.size',section)
+        self.assertIn('onEdit(preset)',section)
+        self.assertIn('onUse(preset)',section)
+        self.assertIn('onDuplicate(preset)',section)
+        self.assertIn('confirming=preset',section)
+        self.assertIn('active',section)
+
+    def test_settings_three_sections_and_real_controls(self):
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        section=ui.split('@Composable private fun SettingsScreen(',1)[1].split('@Composable private fun LivePreview(',1)[0]
+        for label in ('Производительность','Интерактивность','Конфиденциальность и движок',
+                      'Экономия','Баланс','Максимум','Без аккаунта','Без интернета','Локальное хранение'):
+            self.assertIn(label,section)
+        self.assertIn('onFps(cap)',section)
+        self.assertIn('Switch(checked=gyro,onCheckedChange=onGyro',section)
+        self.assertIn('if(gyro) "Включено" else "Выключено"',section)
+
     def test_atelier_gallery_is_filterable_visual_grid(self):
         ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
         library=ui.split('@Composable private fun SearchableLibrary(',1)[1].split('@Composable private fun Miniature(',1)[0]
