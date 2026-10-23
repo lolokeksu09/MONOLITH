@@ -1,3 +1,31 @@
+# NOX 1.7 Living Scenes — release-candidate verification, 2026-10-23
+
+## Verified
+- Code commit: `0446ab267d63d664d7091f6007d121acadcb498d`.
+- [GitHub Actions run #40004992732](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40004992732): structural contracts **success**; `:core:model:test` **success**; `:app:assembleDebug` **success**; APK artifact upload **success**.
+- GitHub artifact ID `12524570195`, name `NOX-1.7-living-scenes-APK`. Extracted APK size `19478319` bytes, SHA-256 `bd69e94cbe6185baf5bfe2fcb31474a40b2866f767f2e382a56c4c645cfe5072`. APK ZIP structure/integrity verified (manifest, DEX, Android resources).
+- Scene registry tests cover six unique IDs, preserved FLUX/HALO/NEBULA defaults, new categories, normalization.
+- Preset tests cover nine curated appearances, exact palettes and versioned `.nox` round-trip.
+- UI structural checks cover pinned Studio preview, gallery filters, six-scene Home carousel, new Canvas thumbnails, draft handling, no new permissions, GL dispatch and correct Kotlin imports.
+
+## Not verified on Lenovo Legion Y70 2026
+- GLSL fragment shader compilation at runtime for AURORA, PULSE, COMET (Gradle does not compile GLSL on the phone).
+- 10–15-minute sustained performance per new scene, actual FPS, battery/thermal observations; 60 vs 120 FPS under real system limits.
+- Tap, tilt/parallax, orientation, lock/unlock, wallpaper service lifecycle, PWM-related visual appearance, PNG export and application to system wallpaper.
+- Actual visual quality and absence of rectangular compositing artifacts in NEBULA or newly added scenes.
+
+## Required device QA
+1. Install NOX 1.7 beside older versions; do not uninstall older private data.
+2. Open each of six scenes, use Home horizontal gallery, choose all nine named variants and inspect smoothness.
+3. Enter Studio with each new scene: confirm live preview is pinned while scrolling; Undo/Redo, Save/PNG/Apply use displayed values.
+4. Save, duplicate, favorite, filter by category, export/import `.nox`; force-stop and relaunch to confirm persistence.
+5. Apply as live wallpaper; test home/lock screen, hidden/visible engine and thermal or energy saving.
+6. Screenshot and visually inspect normal vs exported image; capture reproducible artifacts and logcat messages if any.
+
+**Conclusions:** CI-built installable preview, **not hardware-certified**. Do not claim new shaders or 120 FPS validated on device until the user's measurements are available.
+
+---
+
 # NOX 1.0 — verification ledger, 2026-10-23
 
 ## Verified in this execution environment
