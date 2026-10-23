@@ -2,6 +2,15 @@
 
 > Каждый следующий патч обязан обновлять этот файл и публиковаться коммитом в GitHub. См. [AGENTS.md](../AGENTS.md) и [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md).
 
+## [1.7.0 / Patch 4] — Gallery, category filters and Home variants (2026-10-23)
+
+- Home now has an accessible, horizontally scrollable selection of six scenes with `NEW` labels for AURORA, PULSE and COMET, plus a modal listing three curated variants for the selected new scene. Selecting a variant edits only an unsaved draft.
+- Added lightweight Canvas representations of AURORA, PULSE and COMET to avoid six GL rendering surfaces.
+- The gallery retains scene, name, favorites, sort and two-column art grid while adding Signature/Ambient/Tech/Cosmic category filtering.
+- Added structural regression tests for all three new thumbnails, category filtering, current-configuration export and pinned live preview.
+- Commit series: `722ccb8` tests, `00ba447` Home, `f22a0ce` Canvas/gallery; baseline renderer unchanged since Patch 2.
+- **Verification:** CI not yet complete; device appearance and touch handling are unverified.
+
 ## [1.7.0 / Patch 3] — Nine scene variants (2026-10-23)
 
 - Created `ScenePresets.kt` with 3 named variations each for AURORA (Polar, Emerald, Violet Mist), PULSE (Cyan Beat, Crimson Core, Neon Echo), COMET (Deep Space, White Tail, Blue Drift).
