@@ -694,22 +694,25 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
     }
 }
 
-@Composable private fun LibraryScreen(presets:List<NoxPreset>,active:Long?,onEdit:(NoxPreset)->Unit,onUse:(NoxPreset)->Unit,onDuplicate:(NoxPreset)->Unit,onDelete:(NoxPreset)->Unit) {
-    SearchableLibrary(presets,active,onEdit,onUse,onDuplicate,onDelete)
+@Composable private fun LibraryScreen(presets:List<NoxPreset>,active:Long?,onEdit:(NoxPreset)->Unit,onUse:(NoxPreset)->Unit,onDuplicate:(NoxPreset)->Unit,onDelete:(NoxPreset)->Unit,favoriteIds:Set<Long>,onToggleFavorite:(NoxPreset)->Unit) {
+    SearchableLibrary(presets,active,onEdit,onUse,onDuplicate,onDelete,favoriteIds,onToggleFavorite)
 }
 
 @Composable private fun SearchableLibrary(
     presets:List<NoxPreset>,active:Long?,
     onEdit:(NoxPreset)->Unit,onUse:(NoxPreset)->Unit,
-    onDuplicate:(NoxPreset)->Unit,onDelete:(NoxPreset)->Unit
+    onDuplicate:(NoxPreset)->Unit,onDelete:(NoxPreset)->Unit,
+    favoriteIds:Set<Long>,onToggleFavorite:(NoxPreset)->Unit
 ) {
     var confirming by remember { mutableStateOf<NoxPreset?>(null) }
     var query by remember { mutableStateOf("") }
     var filterScene by remember { mutableStateOf("ALL") }
+    var filterFavorites by remember { mutableStateOf(false) }
     var sortOrder by remember { mutableStateOf("Недавние") }
-    val filtered=remember(presets,query,filterScene,sortOrder) {
+    val filtered=remember(presets,query,filterScene,sortOrder,filterFavorites,favoriteIds) {
         val matches=presets.filter { preset ->
             (filterScene=="ALL" || preset.scene.sceneId==filterScene) &&
+            (!filterFavorites || preset.id in favoriteIds) &&
             (preset.name.contains(query.trim(),ignoreCase=true) ||
                 preset.scene.sceneId.contains(query.trim(),ignoreCase=true))
         }
@@ -747,6 +750,22 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
         Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             horizontalArrangement=Arrangement.spacedBy(7.dp)) {
+            FilterChip(selected=filterFavorites,onClick={filterFavorites=!filterFavorites},
+                modifier=Modifier.height(39.dp),
+                label={
+                    Row(verticalAlignment=Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.Star,contentDescription=null,
+                            modifier=Modifier.size(15.dp))
+                        Spacer(Modifier.width(5.dp))
+                        Text("Избранное",fontSize=11.sp)
+                    }
+                },
+                shape=RoundedCornerShape(11.dp),
+                colors=FilterChipDefaults.filterChipColors(
+                    selectedContainerColor=Color(0xFF164052),
+                    selectedLabelColor=Cyan,containerColor=Color(0xFF0D141C),
+                    labelColor=Muted))
+            Spacer(Modifier.width(3.dp))
             (listOf("ALL")+SceneCatalog.ids).forEach { key ->
                 FilterChip(selected=filterScene==key,onClick={filterScene=key},
                     modifier=Modifier.height(39.dp),
@@ -857,6 +876,17 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                                         leadingIcon={Icon(Icons.Outlined.DeleteOutline,null,
                                             tint=Color(0xFFFF8494))})
                                 }
+                            }
+                            IconButton(onClick={onToggleFavorite(preset)},
+                                modifier=Modifier.align(Alignment.BottomEnd).padding(4.dp)
+                                    .size(44.dp)
+                                    .background(Color(0xA5081420),CircleShape)) {
+                                Icon(
+                                    if(preset.id in favoriteIds) Icons.Filled.Star else Icons.Outlined.Star,
+                                    contentDescription=if(preset.id in favoriteIds) "Убрать из избранного" else "В избранное",
+                                    tint=if(preset.id in favoriteIds) Cyan else TextWhite,
+                                    modifier=Modifier.size(23.dp)
+                                )
                             }
                             Text(preset.scene.sceneId,color=Cyan,fontSize=10.sp,
                                 letterSpacing=1.sp, fontWeight=FontWeight.Medium,
