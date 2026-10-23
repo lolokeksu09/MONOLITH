@@ -211,11 +211,13 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
 
 @Composable private fun StudioScreen(config:SceneConfig,name:String,fps:Int,gyro:Boolean,onEdit:(SceneConfig)->Unit,onName:(String)->Unit,onSave:()->Unit,onExport:()->Unit,onApply:()->Unit) {
     var immersive by remember { mutableStateOf(false) }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=18.dp)) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val previewHeight = (maxHeight * 0.39f).coerceIn(144.dp, 315.dp)
+        Column(Modifier.fillMaxSize().padding(horizontal=18.dp)) {
         Text("Студия света",color=TextWhite,fontSize=27.sp,fontWeight=FontWeight.SemiBold)
         Text("Форма, цвет и движение — в твоих руках.",color=Muted,fontSize=12.sp)
         Spacer(Modifier.height(16.dp))
-        Box(Modifier.fillMaxWidth().height(345.dp).clip(RoundedCornerShape(22.dp))
+        Box(Modifier.fillMaxWidth().height(previewHeight).clip(RoundedCornerShape(22.dp))
             .border(1.dp,Color(0xFF233748),RoundedCornerShape(22.dp))) {
             if(!immersive) LivePreview(config,fps,gyro,Modifier.fillMaxSize())
             Row(Modifier.align(Alignment.TopStart).padding(16.dp),verticalAlignment=Alignment.CenterVertically) {
@@ -228,7 +230,9 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                 Icon(Icons.Outlined.Fullscreen,contentDescription="На весь экран",tint=TextWhite)
             }
         }
-        Spacer(Modifier.height(15.dp))
+        Spacer(Modifier.height(8.dp))
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+        Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             OutlinedButton(onClick={onEdit(SceneLooks.shuffle(config))},modifier=Modifier.weight(1f),
                 shape=RoundedCornerShape(13.dp)) {
@@ -292,6 +296,8 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
             TextButton(onClick=onApply,modifier=Modifier.weight(1f)) {Text("Установить обои",color=Cyan)}
         }
         Spacer(Modifier.height(25.dp))
+        }
+        }
     }
     if(immersive) FullscreenPreview(config,fps,gyro,onClose={immersive=false})
 }
