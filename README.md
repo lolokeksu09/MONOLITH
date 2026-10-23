@@ -1,3 +1,22 @@
+# NOX 1.5 Portable Studio
+
+Native offline AMOLED live-wallpaper studio for Android 16. Preserves NOX's GPU effects, pinned preview, editor/history, curated palettes, local Room presets and system wallpaper integration.
+
+## What's new in 1.5
+
+- **Portable library** in Settings: Export all presets to a user-chosen `.nox` file; import one from any previous NOX installation. Both use Android's system file chooser, no network or storage permissions. Imports **add** scenes; existing presets remain. Max 100 presets per file, 256k text-size bound; corrupted and incompatible formats are rejected.
+- **Gallery sorting**: newest, by preset name or scene, in addition to existing filters and search.
+- **Version header correctness**: derives from the Android BuildConfig, not a stale manually typed number.
+- **NEBULA numerical stability**: star positions now use bounded trig-free hash. Rectangular artifacts visible in captured screenshots may also be caused by SurfaceView capture/composition or GPU driver differences; only actual device tests can confirm whether they disappear.
+
+### Installing
+
+`NOX 1.5 Portable` is a separate debug package `studio.nox.light.portable`. Previous NOX versions remain installed with their own data. To transfer scenes: open old NOX's Settings > Export if that version supports it, then import in 1.5. Existing versions without export must be upgraded with a **consistently signed build** to expose their data; sandboxed presets cannot be automatically read or copied by NOX 1.5. **Do not uninstall an old NOX to try 1.5, as that deletes its private presets.**
+
+Build artifact: `NOX-1.5-portable-APK`. Requires on-device QA for Live Wallpapers, SurfaceView screenshot artifacts, scroll, file picker and performance. Debug APK is not an owner-signed stable release.
+
+---
+
 # NOX 1.4 — Atelier
 
 A native, private, offline AMOLED live wallpaper studio for Android. Target tested phone family: Lenovo Legion Y70 2026 with Android 16 and seller-installed Motorola firmware.
