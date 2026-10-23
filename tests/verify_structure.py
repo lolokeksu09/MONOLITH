@@ -24,6 +24,19 @@ class StructuralContracts(unittest.TestCase):
         source=self.read('feature/wallpaper/src/main/java/studio/nox/wallpaper/NoxWallpaperService.kt')
         for case in ['onSurfaceCreated','onSurfaceDestroyed','onVisibilityChanged','motion.stop()','setVisible(isVisible)']:
             self.assertIn(case,source)
+    def test_living_scenes_gl_modes_and_legacy_branch(self):
+        shader=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
+        for mode in ('"FLUX"->0f','"HALO"->1f','"NEBULA"->2f',
+                     '"AURORA"->3f','"PULSE"->4f','"COMET"->5f'):
+            self.assertIn(mode,shader)
+        for branch in ('if(uMode < 0.5)','else if (uMode < 1.5)',
+                       'else if (uMode < 2.5)','else if (uMode < 3.5)',
+                       'else if (uMode < 4.5)','COMET:'):
+            self.assertIn(branch,shader)
+        self.assertIn('GL_TRIANGLE_STRIP',shader)
+        self.assertIn('uMotion',shader)
+        self.assertIn('uTouch',shader)
+
     def test_offline_gl_materials(self):
         shaders=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
         for case in ['FLUX:','HALO:','NEBULA:','GL_TRIANGLE_STRIP','gl_FragColor']:
