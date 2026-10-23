@@ -899,7 +899,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
             listOf(
                 Triple(Icons.Outlined.PersonOff,"Без аккаунта","Не нужна регистрация"),
                 Triple(Icons.Outlined.WifiOff,"Без интернета","Работает автономно"),
-                Triple(Icons.Outlined.FolderOutlined,"Локальное хранение","Пресеты на устройстве")
+                Triple(Icons.Outlined.Folder,"Локальное хранение","Пресеты на устройстве")
             ).forEachIndexed { index,item ->
                 Row(Modifier.fillMaxWidth().heightIn(min=53.dp),
                     verticalAlignment=Alignment.CenterVertically) {
