@@ -49,6 +49,7 @@ import studio.nox.data.NoxPreset
 import studio.nox.model.SceneCatalog
 import studio.nox.model.SceneConfig
 import studio.nox.model.SceneLooks
+import studio.nox.model.SceneLook
 import studio.nox.model.ColorHarmony
 import studio.nox.model.EditHistory
 import studio.nox.model.PortablePreset
@@ -190,6 +191,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                     Tab.HOME -> HomeScreen(homeScene,active,homeDraft,settings.fps,settings.gyroEnabled,
                         onScene={homeScene=it;homeDraft=null},
                         onRemix={homeDraft=SceneLooks.shuffle(previewHomeConfig)},
+                        onLook={look->homeDraft=SceneLooks.apply(previewHomeConfig,look)},
                         onEdit={config->
                             val current=active?.takeIf {p->p.scene==config}
                             openStudio(config,current?.id?:0,current?.name?:"")
@@ -225,7 +227,8 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                         })
                     Tab.LIBRARY -> LibraryScreen(presets,settings.activeId,
                         onEdit={openStudio(it.scene,it.id,it.name)},onUse={vm.use(it)},
-                        onDuplicate={vm.duplicate(it)},onDelete={vm.delete(it)})
+                        onDuplicate={vm.duplicate(it)},onDelete={vm.delete(it)},
+                        favoriteIds=settings.favoriteIds,onToggleFavorite={vm.toggleFavorite(it)})
                     Tab.SETTINGS -> SettingsScreen(settings.fps,settings.gyroEnabled,vm::setFps,vm::setGyro,
                         presetCount=presets.size,
                         onExportPresets={
@@ -246,9 +249,10 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
 
 @Composable private fun HomeScreen(
     scene:String, active:NoxPreset?, draft:SceneConfig?, fps:Int, gyro:Boolean,
-    onScene:(String)->Unit, onRemix:()->Unit,
+    onScene:(String)->Unit, onRemix:()->Unit, onLook:(SceneLook)->Unit,
     onEdit:(SceneConfig)->Unit, onApply:()->Unit, onExport:(SceneConfig)->Unit
 ) {
+    var showLooks by remember { mutableStateOf(false) }
     val config = draft?.takeIf { it.sceneId == scene }
         ?: if(active?.scene?.sceneId==scene) active.scene else SceneCatalog.default(scene)
     val description = when(scene) {
@@ -321,11 +325,56 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                 Spacer(Modifier.width(7.dp))
                 Text("Новый вариант",color=Cyan,fontSize=12.sp)
             }
+            TextButton(onClick={showLooks=true}) {
+                Icon(Icons.Outlined.Palette,contentDescription=null,tint=TextWhite,
+                    modifier=Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Стили",color=TextWhite,fontSize=12.sp)
+            }
             TextButton(onClick={onExport(config)}) {
                 Icon(Icons.Outlined.FileDownload,contentDescription=null,tint=Muted,
                     modifier=Modifier.size(17.dp))
                 Spacer(Modifier.width(5.dp))
                 Text("PNG",color=Muted,fontSize=12.sp)
+            }
+        }
+    }
+    if(showLooks) {
+        ModalBottomSheet(onDismissRequest={showLooks=false},
+            containerColor=Color(0xFF0B121B),
+            dragHandle={BottomSheetDefaults.DragHandle(color=Color(0xFF45596A))}) {
+            Column(Modifier.fillMaxWidth().padding(horizontal=21.dp)) {
+                Text("Коллекция света",color=TextWhite,fontWeight=FontWeight.SemiBold,
+                    fontSize=23.sp)
+                Spacer(Modifier.height(3.dp))
+                Text("Выбери характер сцены. Исходный пресет не изменится.",
+                    color=Muted,fontSize=12.sp)
+                Spacer(Modifier.height(15.dp))
+                SceneLooks.looks.forEach { look ->
+                    Row(Modifier.fillMaxWidth().padding(bottom=9.dp)
+                        .clip(RoundedCornerShape(17.dp))
+                        .background(Color(0xFF121D2A))
+                        .border(1.dp,Color(0xFF203749),RoundedCornerShape(17.dp))
+                        .clickable {onLook(look);showLooks=false}
+                        .padding(11.dp),verticalAlignment=Alignment.CenterVertically) {
+                        Box(Modifier.size(width=96.dp,height=57.dp)
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(Brush.horizontalGradient(listOf(
+                                Color(0xFF000000.toInt() or look.primary),
+                                Color(0xFF000000.toInt() or look.secondary)))))
+                        Spacer(Modifier.width(16.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(look.label,color=TextWhite,fontSize=16.sp,
+                                fontWeight=FontWeight.SemiBold)
+                            Spacer(Modifier.height(3.dp))
+                            Text("ПРИМЕНИТЬ К СЦЕНЕ",color=Muted,fontSize=10.sp,
+                                letterSpacing=0.65.sp)
+                        }
+                        Icon(Icons.Outlined.ArrowForwardIos,contentDescription=null,
+                            tint=Muted,modifier=Modifier.size(16.dp))
+                    }
+                }
+                Spacer(Modifier.height(20.dp))
             }
         }
     }
