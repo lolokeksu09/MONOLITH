@@ -211,7 +211,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
             verticalAlignment=Alignment.Bottom) {
             Column(Modifier.weight(1f)) {
                 Text("Создай свой свет.",color=TextWhite,fontSize=25.sp,
-                    fontWeight=FontWeight.SemiBold,letterSpacing=(-0.6).sp)
+                    fontWeight=FontWeight.SemiBold,letterSpacing=(-0.6f).sp)
                 Text("Твоя личная галерея движения",color=Muted,fontSize=12.sp)
             }
             Box(Modifier.clip(RoundedCornerShape(9.dp)).background(Color(0xFF0F2934))
@@ -235,7 +235,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
             }
             Column(Modifier.align(Alignment.BottomStart).padding(22.dp)) {
                 Text(scene,color=TextWhite,fontSize=50.sp,
-                    fontWeight=FontWeight.Black,letterSpacing=(-1.0).sp)
+                    fontWeight=FontWeight.Black,letterSpacing=(-1f).sp)
                 Text(description,color=Muted,fontSize=13.sp)
             }
             Text("NOX  /  01",color=Muted.copy(alpha=.7f),fontSize=10.sp,
@@ -657,7 +657,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
         } else {
             LazyVerticalGrid(
                 columns=GridCells.Fixed(2),
-                modifier=Modifier.fillMaxSize(),
+                modifier=Modifier.weight(1f),
                 horizontalArrangement=Arrangement.spacedBy(11.dp),
                 verticalArrangement=Arrangement.spacedBy(15.dp),
                 contentPadding=PaddingValues(bottom=22.dp)
