@@ -15,6 +15,9 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -64,6 +67,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
     val settings by vm.settings.collectAsState()
     var tab by remember { mutableStateOf(Tab.HOME) }
     var homeScene by remember { mutableStateOf("FLUX") }
+    var homeDraft by remember { mutableStateOf<SceneConfig?>(null) }
     var editing by remember { mutableStateOf(SceneCatalog.default("FLUX")) }
     var history by remember { mutableStateOf(EditHistory.start(SceneCatalog.default("FLUX"))) }
     var editId by remember { mutableLongStateOf(0) }
@@ -72,7 +76,9 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
     val context=LocalContext.current
     val scope=rememberCoroutineScope()
     val active=presets.firstOrNull {it.id==settings.activeId}
-    LaunchedEffect(active?.scene?.sceneId) { if(active!=null)homeScene=active.scene.sceneId }
+    LaunchedEffect(active?.scene?.sceneId) { if(active!=null) {homeScene=active.scene.sceneId;homeDraft=null} }
+    val previewHomeConfig = homeDraft?.takeIf {it.sceneId==homeScene}
+        ?: if(active?.scene?.sceneId==homeScene) active.scene else SceneCatalog.default(homeScene)
     val exportLauncher=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri:Uri? ->
         val snapshot=pendingExport;pendingExport=null
         if(uri==null || snapshot==null) return@rememberLauncherForActivityResult
@@ -136,15 +142,26 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                         Text("NOX",fontSize=31.sp,fontWeight=FontWeight.Black,color=TextWhite,letterSpacing=4.sp)
                         Text("LIVING LIGHT STUDIO",fontSize=9.sp,color=Cyan,letterSpacing=2.sp)
                     }
-                    Text("1.3",fontSize=12.sp,color=Muted)
+                    Text("1.4",fontSize=12.sp,color=Muted)
                 }
                 when(tab) {
-                    Tab.HOME -> HomeScreen(homeScene,active,settings.fps,settings.gyroEnabled,
-                        onScene={homeScene=it},onEdit={openStudio(it,active?.takeIf{p->p.scene==it}?.id?:0,active?.takeIf{p->p.scene==it}?.name?:"")},
+                    Tab.HOME -> HomeScreen(homeScene,active,homeDraft,settings.fps,settings.gyroEnabled,
+                        onScene={homeScene=it;homeDraft=null},
+                        onRemix={homeDraft=SceneLooks.shuffle(previewHomeConfig)},
+                        onEdit={config->
+                            val current=active?.takeIf {p->p.scene==config}
+                            openStudio(config,current?.id?:0,current?.name?:"")
+                        },
                         onApply={
-                            if(active?.scene?.sceneId==homeScene) applySafely()
-                            else vm.saveAndApply("${homeScene} default", if(active?.scene?.sceneId==homeScene) active.scene else SceneCatalog.default(homeScene)) {applySafely()}
-                        },onExport={export(it)})
+                            if(homeDraft?.sceneId==homeScene) {
+                                vm.saveAndApply("${homeScene} remix",previewHomeConfig) {applySafely()}
+                            } else if(active?.scene?.sceneId==homeScene) {
+                                applySafely()
+                            } else {
+                                vm.saveAndApply("${homeScene} default",previewHomeConfig) {applySafely()}
+                            }
+                        },
+                        onExport={export(it)})
                     Tab.STUDIO -> StudioScreen(editing,editName,settings.fps,settings.gyroEnabled,
                         canUndo=history.canUndo,canRedo=history.canRedo,
                         onUndo={
@@ -177,61 +194,108 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
     }
 }
 
-@Composable private fun HomeScreen(scene:String,active:NoxPreset?,fps:Int,gyro:Boolean,onScene:(String)->Unit,onEdit:(SceneConfig)->Unit,onApply:()->Unit,onExport:(SceneConfig)->Unit) {
-    val config = if(active?.scene?.sceneId == scene) active.scene else SceneCatalog.default(scene)
-    val subtitle = when(scene) {
-        "HALO" -> "Орбиты света"
-        "NEBULA" -> "Звёздная пыль"
-        else -> "Световые потоки"
+@Composable private fun HomeScreen(
+    scene:String, active:NoxPreset?, draft:SceneConfig?, fps:Int, gyro:Boolean,
+    onScene:(String)->Unit, onRemix:()->Unit,
+    onEdit:(SceneConfig)->Unit, onApply:()->Unit, onExport:(SceneConfig)->Unit
+) {
+    val config = draft?.takeIf { it.sceneId == scene }
+        ?: if(active?.scene?.sceneId==scene) active.scene else SceneCatalog.default(scene)
+    val description = when(scene) {
+        "HALO" -> "Свет в бесконечном вращении"
+        "NEBULA" -> "Тихое движение звёзд"
+        else -> "Линии, которые чувствуют движение"
     }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=18.dp)) {
-        Row(Modifier.fillMaxWidth().padding(top=8.dp,bottom=14.dp), verticalAlignment=Alignment.CenterVertically) {
+    Column(Modifier.fillMaxSize().padding(horizontal=18.dp)) {
+        Row(Modifier.fillMaxWidth().padding(top=4.dp,bottom=14.dp),
+            verticalAlignment=Alignment.Bottom) {
             Column(Modifier.weight(1f)) {
-                Text("Свет, который живёт.",fontSize=24.sp,color=TextWhite,fontWeight=FontWeight.SemiBold)
-                Text("Твоя сцена. Твои правила.",fontSize=13.sp,color=Muted)
+                Text("Создай свой свет.",color=TextWhite,fontSize=25.sp,
+                    fontWeight=FontWeight.SemiBold,letterSpacing=(-0.6).sp)
+                Text("Твоя личная галерея движения",color=Muted,fontSize=12.sp)
             }
-            Text((SceneCatalog.ids.indexOf(scene)+1).toString().padStart(2,'0')+" / 03",
-                fontSize=12.sp,color=Cyan,letterSpacing=1.sp)
+            Box(Modifier.clip(RoundedCornerShape(9.dp)).background(Color(0xFF0F2934))
+                .padding(horizontal=10.dp,vertical=6.dp)) {
+                Text(if(draft?.sceneId==scene) "REMIX" else "LIVE",
+                    fontSize=10.sp,fontWeight=FontWeight.Bold,color=Cyan)
+            }
         }
-        Box(Modifier.fillMaxWidth().height(468.dp).clip(RoundedCornerShape(24.dp)).background(Ink)
-            .border(1.dp,Color(0xFF1B3244),RoundedCornerShape(24.dp))) {
+        Box(Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(24.dp))
+            .background(Ink).border(1.dp,Color(0xFF223C4C),RoundedCornerShape(24.dp))) {
             LivePreview(config,fps,gyro,Modifier.fillMaxSize())
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
-                0f to Color.Black.copy(alpha=0.40f),
-                0.47f to Color.Transparent,
-                1f to Color.Black.copy(alpha=0.92f))))
-            Row(Modifier.align(Alignment.TopStart).padding(20.dp),verticalAlignment=Alignment.CenterVertically) {
-                Box(Modifier.size(6.dp).background(Cyan,CircleShape))
+                0f to Color.Black.copy(alpha=.14f),
+                0.52f to Color.Transparent,
+                1f to Color.Black.copy(alpha=.94f))))
+            Row(Modifier.align(Alignment.TopStart).padding(19.dp),
+                verticalAlignment=Alignment.CenterVertically) {
+                Box(Modifier.size(5.dp).background(Cyan,CircleShape))
                 Spacer(Modifier.width(9.dp))
-                Text("LIVE ENGINE",fontSize=10.sp,letterSpacing=1.5.sp,color=TextWhite)
+                Text("ATELIER    /    \${scene}",fontSize=11.sp,color=TextWhite,letterSpacing=1.1.sp)
             }
             Column(Modifier.align(Alignment.BottomStart).padding(22.dp)) {
-                Text(subtitle,color=Muted,fontSize=13.sp)
-                Text(scene,fontSize=42.sp,color=TextWhite,fontWeight=FontWeight.Black,letterSpacing=2.sp)
-                Spacer(Modifier.height(5.dp))
-                Text("OpenGL · касайся и двигай свет",fontSize=12.sp,color=Muted)
+                Text(scene,color=TextWhite,fontSize=50.sp,
+                    fontWeight=FontWeight.Black,letterSpacing=(-1.0).sp)
+                Text(description,color=Muted,fontSize=13.sp)
             }
+            Text("NOX  /  01",color=Muted.copy(alpha=.7f),fontSize=10.sp,
+                modifier=Modifier.align(Alignment.BottomEnd).padding(24.dp))
         }
-        Spacer(Modifier.height(15.dp))
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+        Spacer(Modifier.height(13.dp))
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)) {
             SceneCatalog.ids.forEach { id ->
-                FilterChip(selected=id==scene,onClick={onScene(id)},
-                    label={Text(id,fontSize=12.sp,fontWeight=FontWeight.SemiBold)},
-                    colors=FilterChipDefaults.filterChipColors(selectedContainerColor=Color(0xFF153544),
-                        selectedLabelColor=Cyan,containerColor=Surface,labelColor=Muted))
+                SceneMiniature(id=id,selected=id==scene,modifier=Modifier.weight(1f),
+                    onClick={onScene(id)})
             }
         }
-        Spacer(Modifier.height(16.dp))
-        Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+        Spacer(Modifier.height(11.dp))
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             Button(onClick={onEdit(config)},modifier=Modifier.weight(1f).height(54.dp),
-                shape=RoundedCornerShape(15.dp),colors=ButtonDefaults.buttonColors(containerColor=Cyan,contentColor=Ink)) {
-                Text("Создать свой",fontWeight=FontWeight.Bold)
+                shape=RoundedCornerShape(14.dp),
+                colors=ButtonDefaults.buttonColors(containerColor=Cyan,contentColor=Ink)) {
+                Icon(Icons.Outlined.Tune,contentDescription=null,modifier=Modifier.size(19.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("В студию",fontWeight=FontWeight.Bold)
             }
             OutlinedButton(onClick=onApply,modifier=Modifier.weight(1f).height(54.dp),
-                shape=RoundedCornerShape(15.dp)) { Text("На экран",color=TextWhite) }
+                shape=RoundedCornerShape(14.dp),
+                border=androidx.compose.foundation.BorderStroke(1.dp,Color(0xFF365061))) {
+                Text("На экран",color=TextWhite,fontWeight=FontWeight.SemiBold)
+            }
         }
-        TextButton(onClick={onExport(config)},modifier=Modifier.align(Alignment.End)) { Text("Сохранить кадр PNG ↗",color=Cyan) }
-        Spacer(Modifier.height(14.dp))
+        Row(Modifier.fillMaxWidth().padding(top=2.dp,bottom=5.dp),
+            horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
+            TextButton(onClick=onRemix) {
+                Icon(Icons.Outlined.AutoAwesome,contentDescription=null,tint=Cyan,
+                    modifier=Modifier.size(18.dp))
+                Spacer(Modifier.width(7.dp))
+                Text("Новый вариант",color=Cyan,fontSize=12.sp)
+            }
+            TextButton(onClick={onExport(config)}) {
+                Icon(Icons.Outlined.FileDownload,contentDescription=null,tint=Muted,
+                    modifier=Modifier.size(17.dp))
+                Spacer(Modifier.width(5.dp))
+                Text("PNG",color=Muted,fontSize=12.sp)
+            }
+        }
+    }
+}
+
+@Composable private fun SceneMiniature(
+    id:String,selected:Boolean,modifier:Modifier=Modifier,onClick:()->Unit
+) {
+    Row(modifier.height(66.dp).clip(RoundedCornerShape(14.dp))
+        .background(if(selected) Color(0xFF15303F) else Color(0xFF0D141C))
+        .border(1.dp,if(selected) Cyan.copy(alpha=.65f) else Color(0xFF243644),
+            RoundedCornerShape(14.dp))
+        .clickable(onClick=onClick).padding(8.dp),
+        verticalAlignment=Alignment.CenterVertically) {
+        Box(Modifier.size(35.dp).clip(RoundedCornerShape(9.dp)).background(Ink)) {
+            Miniature(SceneCatalog.default(id),Modifier.fillMaxSize())
+        }
+        Spacer(Modifier.width(6.dp))
+        Text(id,fontSize=10.sp,fontWeight=FontWeight.SemiBold,
+            color=if(selected) Cyan else Muted,maxLines=1)
     }
 }
 
