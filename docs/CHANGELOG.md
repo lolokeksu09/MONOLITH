@@ -2,6 +2,13 @@
 
 > Каждый следующий патч обязан обновлять этот файл и публиковаться коммитом в GitHub. См. [AGENTS.md](../AGENTS.md) и [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md).
 
+## [1.7.0 / Patch 3] — Nine scene variants (2026-10-23)
+
+- Created `ScenePresets.kt` with 3 named variations each for AURORA (Polar, Emerald, Violet Mist), PULSE (Cyan Beat, Crimson Core, Neon Echo), COMET (Deep Space, White Tail, Blue Drift).
+- Reuses the existing `SceneConfig` fields with deterministic seed values; no Room migration. Added JUnit tests for names, exact colors, ranges and `.nox` round-trip.
+- Commit series: `0b270e1` (red contracts), `3c047d3` (implementation).
+- **Verification:** Android CI pending; no device validation or shader screenshots at this stage.
+
 ## [1.7.0 / Patch 2] — Procedural renderer (2026-10-23)
 
 - Added GPU modes 3=AURORA, 4=PULSE, 5=COMET in the shared `GlBackend.kt`, maintaining existing modes 0=FLUX, 1=HALO, 2=NEBULA.
