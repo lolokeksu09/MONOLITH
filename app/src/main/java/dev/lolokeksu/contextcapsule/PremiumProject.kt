@@ -60,21 +60,20 @@ fun PremiumProjectContent(
     onDeleteDecision: (String) -> Unit,
     onEditTask: (String, String) -> Unit,
     onDeleteTask: (String) -> Unit,
-    onCopy: () -> Unit,
-    onShare: () -> Unit,
-    onExport: (Boolean) -> Unit
+    onCopy: (Boolean) -> Unit,
+    onShare: (Boolean) -> Unit,
+    onExport: (Boolean, Boolean) -> Unit
 ) {
     val project = state.active ?: return
     var note by remember(project.id) { mutableStateOf("") }
     var task by remember(project.id) { mutableStateOf("") }
     var preview by remember(project.id) { mutableStateOf(false) }
+    var compactBrief by remember(project.id) { mutableStateOf(true) }
     var decisionQuery by remember(project.id) { mutableStateOf("") }
     var pendingOnly by remember(project.id) { mutableStateOf(false) }
     var selectedSection by remember(project.id) { mutableIntStateOf(0) }
     var editingNote by remember(project.id) { mutableStateOf<Decision?>(null) }
     var deletingNote by remember(project.id) { mutableStateOf<Decision?>(null) }
-    var editingTask by remember(project.id) { mutableStateOf<ProjectTask?>(null) }
-    var deletingTask by remember(project.id) { mutableStateOf<ProjectTask?>(null) }
     val shownDecisions = WorkspaceTools.filterDecisions(state.decisions, decisionQuery, pendingOnly)
 
     Column(Modifier.fillMaxSize().background(InkBlack)) {
@@ -88,7 +87,8 @@ fun PremiumProjectContent(
             Text("Все проекты", color = BodyText, fontSize = 13.sp)
         }
         Spacer(Modifier.height(18.dp))
-        Text("Пространство проекта", color = Electric, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+        Text("РАБОЧЕЕ ПРОСТРАНСТВО", color = Electric, fontSize = 11.sp,
+            fontWeight = FontWeight.Bold, letterSpacing = 1.6.sp)
         Spacer(Modifier.height(6.dp))
         Text(
             project.title, color = WhiteText, fontSize = 31.sp, lineHeight = 35.sp,
@@ -100,27 +100,28 @@ fun PremiumProjectContent(
             Spacer(Modifier.width(7.dp))
             Text(project.repository ?: "Локальный проект", color = BodyText, fontSize = 12.sp, maxLines = 2)
         }
-        Spacer(Modifier.height(22.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            listOf("Обзор", "Память").forEachIndexed { index, label ->
+        Spacer(Modifier.height(18.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            listOf("Обзор", "Память", "План").forEachIndexed { index, label ->
                 val active = selectedSection == index
                 FilledTonalButton(
                     onClick = { selectedSection = index },
-                    modifier = Modifier.weight(1f).height(46.dp),
+                    modifier = Modifier.weight(1f).height(48.dp).testTag("section_$index"),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.filledTonalButtonColors(
                         containerColor = if (active) Color(0xFF243F63) else Plate,
                         contentColor = if (active) WhiteText else BodyText
                     )
                 ) {
-                    Text(label, fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal, fontSize = 14.sp)
+                    Text(label, fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
+                        fontSize = 12.sp)
                 }
             }
         }
         Spacer(Modifier.height(22.dp))
         if (selectedSection == 0) {
             RepositoryOverviewPanel(state.snapshot, project.repository != null, state.busy, onSync, onTask, state.tasks)
-        } else {
+        } else if (selectedSection == 1) {
         Column(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(23.dp))
                 .background(Brush.linearGradient(listOf(Color(0xFF1E3961), Color(0xFF111C30))))
@@ -143,7 +144,7 @@ fun PremiumProjectContent(
             }
             Spacer(Modifier.height(19.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = onShare, contentPadding = PaddingValues(0.dp)) {
+                TextButton(onClick = { onShare(compactBrief) }, contentPadding = PaddingValues(0.dp)) {
                     Icon(Icons.Default.IosShare, contentDescription = null, tint = BodyText, modifier = Modifier.size(17.dp))
                     Spacer(Modifier.width(6.dp))
                     Text("Отправить", color = BodyText, fontSize = 13.sp)
@@ -162,7 +163,7 @@ fun PremiumProjectContent(
                             dev.lolokeksu.contextcapsule.domain.CapsuleInput(
                                 project, state.decisions, state.tasks,
                                 state.snapshot?.copy(summary = dev.lolokeksu.contextcapsule.github.RepositoryOverviewCodec.readable(state.snapshot.summary))
-                            )
+                            ), compact = compactBrief
                         ),
                         color = BodyText, fontSize = 12.sp, lineHeight = 19.sp
                     )
@@ -268,50 +269,17 @@ fun PremiumProjectContent(
             }
         }
 
-        Spacer(Modifier.height(29.dp))
-        SectionTitle("Следующие шаги", "${state.tasks.count { !it.completed }} открыто")
-        Spacer(Modifier.height(11.dp))
-        ProjectPlate {
-            OutlinedTextField(task, { task = it }, label = { Text("Новая задача") },
-                singleLine = true, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(9.dp))
-            OutlinedButton(
-                onClick = { onTask(task); task = "" }, enabled = task.isNotBlank(),
-                shape = RoundedCornerShape(13.dp)
-            ) { Text("Добавить задачу") }
-            state.tasks.forEach { item ->
-                Column(Modifier.fillMaxWidth()) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(item.completed, { onToggle(item.id, it) }, enabled = !state.busy)
-                        Text(item.title, color = if (item.completed) SubText else WhiteText,
-                            fontSize = 13.sp, modifier = Modifier.weight(1f))
-                    }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton(
-                            onClick = { editingTask = item },
-                            enabled = !state.busy,
-                            modifier = Modifier.testTag("task_edit_${item.id}")
-                        ) { Text("Изменить", color = Electric, fontSize = 12.sp) }
-                        TextButton(
-                            onClick = { deletingTask = item },
-                            enabled = !state.busy,
-                            modifier = Modifier.testTag("task_delete_${item.id}")
-                        ) { Text("Удалить", color = Caution, fontSize = 12.sp) }
-                    }
-                }
-            }
-        }
         Spacer(Modifier.height(24.dp))
         Text("Резервные копии содержат личные заметки. Храни их только в надёжном месте.",
             color = SubText, fontSize = 11.sp, lineHeight = 16.sp)
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            TextButton(onClick = { onExport(false) }) {
+            TextButton(onClick = { onExport(false, compactBrief) }) {
                 Icon(Icons.Default.HistoryEdu, contentDescription = null, tint = Electric, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
                 Text("Markdown", color = Electric)
             }
-            TextButton(onClick = { onExport(true) }) {
+            TextButton(onClick = { onExport(true, compactBrief) }) {
                 Icon(Icons.Default.FileDownload, contentDescription = null, tint = BodyText, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
                 Text("Резервная копия", color = BodyText)
@@ -323,22 +291,58 @@ fun PremiumProjectContent(
         }
         if (state.busy) { Spacer(Modifier.height(10.dp)); LinearProgressIndicator(Modifier.fillMaxWidth()) }
         Spacer(Modifier.height(32.dp))
+        } else {
+            TaskBoard(
+                tasks = state.tasks,
+                busy = state.busy,
+                onAdd = onTask,
+                onToggle = onToggle,
+                onEdit = onEditTask,
+                onDelete = onDeleteTask
+            )
         }
         }
         HorizontalDivider(color = Line.copy(alpha = 0.8f))
-        Row(
+        Column(
             Modifier.fillMaxWidth().background(InkBlack)
-                .padding(horizontal = 23.dp, vertical = 10.dp)
+                .padding(horizontal = 23.dp, vertical = 9.dp)
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(9.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Капсула:", color = BodyText, fontSize = 12.sp)
+                FilterChip(
+                    selected = compactBrief,
+                    onClick = { compactBrief = true },
+                    label = { Text("Кратко") },
+                    modifier = Modifier.testTag("brief_compact"),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Color(0xFF274364),
+                        selectedLabelColor = WhiteText
+                    )
+                )
+                FilterChip(
+                    selected = !compactBrief,
+                    onClick = { compactBrief = false },
+                    label = { Text("Полностью") },
+                    modifier = Modifier.testTag("brief_full"),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Color(0xFF274364),
+                        selectedLabelColor = WhiteText
+                    )
+                )
+            }
             Button(
-                onClick = onCopy,
-                modifier = Modifier.fillMaxWidth().height(51.dp).testTag("handoff_copy"),
+                onClick = { onCopy(compactBrief) },
+                modifier = Modifier.fillMaxWidth().height(50.dp).testTag("handoff_copy"),
                 shape = RoundedCornerShape(15.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Electric, contentColor = InkBlack)
             ) {
                 Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(10.dp))
-                Text("Скопировать капсулу", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text("Скопировать контекст", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
             }
         }
     }
@@ -360,27 +364,6 @@ fun PremiumProjectContent(
             onDelete = {
                 onDeleteDecision(selected.id)
                 deletingNote = null
-            }
-        )
-    }
-    editingTask?.let { selected ->
-        MemoryEditDialog(
-            heading = "Изменить задачу", initial = selected.title, maxLength = 500,
-            tag = "confirm_edit_task",
-            onDismiss = { editingTask = null },
-            onSave = { updated ->
-                onEditTask(selected.id, updated)
-                editingTask = null
-            }
-        )
-    }
-    deletingTask?.let { selected ->
-        MemoryDeleteDialog(
-            itemType = "задачу", preview = selected.title, tag = "confirm_delete_task",
-            onDismiss = { deletingTask = null },
-            onDelete = {
-                onDeleteTask(selected.id)
-                deletingTask = null
             }
         )
     }

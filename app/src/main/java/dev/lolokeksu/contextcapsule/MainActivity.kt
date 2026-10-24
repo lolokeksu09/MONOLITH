@@ -102,22 +102,22 @@ private fun CapsuleApp(vm: CapsuleViewModel, incoming: String?, onShareDismiss: 
                     onEditDecision = vm::editDecision, onPinDecision = vm::pinDecision,
                     onDeleteDecision = vm::deleteDecision,
                     onEditTask = vm::editTask, onDeleteTask = vm::deleteTask,
-                    onCopy = {
-                        val clip = android.content.ClipData.newPlainText("Context Capsule", vm.capsule())
+                    onCopy = { brief ->
+                        val clip = android.content.ClipData.newPlainText("Context Capsule", vm.capsule(compact = brief))
                         (context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).setPrimaryClip(clip)
                         Toast.makeText(context, "Капсула скопирована", Toast.LENGTH_SHORT).show()
                     },
-                    onShare = {
+                    onShare = { brief ->
                         val send = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, vm.capsule())
+                            putExtra(Intent.EXTRA_TEXT, vm.capsule(compact = brief))
                         }
                         context.startActivity(Intent.createChooser(send, "Передать контекст в ChatGPT"))
                     },
-                    onExport = { backup ->
+                    onExport = { backup, brief ->
                         if (backup) showBackupWarning = true
                         else {
-                            exportText = vm.capsule()
+                            exportText = vm.capsule(compact = brief)
                             exportLauncher.launch("context-capsule.md")
                         }
                     })

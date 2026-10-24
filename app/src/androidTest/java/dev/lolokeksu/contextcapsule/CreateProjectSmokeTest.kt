@@ -45,6 +45,9 @@ class CreateProjectSmokeTest {
         rule.onNodeWithTag("handoff_copy").assertExists()
         rule.onNodeWithText("Память", useUnmergedTree = true).performClick()
         rule.onNodeWithText("Важные решения").assertExists()
+        rule.onNodeWithText("Следующие шаги").assertDoesNotExist()
+        rule.onNodeWithTag("handoff_copy").assertExists()
+        rule.onNodeWithText("План", useUnmergedTree = true).performClick()
         rule.onNodeWithText("Следующие шаги").assertExists()
         rule.onNodeWithTag("handoff_copy").assertExists()
     }
