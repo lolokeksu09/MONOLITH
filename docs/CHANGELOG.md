@@ -1,5 +1,13 @@
 # NOX — журнал изменений
 
+## [1.8.0 / Patch 4] — Side-by-side Android preview and CI packaging (2026-10-24)
+
+- Updated versionName `1.8.0`, versionCode `12`, independent debug package `studio.nox.light.spectra`, launcher `NOX 1.8 Spectra`.
+- Workflow artifact renamed `NOX-1.8-spectra-APK`; updated structural version contracts.
+- README updated with nine scenes, Surprise, .nox limitations and Android build/runtime QA distinction.
+- Commits: `1492ce3`, `0cc18b8`, `8f80382`, `252b6d6`, `b782267`.
+- **Verification:** final GitHub Actions artifact pending at time of writing. Existing 1.7.1 working app kept untouched.
+
 ## [1.8.0 / Patch 3] — Nine-scene gallery and Surprise discovery (2026-10-24)
 
 - Home: added natural-language descriptions for VEIL, GRID, SHARDS while preserving immersive animated hero and nine-scene horizontal selector.
