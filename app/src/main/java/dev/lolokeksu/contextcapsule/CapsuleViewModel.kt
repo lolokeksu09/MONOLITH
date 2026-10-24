@@ -82,6 +82,19 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
         reload()
     }
 
+    /** Only a user-confirmed destination is allowed; imported shares always start UNVERIFIED. */
+    fun captureSharedText(projectId: String, raw: String) = work {
+        val text = WorkspaceTools.normalizeSharedText(raw)
+            ?: throw IllegalArgumentException("Текст пустой или длиннее 20 000 символов")
+        withContext(Dispatchers.IO) {
+            requireNotNull(dao.project(projectId)) { "Проект больше не существует" }
+            dao.upsertDecision(DecisionRow(UUID.randomUUID().toString(), projectId, text,
+                EvidenceKind.UNVERIFIED.name, System.currentTimeMillis()))
+        }
+        reload(projectId)
+        _state.value = _state.value.copy(notice = "Текст сохранён как неподтверждённая заметка")
+    }
+
     fun confirmDecision(id: String) = work {
         withContext(Dispatchers.IO) { dao.confirmDecision(id) }
         reload()
