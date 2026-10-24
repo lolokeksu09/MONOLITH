@@ -178,7 +178,7 @@ class StructuralContracts(unittest.TestCase):
         studio = source.split('@Composable private fun StudioScreen(', 1)[1].split('@Composable private fun FullscreenPreview(', 1)[0]
         self.assertIn('BoxWithConstraints(Modifier.fillMaxSize())', studio)
         self.assertIn('Column(Modifier.fillMaxSize().padding(horizontal=18.dp))', studio)
-        pinned_preview = studio.index('LivePreview(displayConfig,fps,gyro,Modifier.fillMaxSize())')
+        pinned_preview = studio.index('LivePreview(displayConfig,fps,gyro,quality,Modifier.fillMaxSize())')
         scrollable_controls = studio.index('Column(Modifier.weight(1f).verticalScroll(rememberScrollState()))')
         self.assertLess(pinned_preview, scrollable_controls)
         self.assertEqual(studio.count('verticalScroll(rememberScrollState())'), 1,
