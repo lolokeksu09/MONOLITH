@@ -2,6 +2,7 @@ package dev.lolokeksu.contextcapsule
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
 import org.junit.Assert.assertEquals
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -55,7 +56,7 @@ class RepositoryOverviewUiTest {
         }
         rule.onNodeWithText("Обнаружены изменения HEAD").assertExists()
         rule.onNodeWithText("Проверить ошибки последнего CI").assertExists()
-        rule.onNodeWithText("В задачи", useUnmergedTree = true).performClick()
+        rule.onAllNodesWithText("В задачи", useUnmergedTree = true)[0].performClick()
         rule.runOnIdle { assertEquals("Проверить ошибки последнего CI", added) }
     }
 
