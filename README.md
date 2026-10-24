@@ -1,3 +1,27 @@
+# NOX 1.9.1 — Cinematic Depth
+
+**Art-first update:** Nine existing Android AMOLED live wallpapers now have **additional large shapes, mid-depth light and fine texture** in Rich and Ultra, instead of being largely empty or simply brighter. The previously saved quality setting continues to work offline with automatic thermal/power-safe fallback.
+
+- **FLUX** — sculpted flowing wings and nested luminous threads
+- **HALO** — giant orbit arcs, corona and a moving beacon
+- **NEBULA** — broad multi-octave *smooth-noise* gas clouds with a colored secondary lobe (avoids chunky cell edges)
+- **AURORA** — tall folding curtains and inner luminous plasma strands
+- **PULSE** — concentrated energy core and several responsive radial rings
+- **COMET** — three extra drifting streaks behind the hero trail
+- **VEIL** — volume-like smoke folds and silky inner veins
+- **GRID** — distant light pillars and geometric horizon
+- **SHARDS** — large floating facets with glinting beveled outlines
+
+**What changes by quality:** Balanced retains the 1.9 lean baseline. Rich adds foreground/midground structures; Ultra also adds rare pinpoint highlights only over illuminated regions. No network, root, new Room schema or additional permissions. Previous preset IDs/parameters and local `.nox` export remain compatible.
+
+**Preview installation:** Android version `1.9.1` (code 14), debug application ID `studio.nox.light.cinematic`. It installs beside NOX 1.9; private presets do not automatically cross between packages. Keep the earlier working version installed. Use explicit export/import if desired.
+
+**Verification:** CI validates Python structural contracts, GLES 100 GLSL syntax, Kotlin/JUnit and Android packaging. Visual strength, shader runtime, actual thermals and frame rate on Lenovo Legion Y70 require device QA; a successful build is not visual certification.
+
+[Specification](docs/superpowers/specs/2026-10-24-nox-1-9-1-cinematic-depth-design.md) · [Patch plan](docs/superpowers/plans/2026-10-24-nox-1-9-1-cinematic-depth.md) · [Change log](docs/CHANGELOG.md) · [QA status](docs/QA_STATUS.md) · [AGENTS.md](AGENTS.md)
+
+---
+
 # NOX 1.9 — Graphics Overdrive
 
 Nine offline AMOLED live wallpapers upgraded with **real layered GPU lighting** rather than simply adding more scenes.
