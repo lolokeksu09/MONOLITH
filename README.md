@@ -10,12 +10,12 @@ CONTEXT CAPSULE is a proposed native Android application that keeps explicit pro
 | --- | --- |
 | Repository | `lolokeksu09/NOX-LEGION` (legacy GitHub name) |
 | Default branch | `main` |
-| Tracked files | Design and development documentation only |
-| Old Android code, graphics, Gradle, APK workflow | Absent from `main` |
+| Tracked files | Android source under feature/context-capsule-v1; main remains docs-only |
+| Old Android code, graphics, Gradle, APK workflow | Absent from `main` (new workflow on feature branch) |
 | Active feature branches | None at the last verification |
 | Open pull requests | None at the last verification |
-| CONTEXT CAPSULE Android implementation | **Not yet implemented** |
-| APK / GitHub Actions build | **Not available** |
+| CONTEXT CAPSULE Android implementation | **Source code added on feature branch; build unverified** |
+| APK / GitHub Actions build | **Workflow created; first build pending** |
 
 The repository's name is still `NOX-LEGION`. Renaming it to `CONTEXT-CAPSULE` requires a separate GitHub repository-settings operation. Historic commits may still contain the old app; branch deletion is not Git-history erasure.
 
@@ -45,4 +45,4 @@ No root, no proprietary server, no hidden chat collection, no paid OpenAI API.
 - [Developer rules](AGENTS.md)
 - [Changelog](docs/CHANGELOG.md)
 
-**Next milestone:** review the specification and plan, then create a feature branch, write tests before code, implement the Android client and verify its APK through GitHub Actions. There is no download or runnable application at this stage.
+**Next milestone:** review the specification and plan, then create a feature branch, write tests before code, implement the Android client and verify its APK through GitHub Actions. A debug APK is only available after an Android Actions run succeeds; no build result has been validated yet.
