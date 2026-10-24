@@ -60,6 +60,35 @@ class RepositoryOverviewUiTest {
         rule.runOnIdle { assertEquals("Проверить ошибки последнего CI", added) }
     }
 
+    @Test fun compareDetailsExpandWithoutInventingFileCounts() {
+        val previous = "a".repeat(40)
+        val current = "b".repeat(40)
+        val filenames = listOf("app/Main.kt", "app/Room.kt", "README.md", "app/Last.kt")
+        val changed = JSONArray()
+        filenames.forEach { filename ->
+            changed.put(JSONObject().put("path", filename).put("status", "modified")
+                .put("added", 3).put("deleted", 1))
+        }
+        val data = JSONObject()
+            .put("previousSha", previous)
+            .put("previousBranch", "main")
+            .put("ciStatus", "success")
+            .put("comparison", JSONObject().put("status", "ahead")
+                .put("aheadBy", 2).put("behindBy", 0)
+                .put("filesShown", 4).put("truncated", false)
+                .put("url", "https://github.com/o/r/compare/$previous...$current")
+                .put("files", changed))
+        val snapshot = GithubSnapshot("p", "main", current,
+            "https://github.com/o/r/commit/$current", 2000L,
+            RepositoryOverviewCodec.encode(data), null)
+        rule.setContent { RepositoryOverviewPanel(snapshot, true, false, {}) }
+        rule.onNodeWithText("Новые коммиты: 2").assertExists()
+        rule.onNodeWithText("Файлов в ответе: 4").assertExists()
+        rule.onNodeWithText("app/Last.kt").assertDoesNotExist()
+        rule.onNodeWithText("Показать ещё файлы").performClick()
+        rule.onNodeWithText("app/Last.kt").assertExists()
+    }
+
     @Test fun missingSnapshotIsNotCalledHealthy() {
         rule.setContent { RepositoryOverviewPanel(null, true, false, {}) }
         rule.onNodeWithText("Данных ещё нет").assertExists()

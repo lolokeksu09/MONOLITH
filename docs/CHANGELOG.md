@@ -1,5 +1,14 @@
 # CONTEXT CAPSULE — Changelog
 
+## 2026-10-24 — 0.7.0-preview · GitHub Diff Inspector
+
+- Compares previous and current GitHub HEAD using the read-only `compare/{base}...{head}` API endpoint, only for the same branch and well-formed SHA values.
+- Captures API-reported ahead/behind/diverged/identical state, sampled changed paths and +/- line counts in the existing JSON snapshot (no Room migration).
+- Adds a compact expandable changed-files panel and a direct GitHub comparison link to the Overview tab.
+- The human-readable exported capsule now includes comparison evidence and a source URL.
+- Handles rate limits, unreachable comparisons, diverged/rewritten history and truncated file lists with explicit warnings, never invented metrics.
+- Version code 7, `0.7.0-preview`; includes JVM classification tests and emulator expansion test.
+
 ## 2026-10-24 — 0.6.0-preview · Focused navigation
 
 - Split the long project page into Overview (GitHub/commits/activity) and Memory (handoff, notes, decisions, tasks, export) using two native Compose tabs.
