@@ -20,8 +20,9 @@ class CreateProjectSmokeTest {
         rule.onNodeWithText("Создать проект").performClick()
         rule.onNodeWithTag("project_name").performTextInput(project)
         rule.onNodeWithTag("confirm_create").performClick()
+        // Project name already exists in the form input; wait for actual navigation.
         rule.waitUntil(20_000) {
-            rule.onAllNodesWithText(project).fetchSemanticsNodes().isNotEmpty()
+            rule.onAllNodesWithText("Все проекты").fetchSemanticsNodes().isNotEmpty()
         }
         rule.onNodeWithText("Все проекты").performClick()
         rule.waitUntil(15_000) {
