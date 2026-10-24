@@ -49,6 +49,7 @@ private fun CapsuleApp(vm: CapsuleViewModel) {
     val context = LocalContext.current
     val state by vm.state.collectAsStateWithLifecycle()
     var exportText by remember { mutableStateOf("") }
+    var showBackupWarning by remember { mutableStateOf(false) }
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
         if (uri != null) runCatching {
             context.contentResolver.openOutputStream(uri)?.use { it.write(exportText.toByteArray(Charsets.UTF_8)) }
@@ -58,7 +59,7 @@ private fun CapsuleApp(vm: CapsuleViewModel) {
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching {
             context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { reader ->
-                reader.readText().takeIf { it.length <= 1_000_000 } ?: error("File is too large")
+                reader.readText().take(1_000_001).takeIf { it.length <= 1_000_000 } ?: error("File is too large")
             } ?: error("Unable to open document")
         }.onSuccess(vm::importBackup)
             .onFailure { Toast.makeText(context, it.message ?: "Import failed", Toast.LENGTH_LONG).show() }
@@ -88,11 +89,25 @@ private fun CapsuleApp(vm: CapsuleViewModel) {
                         context.startActivity(Intent.createChooser(send, "Continue in ChatGPT"))
                     },
                     onExport = { backup ->
-                        exportText = if (backup) vm.backup() else vm.capsule()
-                        exportLauncher.launch(if (backup) "context-capsule-backup.json" else "context-capsule.md")
+                        if (backup) showBackupWarning = true
+                        else {
+                            exportText = vm.capsule()
+                            exportLauncher.launch("context-capsule.md")
+                        }
                     })
             }
         }
+        if (showBackupWarning) AlertDialog(
+            onDismissRequest = { showBackupWarning = false },
+            title = { Text("Unencrypted backup") },
+            text = { Text("This JSON file contains your private project notes in plain text. Save it only to a trusted location.") },
+            confirmButton = { TextButton(onClick = {
+                showBackupWarning = false
+                exportText = vm.backup()
+                exportLauncher.launch("context-capsule-backup.json")
+            }) { Text("Export backup") } },
+            dismissButton = { TextButton(onClick = { showBackupWarning = false }) { Text("Cancel") } }
+        )
     }
 }
 
