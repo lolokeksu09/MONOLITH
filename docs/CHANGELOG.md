@@ -1,5 +1,27 @@
 # NOX — журнал изменений
 
+## [1.9.0 / Graphics Overdrive] — implementation and release QA (2026-10-24)
+
+**Status:** implementation published in feature branch; CI evidence to be recorded below. Lenovo hardware QA still required.
+
+### Patch 1: Visual-quality domain and persistence
+- Added test-first `VisualQuality` 0=Balanced / 1=Rich / 2=Ultra, verified bounds and fallback under Android battery/thermal pressure.
+- Added DataStore `visual_quality` (default Rich) and ViewModel setter. No Room schema or `.nox` archive changes.
+- Test commits: `8a97011`, `02e20d6`; implementation: `10e8340`, `438669e`, `4622c56`.
+
+### Patch 2: Shared renderer and live wallpaper quality
+- Quality travels through `EglSession`, `NoxSurfaceView` and system WallpaperService to `GlBackend`. The session automatically caps effective quality to Balanced under power saving/thermal stress, without changing user preference.
+- Added `uQuality` uniform and per-mode **local hero lighting / depth layers for all nine scenes**: FLUX, HALO, NEBULA, AURORA, PULSE, COMET, VEIL, GRID, SHARDS. Pixel-zero regions remain black. Balanced retains original base lighting, Rich is default.
+- Implementation commits: `98dc26a`, `cf29390`, `a475176`, `92f5560`.
+- IMPORTANT: Independent glslangValidator pass is needed; GLSL syntax correctness is distinct from actual GPU visual quality.
+
+### Patch 3: Premium UI and packaging
+- Real three-tile settings `Balanced / Rich / Ultra` with descriptions, immediate preview updates, and thermal caveat; fixed pinned Studio preview preserved.
+- Android version 1.9.0/code13, separate debug application ID `studio.nox.light.overdrive`, launcher `NOX 1.9 Overdrive`; CI artifact `NOX-1.9-overdrive-APK`.
+- Commits: `2f45a20`, `811d6c1`, `5d047cb`, `2cb9963`, `d5543b1`, `16042c4`.
+- No permission, account, cloud, network, UI navigation or data-schema changes. Old installations remain intact.
+
+
 ## [1.8.0 / Patch 6] — Fix GLSL reserved identifier caught by compiler (2026-10-24)
 
 - Independent `glslangValidator` check detected previously undetected GLSL ES 100 error: `active` is a reserved word.
