@@ -25,7 +25,9 @@ class PublicGithubClient {
         } finally { conn.disconnect() }
     }
 
-    suspend fun sync(projectId: String, repository: String): GithubSnapshot = withContext(Dispatchers.IO) {
+    suspend fun sync(
+        projectId: String, repository: String, previous: GithubSnapshot? = null
+    ): GithubSnapshot = withContext(Dispatchers.IO) {
         require(Regex("[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+").matches(repository)) { "Неверный GitHub owner/repository" }
         val base = "https://api.github.com/repos/$repository"
         val root = JSONObject(get(base))
@@ -88,6 +90,40 @@ class PublicGithubClient {
             val state = first.optString("status")
             val conclusion = first.optString("conclusion")
             data.put("ciStatus", if (state == "completed") conclusion.takeIf { it.isNotBlank() && it != "null" } ?: "unknown" else state)
+        }
+
+        // Read-only GitHub comparison: only valid SHA values on the same branch.
+        // Never claim two diverged histories are ordinary new commits.
+        val old = previous?.sha
+        if (old != null && previous.branch == branch && old != head &&
+            Regex("[a-fA-F0-9]{40}").matches(old) && Regex("[a-fA-F0-9]{40}").matches(head)) {
+            try {
+                val compare = JSONObject(get("$base/compare/$old...$head"))
+                val reportedFiles = compare.optJSONArray("files")
+                val shown = reportedFiles?.length() ?: 0
+                val sample = JSONArray()
+                if (reportedFiles != null) {
+                    for (i in 0 until minOf(8, shown)) {
+                        val obj = reportedFiles.getJSONObject(i)
+                        sample.put(JSONObject()
+                            .put("path", obj.optString("filename").take(240))
+                            .put("status", obj.optString("status").take(40))
+                            .put("added", obj.optInt("additions", 0).coerceAtLeast(0))
+                            .put("deleted", obj.optInt("deletions", 0).coerceAtLeast(0)))
+                    }
+                }
+                data.put("comparison", JSONObject()
+                    .put("status", compare.optString("status", "unknown"))
+                    .put("aheadBy", compare.optInt("ahead_by", 0).coerceAtLeast(0))
+                    .put("behindBy", compare.optInt("behind_by", 0).coerceAtLeast(0))
+                    .put("filesShown", shown)
+                    .put("truncated", shown >= 300)
+                    .put("url", "https://github.com/$repository/compare/$old...$head")
+                    .put("files", sample))
+                if (shown >= 300) warnings.add("GitHub ограничивает список изменённых файлов; показана часть")
+            } catch (ex: Exception) {
+                warnings.add("Сравнение двух коммитов недоступно: ${ex.message}")
+            }
         }
 
         try {

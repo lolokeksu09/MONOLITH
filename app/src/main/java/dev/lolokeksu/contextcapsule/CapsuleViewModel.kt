@@ -118,7 +118,7 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
         val p = requireNotNull(_state.value.active)
         val repo = requireNotNull(p.repository) { "Link a public GitHub repository first" }
         val previous = withContext(Dispatchers.IO) { dao.snapshot(p.id)?.toDomain() }
-        val fetched = github.sync(p.id, repo)
+        val fetched = github.sync(p.id, repo, previous)
         val snap = fetched.copy(summary = RepositoryOverviewCodec.withPrevious(fetched.summary, previous))
         withContext(Dispatchers.IO) {
             dao.upsertSnapshot(SnapshotRow(snap.projectId, snap.branch, snap.sha, snap.url, snap.checkedAt, snap.summary, snap.warning))

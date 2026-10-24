@@ -3,6 +3,12 @@ package dev.lolokeksu.contextcapsule.github
 import org.json.JSONObject
 
 data class OverviewEntry(val title: String, val url: String)
+data class ChangedFile(val path: String, val status: String, val added: Int, val deleted: Int)
+data class GitHubComparison(
+    val status: String, val aheadBy: Int, val behindBy: Int,
+    val filesShown: Int, val truncated: Boolean, val url: String,
+    val files: List<ChangedFile>
+)
 data class RepositoryOverview(
     val description: String?,
     val readme: String?,
@@ -16,7 +22,8 @@ data class RepositoryOverview(
     val issues: List<OverviewEntry>,
     val previousSha: String? = null,
     val previousBranch: String? = null,
-    val previousCheckedAt: Long? = null
+    val previousCheckedAt: Long? = null,
+    val comparison: GitHubComparison? = null
 )
 
 object RepositoryOverviewCodec {
@@ -33,6 +40,29 @@ object RepositoryOverviewCodec {
         return objectValue.toString()
     }
 
+    /** Read only metadata returned by the GitHub compare endpoint. */
+    fun compareData(json: JSONObject): GitHubComparison? = runCatching {
+        val c = json.optJSONObject("comparison") ?: return null
+        val arr = c.optJSONArray("files")
+        GitHubComparison(
+            status = c.optString("status", "unknown"),
+            aheadBy = c.optInt("aheadBy", 0).coerceAtLeast(0),
+            behindBy = c.optInt("behindBy", 0).coerceAtLeast(0),
+            filesShown = c.optInt("filesShown", 0).coerceAtLeast(0),
+            truncated = c.optBoolean("truncated", false),
+            url = c.optString("url"),
+            files = (0 until minOf(8, arr?.length() ?: 0)).map { index ->
+                val obj = arr!!.getJSONObject(index)
+                ChangedFile(
+                    obj.optString("path").take(240),
+                    obj.optString("status").take(40),
+                    obj.optInt("added", 0).coerceAtLeast(0),
+                    obj.optInt("deleted", 0).coerceAtLeast(0)
+                )
+            }
+        )
+    }.getOrNull()
+
     /** Turns the saved structured snapshot into a human handoff, keeping unknowns explicit. */
     fun readable(raw: String): String {
         val overview = decode(raw) ?: return raw
@@ -46,6 +76,17 @@ object RepositoryOverviewCodec {
             overview.previousSha?.let {
                 appendLine("Предыдущий HEAD (последнее сравнение): $it")
                 appendLine("Предыдущая ветка: ${overview.previousBranch ?: "UNKNOWN"}")
+            }
+            overview.comparison?.let { comparison ->
+                val reading = dev.lolokeksu.contextcapsule.domain.CommitComparison.explain(
+                    comparison.status, comparison.aheadBy, comparison.behindBy,
+                    comparison.aheadBy, comparison.filesShown, comparison.truncated
+                )
+                appendLine("Сравнение GitHub: ${reading.headline}")
+                appendLine("Ссылка на сравнение: ${comparison.url}")
+                appendLine("Добавлено впереди: ${comparison.aheadBy}; позади: ${comparison.behindBy}")
+                appendLine("Изменённых файлов в ответе: ${comparison.filesShown}${if (reading.warning) " (результат ограничен)" else ""}")
+                comparison.files.take(5).forEach { appendLine("Файл: ${it.status} ${it.path} (+${it.added}/-${it.deleted})") }
             }
             overview.lastCommit?.let { appendLine("Последний коммит: $it") }
             for (entry in overview.commits.take(4)) appendLine("Коммит: ${entry.title} — ${entry.url}")
@@ -77,7 +118,8 @@ object RepositoryOverviewCodec {
             issues = readEntries("issues"),
             previousSha = json.optString("previousSha").takeIf { it.isNotBlank() },
             previousBranch = json.optString("previousBranch").takeIf { it.isNotBlank() },
-            previousCheckedAt = if (json.has("previousCheckedAt") && !json.isNull("previousCheckedAt")) json.getLong("previousCheckedAt") else null
+            previousCheckedAt = if (json.has("previousCheckedAt") && !json.isNull("previousCheckedAt")) json.getLong("previousCheckedAt") else null,
+            comparison = compareData(json)
         )
     }.getOrNull()
 }
