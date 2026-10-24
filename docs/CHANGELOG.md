@@ -8,6 +8,7 @@
 - Search decisions within the active project, and filter those that need confirmation.
 - Added `WorkspaceToolsTest` covering case-insensitive search, evidence filtering, incoming text validation.
 - Version bump to `0.3.0-preview` (code 3), Room schema unchanged. CI and device verification are separate.
+- Added custom vector adaptive launcher icon matching the capsule visual identity.
 
 ## 2026-10-24 — 0.2.0-preview · AMOLED UX redesign
 
