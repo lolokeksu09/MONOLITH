@@ -5,7 +5,7 @@
 - Independent `glslangValidator` check detected previously undetected GLSL ES 100 error: `active` is a reserved word.
 - Renamed `active` variables to `visibilityMask` and updated all references in COMET and SHARDS. No changes to visual formulas.
 - Updated structural regressions to reject the reserved identifier, preserving COMET/SHARDS culling.
-- Source/test commits: `99755c6`, `b8d039a`, `433d68a`. **CI recompilation pending** at this documentation commit; final code must pass shader and Android builds.
+- Source/test commits: `99755c6`, `b8d039a`, `433d68a`. Confirmed [GitHub Actions #40070162219](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40070162219) successful for shader validation, JUnit, Android build and artifact, with source SHA `433d68a4`. Verified APK SHA-256 `4a7d87a617dbed603cdabfe163b0b0fd034988257bd300aeb76aefb91e31df64`.
 - Hardware/runtime behavior remains unverified.
 
 ## [1.8.0 / Patch 5] — Build-time GLES shader validation (2026-10-24)
@@ -21,7 +21,7 @@
 - Workflow artifact renamed `NOX-1.8-spectra-APK`; updated structural version contracts.
 - README updated with nine scenes, Surprise, .nox limitations and Android build/runtime QA distinction.
 - Commits: `1492ce3`, `0cc18b8`, `8f80382`, `252b6d6`, `b782267`.
-- **Verification:** final GitHub Actions artifact pending at time of writing. Existing 1.7.1 working app kept untouched.
+- **Verification:** confirmed successful CI #40070162219, artifact ID 12550619243, `NOX-1.8-spectra-APK`; ZIP/APK integrity verified. Existing 1.7.1 working app untouched.
 
 ## [1.8.0 / Patch 3] — Nine-scene gallery and Surprise discovery (2026-10-24)
 
