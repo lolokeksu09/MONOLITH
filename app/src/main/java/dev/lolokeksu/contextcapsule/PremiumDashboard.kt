@@ -56,7 +56,10 @@ fun PremiumHomeContent(
     var repository by remember { mutableStateOf("") }
     var formError by remember { mutableStateOf<String?>(null) }
     var search by remember { mutableStateOf("") }
-    val visibleProjects = WorkspaceTools.filterProjects(state.projects, search)
+    var showingArchived by remember { mutableStateOf(false) }
+    val visibleProjects = dev.lolokeksu.contextcapsule.domain.ProjectCatalog.visible(
+        state.projects, showingArchived, search
+    )
     Column(
         modifier = Modifier.fillMaxSize().background(B).verticalScroll(rememberScrollState())
             .padding(start = 24.dp, end = 24.dp, top = 21.dp, bottom = 32.dp)
@@ -97,7 +100,8 @@ fun PremiumHomeContent(
         )
         Spacer(Modifier.height(if (state.projects.isEmpty()) 26.dp else 17.dp))
         if (state.projects.isNotEmpty()) {
-            val stats = state.projectStats.values
+            val activeIds = state.projects.filterNot { it.archived }.map { it.id }.toSet()
+            val stats = state.projectStats.filterKeys { it in activeIds }.values
             Column(
                 modifier = Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(22.dp))
@@ -163,6 +167,22 @@ fun PremiumHomeContent(
         }
         Spacer(Modifier.height(14.dp))
         if (state.projects.isNotEmpty()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth()) {
+                FilterChip(
+                    selected = !showingArchived,
+                    onClick = { showingArchived = false },
+                    label = { Text("Активные · ${state.projects.count { !it.archived }}") },
+                    modifier = Modifier.testTag("home_active_filter")
+                )
+                FilterChip(
+                    selected = showingArchived,
+                    onClick = { showingArchived = true },
+                    label = { Text("Архив · ${state.projects.count { it.archived }}") },
+                    modifier = Modifier.testTag("home_archive_filter")
+                )
+            }
+            Spacer(Modifier.height(12.dp))
             OutlinedTextField(
                 value = search,
                 onValueChange = { search = it },
@@ -187,10 +207,22 @@ fun PremiumHomeContent(
             Column(
                 Modifier.fillMaxWidth().background(P, RoundedCornerShape(20.dp)).padding(20.dp)
             ) {
-                Text("Ничего не найдено", color = White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    if (showingArchived && search.isBlank()) "Архив пока пуст" else "Ничего не найдено",
+                    color = White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold
+                )
                 Spacer(Modifier.height(5.dp))
-                Text("Попробуй другое название или часть адреса GitHub.", color = MutedText, fontSize = 13.sp)
-                TextButton(onClick = { search = "" }) { Text("Сбросить поиск", color = BlueLight) }
+                Text(
+                    if (showingArchived && search.isBlank())
+                        "Архивные проекты можно восстановить через их настройки."
+                    else "Попробуй другое название или часть адреса GitHub.",
+                    color = MutedText, fontSize = 13.sp
+                )
+                if (search.isNotBlank()) {
+                    TextButton(onClick = { search = "" }) {
+                        Text("Сбросить поиск", color = BlueLight)
+                    }
+                }
             }
         } else {
             visibleProjects.forEachIndexed { index, project ->
@@ -222,6 +254,12 @@ fun PremiumHomeContent(
                                 )
                             }
                             Icon(Icons.Default.ChevronRight, contentDescription = "Открыть", tint = BlueLight)
+                        }
+                        if (project.archived) {
+                            Spacer(Modifier.height(8.dp))
+                            Text("В АРХИВЕ", color = Color(0xFFFFCE83),
+                                fontSize = 10.sp, fontWeight = FontWeight.SemiBold,
+                                letterSpacing = 1.1.sp)
                         }
                         Spacer(Modifier.height(14.dp))
                         if (metrics != null) {

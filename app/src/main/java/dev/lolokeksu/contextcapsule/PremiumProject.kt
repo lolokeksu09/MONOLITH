@@ -60,6 +60,9 @@ fun PremiumProjectContent(
     onDeleteDecision: (String) -> Unit,
     onEditTask: (String, String) -> Unit,
     onDeleteTask: (String) -> Unit,
+    onUpdateProject: (String, String) -> Unit,
+    onArchiveProject: (Boolean) -> Unit,
+    onDeleteProject: (String) -> Unit,
     onCopy: (Boolean) -> Unit,
     onShare: (Boolean) -> Unit,
     onExport: (Boolean, Boolean) -> Unit
@@ -74,6 +77,8 @@ fun PremiumProjectContent(
     var selectedSection by remember(project.id) { mutableIntStateOf(0) }
     var editingNote by remember(project.id) { mutableStateOf<Decision?>(null) }
     var deletingNote by remember(project.id) { mutableStateOf<Decision?>(null) }
+    var showSettings by remember(project.id) { mutableStateOf(false) }
+    var showProjectDelete by remember(project.id) { mutableStateOf(false) }
     val shownDecisions = WorkspaceTools.filterDecisions(state.decisions, decisionQuery, pendingOnly)
 
     Column(Modifier.fillMaxSize().background(InkBlack)) {
@@ -81,10 +86,20 @@ fun PremiumProjectContent(
             Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
                 .padding(horizontal = 23.dp, vertical = 18.dp)
         ) {
-        TextButton(onClick = onBack, contentPadding = PaddingValues(0.dp)) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = BodyText)
-            Spacer(Modifier.width(7.dp))
-            Text("Все проекты", color = BodyText, fontSize = 13.sp)
+        Row(verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            TextButton(onClick = onBack, contentPadding = PaddingValues(0.dp)) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = BodyText)
+                Spacer(Modifier.width(7.dp))
+                Text("Все проекты", color = BodyText, fontSize = 13.sp)
+            }
+            OutlinedButton(
+                onClick = { showSettings = true }, enabled = !state.busy,
+                modifier = Modifier.height(45.dp).testTag("project_settings"),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, Line),
+                contentPadding = PaddingValues(horizontal = 13.dp)
+            ) { Text("Настроить", color = Electric, fontSize = 12.sp) }
         }
         Spacer(Modifier.height(18.dp))
         Text("РАБОЧЕЕ ПРОСТРАНСТВО", color = Electric, fontSize = 11.sp,
@@ -94,6 +109,11 @@ fun PremiumProjectContent(
             project.title, color = WhiteText, fontSize = 31.sp, lineHeight = 35.sp,
             fontWeight = FontWeight.SemiBold
         )
+        if (project.archived) {
+            Spacer(Modifier.height(8.dp))
+            Text("ПРОЕКТ В АРХИВЕ", color = Caution, fontSize = 11.sp,
+                letterSpacing = 1.1.sp, fontWeight = FontWeight.SemiBold)
+        }
         Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Folder, contentDescription = null, tint = SubText, modifier = Modifier.size(15.dp))
@@ -345,6 +365,24 @@ fun PremiumProjectContent(
                 Text("Скопировать контекст", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
             }
         }
+    }
+    if (showSettings) {
+        ProjectSettingsDialog(
+            project = project, busy = state.busy,
+            onSave = onUpdateProject,
+            onArchive = onArchiveProject,
+            onBackup = { onExport(true, false) },
+            onRequestDelete = { showProjectDelete = true },
+            onDismiss = { showSettings = false }
+        )
+    }
+    if (showProjectDelete) {
+        ProjectDeleteDialog(
+            project = project, onDelete = {
+                onDeleteProject(it)
+                showProjectDelete = false
+            }, onDismiss = { showProjectDelete = false }
+        )
     }
     editingNote?.let { selected ->
         MemoryEditDialog(
