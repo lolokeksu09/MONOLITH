@@ -61,15 +61,14 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
     fun open(id: String?) = work { reload(id) }
 
     fun create(title: String, repository: String) = work {
-        val name = title.trim()
-        require(name.isNotEmpty() && name.length <= 100) { "Enter a project name (1–100 characters)" }
-        val slug = repository.trim().takeIf { it.isNotBlank() }
-        require(slug == null || Regex("[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+").matches(slug)) {
-            "Repository must be owner/name"
-        }
+        val input = ProjectInput.parse(title, repository)
         val id = UUID.randomUUID().toString()
-        withContext(Dispatchers.IO) { dao.upsertProject(ProjectRow(id, name, slug, System.currentTimeMillis())) }
+        withContext(Dispatchers.IO) {
+            dao.upsertProject(ProjectRow(id, input.title, input.repository, System.currentTimeMillis()))
+            requireNotNull(dao.project(id)) { "Проект не сохранился в локальной базе" }
+        }
         reload(id)
+        _state.value = _state.value.copy(notice = "Проект создан")
     }
 
     fun addDecision(text: String) = work {
