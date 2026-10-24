@@ -1,7 +1,7 @@
 package dev.lolokeksu.contextcapsule.domain
 
 enum class EvidenceKind { VERIFIED_REMOTE, OWNER_CONFIRMED, UNVERIFIED, UNKNOWN }
-data class Project(val id: String, val title: String, val repository: String?, val createdAt: Long)
+data class Project(val id: String, val title: String, val repository: String?, val createdAt: Long, val archived: Boolean = false)
 data class Decision(val id: String, val projectId: String, val text: String, val evidence: EvidenceKind, val createdAt: Long, val pinned: Boolean = false)
 data class ProjectTask(val id: String, val projectId: String, val title: String, val completed: Boolean, val createdAt: Long)
 data class GithubSnapshot(val projectId: String, val branch: String, val sha: String, val url: String,

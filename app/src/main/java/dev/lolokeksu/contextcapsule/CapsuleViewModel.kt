@@ -31,7 +31,7 @@ data class CapsuleUiState(
 
 class CapsuleViewModel(application: Application) : AndroidViewModel(application) {
     private val db = Room.databaseBuilder(application, ProjectDatabase::class.java, "capsule-v1.db")
-        .addMigrations(MIGRATION_1_2).build()
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
     private val dao = db.dao()
     private val github = PublicGithubClient()
     private val _state = MutableStateFlow(CapsuleUiState())
@@ -78,6 +78,49 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
         }
         reload(id)
         _state.value = _state.value.copy(notice = "Проект создан")
+    }
+
+    /** Editing the linked repository invalidates only its previous remote snapshot. */
+    fun updateProject(title: String, repository: String) = work {
+        val active = requireNotNull(_state.value.active) { "Проект не выбран" }
+        val input = ProjectInput.parse(title, repository)
+        withContext(Dispatchers.IO) {
+            db.withTransaction {
+                val current = requireNotNull(dao.project(active.id)) { "Проект не найден" }
+                require(dao.updateProjectDetails(active.id, input.title, input.repository) == 1) {
+                    "Не удалось изменить проект"
+                }
+                if (ProjectCatalog.repositoryChanged(current.repository, input.repository)) {
+                    dao.deleteSnapshot(active.id)
+                }
+            }
+        }
+        reload(active.id)
+        _state.value = _state.value.copy(notice = "Параметры проекта сохранены")
+    }
+
+    fun setArchive(archived: Boolean) = work {
+        val id = requireNotNull(_state.value.active).id
+        withContext(Dispatchers.IO) {
+            require(dao.setProjectArchived(id, archived) == 1) { "Проект не найден" }
+        }
+        reload(null)
+        _state.value = _state.value.copy(
+            notice = if (archived) "Проект перенесён в архив" else "Проект восстановлен"
+        )
+    }
+
+    /** Data removal requires the exact project title, also validated at the persistence boundary. */
+    fun deleteActiveProject(typedName: String) = work {
+        val p = requireNotNull(_state.value.active)
+        require(ProjectCatalog.confirmDelete(p.title, typedName)) {
+            "Для удаления введи точное название проекта"
+        }
+        withContext(Dispatchers.IO) {
+            require(dao.deleteProject(p.id) == 1) { "Проект не найден" }
+        }
+        reload(null)
+        _state.value = _state.value.copy(notice = "Проект удалён с устройства")
     }
 
     fun addDecision(text: String) = work {
@@ -200,7 +243,8 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
             .put("pinned", row.pinned)
         fun t(row: ProjectTask) = JSONObject().put("title", row.title).put("done", row.completed)
         return JSONObject().put("schemaVersion", 1)
-            .put("project", JSONObject().put("title", p.title).put("repository", p.repository ?: ""))
+            .put("project", JSONObject().put("title", p.title)
+                .put("repository", p.repository ?: "").put("archived", p.archived))
             .put("decisions", JSONArray().apply { s.decisions.forEach { put(d(it)) } })
             .put("tasks", JSONArray().apply { s.tasks.forEach { put(t(it)) } })
             .toString(2)
@@ -213,6 +257,7 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
         val p = parsed.getJSONObject("project")
         val title = p.getString("title").trim()
         val repo = p.optString("repository").trim().takeIf { it.isNotBlank() }
+        val archived = p.optBoolean("archived", false)
         require(title.isNotEmpty() && title.length <= 100) { "Invalid project title" }
         require(repo == null || Regex("[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+").matches(repo)) { "Invalid repository" }
         val notes = parsed.getJSONArray("decisions")
@@ -234,7 +279,7 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
         val newId = UUID.randomUUID().toString()
         withContext(Dispatchers.IO) {
             db.withTransaction {
-                dao.upsertProject(ProjectRow(newId, title, repo, System.currentTimeMillis()))
+                dao.upsertProject(ProjectRow(newId, title, repo, System.currentTimeMillis(), archived))
                 validNotes.forEach { (text, pinned) ->
                     dao.upsertDecision(DecisionRow(UUID.randomUUID().toString(), newId, text,
                         "UNVERIFIED", System.currentTimeMillis(), pinned))

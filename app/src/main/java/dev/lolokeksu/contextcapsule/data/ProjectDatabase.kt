@@ -6,7 +6,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import dev.lolokeksu.contextcapsule.domain.*
 
 @Entity(tableName = "projects")
-data class ProjectRow(@PrimaryKey val id: String, val title: String, val repository: String?, val createdAt: Long)
+data class ProjectRow(
+    @PrimaryKey val id: String, val title: String, val repository: String?, val createdAt: Long,
+    @ColumnInfo(defaultValue = "0") val archived: Boolean = false
+)
 
 @Entity(tableName = "decisions", foreignKeys = [ForeignKey(entity = ProjectRow::class, parentColumns = ["id"], childColumns = ["projectId"], onDelete = ForeignKey.CASCADE)], indices = [Index("projectId")])
 data class DecisionRow(@PrimaryKey val id: String, val projectId: String, val text: String, val evidence: String, val createdAt: Long,
@@ -41,6 +44,12 @@ interface ProjectDao {
     suspend fun projectMetrics(): List<ProjectMetricsRow>
     @Query("SELECT * FROM projects ORDER BY createdAt DESC") suspend fun projects(): List<ProjectRow>
     @Query("SELECT * FROM projects WHERE id=:id") suspend fun project(id: String): ProjectRow?
+    @Query("UPDATE projects SET title=:title, repository=:repository WHERE id=:id")
+    suspend fun updateProjectDetails(id: String, title: String, repository: String?): Int
+    @Query("UPDATE projects SET archived=:archived WHERE id=:id")
+    suspend fun setProjectArchived(id: String, archived: Boolean): Int
+    @Query("DELETE FROM snapshots WHERE projectId=:projectId")
+    suspend fun deleteSnapshot(projectId: String): Int
     @Query("SELECT * FROM decisions WHERE projectId=:id ORDER BY pinned DESC, createdAt ASC") suspend fun decisions(id: String): List<DecisionRow>
     @Query("SELECT * FROM decisions WHERE projectId=:projectId AND id=:id") suspend fun decision(projectId: String, id: String): DecisionRow?
     @Query("SELECT * FROM tasks WHERE projectId=:id ORDER BY createdAt ASC") suspend fun tasks(id: String): List<TaskRow>
@@ -49,7 +58,7 @@ interface ProjectDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun upsertDecision(row: DecisionRow)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun upsertTask(row: TaskRow)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun upsertSnapshot(row: SnapshotRow)
-    @Query("DELETE FROM projects WHERE id=:id") suspend fun deleteProject(id: String)
+    @Query("DELETE FROM projects WHERE id=:id") suspend fun deleteProject(id: String): Int
     @Query("DELETE FROM decisions WHERE projectId=:projectId AND id=:id")
     suspend fun deleteDecision(projectId: String, id: String): Int
     @Query("UPDATE decisions SET text=:text, evidence='UNVERIFIED' WHERE projectId=:projectId AND id=:id")
@@ -72,10 +81,16 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
-@Database(entities = [ProjectRow::class, DecisionRow::class, TaskRow::class, SnapshotRow::class], version = 2, exportSchema = false)
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE projects ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
+@Database(entities = [ProjectRow::class, DecisionRow::class, TaskRow::class, SnapshotRow::class], version = 3, exportSchema = false)
 abstract class ProjectDatabase : RoomDatabase() { abstract fun dao(): ProjectDao }
 
-fun ProjectRow.toDomain() = Project(id, title, repository, createdAt)
+fun ProjectRow.toDomain() = Project(id, title, repository, createdAt, archived)
 fun DecisionRow.toDomain() = Decision(id, projectId, text, EvidenceKind.entries.firstOrNull { it.name == evidence } ?: EvidenceKind.UNKNOWN, createdAt, pinned)
 fun TaskRow.toDomain() = ProjectTask(id, projectId, title, completed, createdAt)
 fun SnapshotRow.toDomain() = GithubSnapshot(projectId, branch, sha, url, checkedAt, summary, warning)
