@@ -1,3 +1,27 @@
+# NOX 1.9.2 — Volumetric Light
+
+**Volumetric composition update for all nine offline AMOLED wallpapers.** This patch adds shaped, directionally lit surfaces in Rich and Ultra instead of increasing brightness uniformly:
+
+- **FLUX:** wide luminous energy sheet and specular rim
+- **HALO:** toroidal volume with lighter near-facing wall
+- **NEBULA:** dense directional scattering in existing smooth gas clouds
+- **AURORA:** lit fold surfaces between curtain filaments
+- **PULSE:** shaded sphere-like energy core and outer shell
+- **COMET:** broad tapered plasma wake around existing trails
+- **VEIL:** translucent fabric folds and a narrow sheen
+- **GRID:** illuminated volumetric pillar bodies above the horizon
+- **SHARDS:** faceted translucent crystal body with angled highlights
+
+**Modes and compatibility:** Balanced retains NOX 1.9's lean shader pipeline. Rich/Ultra add the new volume inside the existing cinematic quality gate; low-energy fill is suppressed to retain AMOLED black. No new scene IDs, parameters, permissions, network, root, Room schema, preset migration or EGL pass. Existing pinned Studio preview and battery/thermal downgrade are preserved.
+
+**Debug preview:** version `1.9.2`, code `15`, ID `studio.nox.light.volumetric`, labeled `NOX 1.9.2 Volumetric`. This independent application does not replace 1.9.1 or automatically share its private presets. **Keep previous installations.**
+
+**Quality limits:** GLSL/Android CI validates syntax and packaging, not visual quality or target-device performance. Actual fullscreen depth, 60/120 FPS, heat and battery draw must be checked on the Legion Y70. Volumetric here means layered procedural lighting, *not* physical ray-marched 3D fog.
+
+[Review PR #13](https://github.com/lolokeksu09/NOX-LEGION/pull/13) · [Changelog](docs/CHANGELOG.md) · [QA ledger](docs/QA_STATUS.md) · [AGENTS](AGENTS.md)
+
+---
+
 # NOX 1.9.1 — Cinematic Depth
 
 **Art-first update:** Nine existing Android AMOLED live wallpapers now have **additional large shapes, mid-depth light and fine texture** in Rich and Ultra, instead of being largely empty or simply brighter. The previously saved quality setting continues to work offline with automatic thermal/power-safe fallback.

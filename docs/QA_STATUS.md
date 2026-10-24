@@ -1,3 +1,17 @@
+# NOX 1.9.2 Volumetric Light — QA ledger (2026-10-24)
+
+**Branch:** `feature/nox-1-9-2-volumetric-light`; PR [#13](https://github.com/lolokeksu09/NOX-LEGION/pull/13) targeting 1.9.1. No merge to `main`.
+
+## Evidence and status
+- The new volumetric contract was verified RED in [Actions #40083148531](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40083148531), with the expected missing `shapedVolume` assertion; other previously run structure tests passed.
+- Shader implementation commit: `677bcd13`. Nine existing mode branches each get sculpted volume; final low-energy suppression only applies in the Rich/Ultra quality path.
+- Isolated package code 15, `studio.nox.light.volumetric`, workflow artifact `NOX-1.9.2-volumetric-APK`. Structural packaging regression added in `571528e9`.
+- **Automated end-to-end validation on final branch head pending:** structural tests, GLES100 `glslangValidator`, Kotlin/JUnit, Android assembleDebug, artifact upload. No successful binary claimed until the final CI confirms it.
+- **Not tested on Lenovo Legion Y70:** actual GPU shader link, screenshot-level visual improvement, contrast, 60/120 FPS, GPU load, power draw, thermal caps, lockscreen/surface life cycle, export and set-wallpaper.
+- Debug package has separate app data from prior NOX previews; do not uninstall a working package without exporting presets.
+
+---
+
 # NOX 1.9.1 Cinematic Depth — verified binary and device-QA ledger (2026-10-24)
 
 ## Automated verification — passed

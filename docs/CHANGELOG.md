@@ -8,7 +8,9 @@
 - **Intended effect:** volumetric folds, toroidal profiles, dense gas lobes, depth-weighted curtains and comet wakes, energy-core shading, lit geometry and translucent crystal faces. Preserve existing shapes and nine mode IDs, `.nox` preset compatibility, pure-black AMOLED regions, pinned Studio preview and energy/thermal quality fallback.
 - **Patch 2 — source:** `677bcd13` adds nine distinct low-cost geometric lighting fields to the existing quality-gated cinematic branch: FLUX lit sheet; HALO tube; NEBULA scattering; AURORA fold; PULSE spherical core; COMET plasma wake; VEIL translucent fabric; GRID illuminated pillars; SHARDS angled crystal faces. A per-fragment low-energy gate suppresses diffuse haze. This preserves the prior nine scene IDs, shader inputs, Room and exports.
 - **Verification:** original missing-layer regression failed as expected in [CI #40083148531](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40083148531). The new shader requires the full GLSL/JUnit/Android CI gate before considering this implementation buildable; phone appearance/FPS/thermal testing remains outstanding.
-- **Status:** source implementation published; standalone 1.9.2 APK packaging and QA pending.
+- **Patch 3 — independent preview packaging:** structural contract `571528e9`; Android version `1.9.2` / code `15` in `7407ccd3`, independent debug suffix `.volumetric` and label `NOX 1.9.2 Volumetric` in `1ca40031`, workflow artifact `NOX-1.9.2-volumetric-APK` in `70c2f568`. Existing 1.9.1 installation/data unchanged.
+- **Docs:** README and QA ledger updated with scene details and explicit lack of device testing.
+- **Status:** Android/GLSL and artifact validation pending on latest branch head. No on-device visual, FPS or thermal claims.
 
 ## [1.9.1 / Cinematic Depth] — denser real-time composition (2026-10-24)
 
