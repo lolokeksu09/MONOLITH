@@ -32,7 +32,7 @@ class RepositoryOverviewUiTest {
             RepositoryOverviewPanel(snapshot, true, false, {})
         }
         rule.onNodeWithText("Последний запуск CI успешен").assertExists()
-        rule.onNodeWithText("Improve routing", substring = true).assertExists()
+        rule.onNodeWithText("Community project").assertExists()
         rule.onNodeWithText("2").assertExists()
         rule.onNodeWithText("4").assertExists()
     }
