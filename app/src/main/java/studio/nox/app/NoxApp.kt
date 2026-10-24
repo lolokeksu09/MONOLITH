@@ -658,7 +658,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
         )
         }
     }
-    if(immersive) FullscreenPreview(config,fps,gyro,onClose={immersive=false})
+    if(immersive) FullscreenPreview(config,fps,gyro,quality,onClose={immersive=false})
 }
 
 
@@ -689,7 +689,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
     }
 }
 
-@Composable private fun FullscreenPreview(config:SceneConfig,fps:Int,gyro:Boolean,onClose:()->Unit) {
+@Composable private fun FullscreenPreview(config:SceneConfig,fps:Int,gyro:Boolean,quality:Int,onClose:()->Unit) {
     Dialog(onDismissRequest=onClose,properties=DialogProperties(usePlatformDefaultWidth=false)) {
         Box(Modifier.fillMaxSize().background(Ink)) {
             LivePreview(config,fps,gyro,quality,Modifier.fillMaxSize())
