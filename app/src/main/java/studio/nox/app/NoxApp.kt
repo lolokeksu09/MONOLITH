@@ -52,6 +52,7 @@ import studio.nox.model.SceneConfig
 import studio.nox.model.SceneLooks
 import studio.nox.model.SceneLook
 import studio.nox.model.ScenePresets
+import studio.nox.model.SceneSurprise
 import studio.nox.model.SceneRegistry
 import studio.nox.model.SceneCategory
 import studio.nox.model.NamedScenePreset
@@ -196,6 +197,11 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
                     Tab.HOME -> HomeScreen(homeScene,active,homeDraft,settings.fps,settings.gyroEnabled,
                         onScene={homeScene=it;homeDraft=null},
                         onRemix={homeDraft=SceneLooks.shuffle(previewHomeConfig)},
+                        onSurprise={
+                            val next=SceneSurprise.choose(homeScene,System.nanoTime().toInt())
+                            homeScene=next.sceneId
+                            homeDraft=next
+                        },
                         onLook={look->homeDraft=SceneLooks.apply(previewHomeConfig,look)},
                         onVariant={variant->homeDraft=variant.config},
                         onEdit={config->
@@ -256,7 +262,7 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable private fun HomeScreen(
     scene:String, active:NoxPreset?, draft:SceneConfig?, fps:Int, gyro:Boolean,
-    onScene:(String)->Unit, onRemix:()->Unit, onLook:(SceneLook)->Unit,
+    onScene:(String)->Unit, onRemix:()->Unit, onSurprise:()->Unit, onLook:(SceneLook)->Unit,
     onVariant:(NamedScenePreset)->Unit,
     onEdit:(SceneConfig)->Unit, onApply:()->Unit, onExport:(SceneConfig)->Unit
 ) {
@@ -336,6 +342,12 @@ private enum class Tab { HOME, STUDIO, LIBRARY, SETTINGS }
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
             .padding(top=2.dp,bottom=5.dp),
             horizontalArrangement=Arrangement.spacedBy(5.dp),verticalAlignment=Alignment.CenterVertically) {
+            TextButton(onClick=onSurprise) {
+                Icon(Icons.Outlined.Shuffle,contentDescription=null,tint=Cyan,
+                    modifier=Modifier.size(18.dp))
+                Spacer(Modifier.width(7.dp))
+                Text("Сюрприз",color=Cyan,fontSize=12.sp)
+            }
             TextButton(onClick=onRemix) {
                 Icon(Icons.Outlined.AutoAwesome,contentDescription=null,tint=Cyan,
                     modifier=Modifier.size(18.dp))
