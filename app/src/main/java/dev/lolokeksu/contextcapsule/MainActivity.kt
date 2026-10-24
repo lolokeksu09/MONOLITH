@@ -28,8 +28,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.lolokeksu.contextcapsule.domain.EvidenceKind
 
-private val Ink = Color(0xFF050609)
-private val Surface = Color(0xFF10141C)
+private val Ink = Color(PremiumPalette.Background.toInt())
+private val Surface = Color(PremiumPalette.Panel.toInt())
 private val Accent = Color(0xFF6BA8FF)
 private val Muted = Color(0xFF96A2B5)
 
@@ -68,9 +68,10 @@ private fun CapsuleApp(vm: CapsuleViewModel) {
         surface = Surface, onSurface = Color(0xFFF1F5FF), onBackground = Color(0xFFF1F5FF),
         surfaceVariant = Color(0xFF1A2230), onSurfaceVariant = Muted)
     MaterialTheme(colorScheme = colors) {
+        CompositionLocalProvider(LocalContentColor provides Color(PremiumPalette.Title.toInt())) {
         Column(Modifier.fillMaxSize().background(Ink).statusBarsPadding().navigationBarsPadding()) {
             if (state.active == null) {
-                HomeContent(state, onOpen = vm::open, onCreate = vm::create,
+                PremiumHomeContent(state, onOpen = vm::open, onCreate = vm::create,
                     onImport = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) })
             } else {
                 ProjectContent(state, onBack = { vm.open(null) }, onSync = vm::sync,
@@ -108,80 +109,8 @@ private fun CapsuleApp(vm: CapsuleViewModel) {
             }) { Text("Export backup") } },
             dismissButton = { TextButton(onClick = { showBackupWarning = false }) { Text("Cancel") } }
         )
+        }
     }
-}
-
-@Composable
-private fun HomeContent(state: CapsuleUiState, onOpen: (String?) -> Unit,
-                        onCreate: (String, String) -> Unit, onImport: () -> Unit) {
-    var showCreate by remember { mutableStateOf(false) }
-    var title by remember { mutableStateOf("") }
-    var repository by remember { mutableStateOf("") }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp, vertical = 26.dp)) {
-        Text("PRIVATE WORKSPACE / 01", color = Accent, fontSize = 11.sp, letterSpacing = 2.sp)
-        Spacer(Modifier.height(12.dp))
-        Text("Context\nCapsule", fontSize = 43.sp, lineHeight = 46.sp, fontWeight = FontWeight.Light)
-        Spacer(Modifier.height(14.dp))
-        Text("A durable memory for your projects. No paid AI API. Your data stays here.", color = Muted, fontSize = 14.sp)
-        Spacer(Modifier.height(28.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Button(onClick = { showCreate = true }, shape = RoundedCornerShape(14.dp)) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(Modifier.width(6.dp))
-                Text("New project")
-            }
-            OutlinedButton(onClick = onImport, shape = RoundedCornerShape(14.dp)) {
-                Icon(Icons.Default.FileOpen, contentDescription = null)
-                Spacer(Modifier.width(6.dp))
-                Text("Import backup")
-            }
-        }
-        Spacer(Modifier.height(34.dp))
-        Text("YOUR PROJECTS", color = Muted, letterSpacing = 2.sp, fontSize = 11.sp)
-        Spacer(Modifier.height(12.dp))
-        if (state.projects.isEmpty()) {
-            SurfaceCard {
-                Text("Nothing to remember yet", fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.height(6.dp))
-                Text("Create a project, add decisions, then build your first handoff capsule.", color = Muted)
-            }
-        }
-        state.projects.forEach { p ->
-            Spacer(Modifier.height(10.dp))
-            Card(onClick = { onOpen(p.id) }, shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Surface)) {
-                Column(Modifier.fillMaxWidth().padding(20.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Folder, contentDescription = null, tint = Accent)
-                        Spacer(Modifier.width(12.dp))
-                        Text(p.title, fontSize = 21.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f),
-                            maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        Icon(Icons.Default.ChevronRight, contentDescription = "Open", tint = Muted)
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    Text(p.repository ?: "Local-only project", color = Muted, fontSize = 13.sp)
-                    Spacer(Modifier.height(8.dp))
-                    Text("Open project memory", color = Accent, fontSize = 12.sp)
-                }
-            }
-        }
-        Spacer(Modifier.height(24.dp))
-        state.notice?.let { Text(it, color = Accent) }
-        if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-    }
-    if (showCreate) AlertDialog(
-        onDismissRequest = { showCreate = false },
-        title = { Text("New project") },
-        text = {
-            Column {
-                OutlinedTextField(title, { title = it }, label = { Text("Project name") }, singleLine = true)
-                Spacer(Modifier.height(12.dp))
-                OutlinedTextField(repository, { repository = it }, label = { Text("GitHub owner/repo (optional)") }, singleLine = true)
-            }
-        },
-        confirmButton = { TextButton(onClick = { onCreate(title, repository); showCreate = false; title = ""; repository = "" }) { Text("Create") } },
-        dismissButton = { TextButton(onClick = { showCreate = false }) { Text("Cancel") } }
-    )
 }
 
 @Composable
