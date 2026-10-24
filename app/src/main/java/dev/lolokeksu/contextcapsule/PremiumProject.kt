@@ -25,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -62,12 +63,14 @@ fun PremiumProjectContent(
     var preview by remember(project.id) { mutableStateOf(false) }
     var decisionQuery by remember(project.id) { mutableStateOf("") }
     var pendingOnly by remember(project.id) { mutableStateOf(false) }
+    var selectedSection by remember(project.id) { mutableIntStateOf(0) }
     val shownDecisions = WorkspaceTools.filterDecisions(state.decisions, decisionQuery, pendingOnly)
 
-    Column(
-        Modifier.fillMaxSize().background(InkBlack).verticalScroll(rememberScrollState())
-            .padding(horizontal = 23.dp, vertical = 20.dp)
-    ) {
+    Column(Modifier.fillMaxSize().background(InkBlack)) {
+        Column(
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
+                .padding(horizontal = 23.dp, vertical = 18.dp)
+        ) {
         TextButton(onClick = onBack, contentPadding = PaddingValues(0.dp)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = BodyText)
             Spacer(Modifier.width(7.dp))
@@ -87,9 +90,26 @@ fun PremiumProjectContent(
             Text(project.repository ?: "Локальный проект", color = BodyText, fontSize = 12.sp, maxLines = 2)
         }
         Spacer(Modifier.height(22.dp))
-        RepositoryOverviewPanel(state.snapshot, project.repository != null, state.busy, onSync, onTask, state.tasks)
-        Spacer(Modifier.height(25.dp))
-
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            listOf("Обзор", "Память").forEachIndexed { index, label ->
+                val active = selectedSection == index
+                FilledTonalButton(
+                    onClick = { selectedSection = index },
+                    modifier = Modifier.weight(1f).height(46.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = if (active) Color(0xFF243F63) else Plate,
+                        contentColor = if (active) WhiteText else BodyText
+                    )
+                ) {
+                    Text(label, fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal, fontSize = 14.sp)
+                }
+            }
+        }
+        Spacer(Modifier.height(22.dp))
+        if (selectedSection == 0) {
+            RepositoryOverviewPanel(state.snapshot, project.repository != null, state.busy, onSync, onTask, state.tasks)
+        } else {
         Column(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(23.dp))
                 .background(Brush.linearGradient(listOf(Color(0xFF1E3961), Color(0xFF111C30))))
@@ -111,17 +131,6 @@ fun PremiumProjectContent(
                 StatBlock(if (state.snapshot == null) "—" else "✓", "GitHub", Modifier.weight(1f))
             }
             Spacer(Modifier.height(19.dp))
-            Button(
-                onClick = onCopy,
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Electric, contentColor = InkBlack)
-            ) {
-                Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(17.dp))
-                Spacer(Modifier.width(9.dp))
-                Text("Скопировать капсулу", fontWeight = FontWeight.SemiBold)
-            }
-            Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = onShare, contentPadding = PaddingValues(0.dp)) {
                     Icon(Icons.Default.IosShare, contentDescription = null, tint = BodyText, modifier = Modifier.size(17.dp))
@@ -261,6 +270,24 @@ fun PremiumProjectContent(
         }
         if (state.busy) { Spacer(Modifier.height(10.dp)); LinearProgressIndicator(Modifier.fillMaxWidth()) }
         Spacer(Modifier.height(32.dp))
+        }
+        }
+        HorizontalDivider(color = Line.copy(alpha = 0.8f))
+        Row(
+            Modifier.fillMaxWidth().background(InkBlack)
+                .padding(horizontal = 23.dp, vertical = 10.dp)
+        ) {
+            Button(
+                onClick = onCopy,
+                modifier = Modifier.fillMaxWidth().height(51.dp).testTag("handoff_copy"),
+                shape = RoundedCornerShape(15.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Electric, contentColor = InkBlack)
+            ) {
+                Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(10.dp))
+                Text("Скопировать капсулу", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+            }
+        }
     }
 }
 
