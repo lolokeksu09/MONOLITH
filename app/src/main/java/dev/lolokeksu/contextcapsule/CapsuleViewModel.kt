@@ -117,10 +117,14 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
     fun sync() = work {
         val p = requireNotNull(_state.value.active)
         val repo = requireNotNull(p.repository) { "Link a public GitHub repository first" }
-        val snap = github.sync(p.id, repo)
-        withContext(Dispatchers.IO) { dao.upsertSnapshot(SnapshotRow(snap.projectId, snap.branch, snap.sha, snap.url, snap.checkedAt, snap.summary, snap.warning)) }
+        val previous = withContext(Dispatchers.IO) { dao.snapshot(p.id)?.toDomain() }
+        val fetched = github.sync(p.id, repo)
+        val snap = fetched.copy(summary = RepositoryOverviewCodec.withPrevious(fetched.summary, previous))
+        withContext(Dispatchers.IO) {
+            dao.upsertSnapshot(SnapshotRow(snap.projectId, snap.branch, snap.sha, snap.url, snap.checkedAt, snap.summary, snap.warning))
+        }
         reload()
-        _state.value = _state.value.copy(notice = snap.warning?.let { "Partial GitHub sync: $it" } ?: "Repository snapshot saved")
+        _state.value = _state.value.copy(notice = snap.warning?.let { "Неполная синхронизация: $it" } ?: "GitHub обновлён")
     }
 
     fun capsule(compact: Boolean = false): String {
