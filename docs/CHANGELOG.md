@@ -1,5 +1,14 @@
 # NOX — журнал изменений
 
+## [1.9.3 / Vivid Light] — black-safe luminous contrast (2026-10-24)
+
+**Branch:** `feature/nox-1-9-3-vivid-light`, based on NOX 1.9.2 Volumetric Light; pending review in a separate PR. No automatic merge into `main`.
+
+- **Observed issue:** User reports the nine live wallpapers still look washed out/dim despite added depth. Code review shows small scene radiance coefficients and only `sum*=1.0+qualityMix*0.22` before hard `min(sum,vec3(1.0))` clipping. This cannot increase localized weak highlights enough and loses contrast in hotter peaks. This is a source-level hypothesis, not a measured device colorimetry finding.
+- **Patch 1, red test:** `d260b8bf` adds numeric spectral-grade expectations (black input stays exactly black; a 0.12 neutral highlight rises above 0.22; a 0.8 highlight stays below clipping) and isolated 1.9.3 preview packaging contracts. Validation must fail against the unchanged 1.9.2 production code.
+- **Targeted remedy:** a quality-gated, masked, bounded spectral tone curve on existing scene light, saturation recovery, no blanket black lift, no additional geometry loops or textures. Balanced and energy/thermal fallbacks remain unchanged, as do all nine IDs and existing `.nox` presets.
+- **Status:** regression/design recorded; CI red-green evidence, GLSL syntax, Kotlin tests, APK and device tests to be recorded separately.
+
 ## [1.9.2 / Volumetric Light] — deeper shaped materials (2026-10-24)
 
 **Base:** 1.9.1 Cinematic Depth `3e5f592`; separate branch `feature/nox-1-9-2-volumetric-light`, not merged to `main`.
