@@ -27,6 +27,23 @@ class WorkspaceToolsTest {
         assertEquals(3, WorkspaceTools.filterDecisions(input, "", false).size)
     }
 
+    @Test fun pinnedNotesAppearFirstWithoutChangingTrustStatus() {
+        val decisions = listOf(
+            Decision("old", "project", "Old", EvidenceKind.OWNER_CONFIRMED, 1),
+            Decision("pin", "project", "Pinned", EvidenceKind.UNVERIFIED, 2, pinned = true)
+        )
+        val ordered = WorkspaceTools.filterDecisions(decisions, "", false)
+        assertEquals(listOf("pin", "old"), ordered.map { it.id })
+        assertEquals(EvidenceKind.UNVERIFIED, ordered.first().evidence)
+    }
+
+    @Test fun editedConfirmedTextMustReturnToUnverified() {
+        assertEquals(EvidenceKind.UNVERIFIED,
+            WorkspaceTools.evidenceAfterEdit(EvidenceKind.OWNER_CONFIRMED, "old", "new"))
+        assertEquals(EvidenceKind.OWNER_CONFIRMED,
+            WorkspaceTools.evidenceAfterEdit(EvidenceKind.OWNER_CONFIRMED, "old", "old"))
+    }
+
     @Test fun incomingSharedTextIsTrimmedButNeverSilentlyTruncated() {
         assertEquals("Remember this", WorkspaceTools.normalizeSharedText("  Remember this  "))
         assertNull(WorkspaceTools.normalizeSharedText("   "))
