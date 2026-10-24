@@ -1,5 +1,13 @@
 # NOX — журнал изменений
 
+## [1.8.0 / Patch 6] — Fix GLSL reserved identifier caught by compiler (2026-10-24)
+
+- Independent `glslangValidator` check detected previously undetected GLSL ES 100 error: `active` is a reserved word.
+- Renamed `active` variables to `visibilityMask` and updated all references in COMET and SHARDS. No changes to visual formulas.
+- Updated structural regressions to reject the reserved identifier, preserving COMET/SHARDS culling.
+- Source/test commits: `99755c6`, `b8d039a`, `433d68a`. **CI recompilation pending** at this documentation commit; final code must pass shader and Android builds.
+- Hardware/runtime behavior remains unverified.
+
 ## [1.8.0 / Patch 5] — Build-time GLES shader validation (2026-10-24)
 
 - Added `tests/verify_glsl.py` which extracts the real VERTEX/FRAGMENT shader strings from GlBackend.kt, prepends `#version 100`, and compiles both with `glslangValidator`.
