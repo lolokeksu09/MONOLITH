@@ -4,6 +4,17 @@
 
 CONTEXT CAPSULE is a proposed native Android application that keeps explicit project decisions, tasks and source-backed GitHub state in a portable local knowledge base. It exports a reviewed Markdown/JSON **context capsule** for continuing work in a new ChatGPT conversation. ChatGPT receives the capsule via user-initiated Android sharing or copy/paste — there is no automatic access to private chats.
 
+## 0.2.0 preview — visual identity
+
+The Android feature branch now uses a refined, **Russian-localized AMOLED dashboard and project workspace**:
+- Explicit WCAG-oriented text contrast; no black-on-black fallback.
+- Product-specific glowing capsule geometry drawn in native Compose Canvas (no remote imagery/assets).
+- A distinctive project overview with primary Create action, real empty-state onboarding, truthful local/GitHub status.
+- Project detail with source verification, approved/unverified decisions, next tasks and a prominent ChatGPT handoff.
+- No new permissions, backend or paid API.
+
+**Build status:** GitHub Actions is the source of truth. A source commit is not a verified device installation. Debug signing may vary across GitHub runners; back up existing local projects before changing installed builds.
+
 ## Current status — 24 October 2026
 
 | Item | Verified state |

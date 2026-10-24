@@ -1,5 +1,15 @@
 # CONTEXT CAPSULE — Changelog
 
+## 2026-10-24 — 0.2.0-preview · AMOLED UX redesign
+
+- Fixed unreadable black title on near-black background by using explicit high-contrast UI colors, supported by palette contrast tests.
+- Replaced plain home with custom native capsule illustration, stronger typography, Russian copy, first-project onboarding and substantive project cards.
+- Replaced old project detail UI with coherent premium workspace: confirmed decisions, task status, GitHub snapshot, capsule preview and export.
+- Kept Room persistence, read-only GitHub sync, JSON import/export and manual ChatGPT handoff wired to existing implementation.
+- Incremented Android versionCode to 2 and versionName to `0.2.0-preview`.
+- No new app permissions, telemetry or paid AI API.
+- Validation: APK only considered ready after successful Android CI for exact release candidate SHA. Device UX remains to be checked on Lenovo Legion Y70 2026.
+
 ## 2026-10-24 — Android 0.1.0 implementation branch (unverified build)
 
 - Privacy refinement: JSON backup now requires explicit plaintext warning/confirmation; document import reads are bounded to 1 MB.
