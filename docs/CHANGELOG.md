@@ -15,6 +15,12 @@
 - Implementation commits: `98dc26a`, `cf29390`, `a475176`, `92f5560`.
 - IMPORTANT: Independent glslangValidator pass is needed; GLSL syntax correctness is distinct from actual GPU visual quality.
 
+### Patch 5: Release verification
+- [CI #40078358750](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40078358750): 32 structural tests, glslangValidator vertex/fragment shader compilation, Kotlin tests, Android build and APK upload all **SUCCESS** at code SHA `4b04e44c073f874a7073affe69c5a317ac8f801f`.
+- [CI #40078376689](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40078376689): post-fix docs SHA `8d61f1ef7bfb316de9673c5b2587f950283518b8`, all five stages **SUCCESS**.
+- Artifact `NOX-1.9-overdrive-APK` (ID `12554345934`) — extracted APK 19,494,687 bytes, SHA-256 `f5c58568636059dac2c1a6d797b145e4ce50a808d7287ab799089080769b2aa1`. Both ZIP and APK CRC verified; AndroidManifest.xml, classes.dex, resources.arsc present.
+- `docs/QA_STATUS.md` distinguishes confirmed CI from unverified GPU visual quality and thermal behaviour on Lenovo Legion Y70. No main merge.
+
 ### Patch 4: Preview regression fixes
 - Updated pinned Studio preview structural assertion for the extra quality argument (`8d193271`). Fresh structural and GLES validation passed in GitHub CI run #40078110208; Android build revealed a missing quality parameter in FullscreenPreview.
 - Fixed immersive FullscreenPreview quality propagation (`f7c3bb6e`), added regression (`4b04e44c`). Android build must be rerun; successful release status **not yet claimed**.
