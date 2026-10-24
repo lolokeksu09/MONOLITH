@@ -15,6 +15,9 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
+import dev.lolokeksu.contextcapsule.domain.WorkspaceTools
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -49,6 +52,8 @@ fun PremiumHomeContent(
     var showCreate by remember { mutableStateOf(false) }
     var title by remember { mutableStateOf("") }
     var repository by remember { mutableStateOf("") }
+    var search by remember { mutableStateOf("") }
+    val visibleProjects = WorkspaceTools.filterProjects(state.projects, search)
     Column(
         modifier = Modifier.fillMaxSize().background(B).verticalScroll(rememberScrollState())
             .padding(start = 24.dp, end = 24.dp, top = 21.dp, bottom = 32.dp)
@@ -73,20 +78,25 @@ fun PremiumHomeContent(
                     .padding(horizontal = 12.dp, vertical = 7.dp)
             ) { Text("LOCAL", color = Color(PremiumPalette.Teal.toInt()), fontSize = 10.sp, letterSpacing = 1.5.sp, fontWeight = FontWeight.SemiBold) }
         }
-        Spacer(Modifier.height(35.dp))
+        Spacer(Modifier.height(if (state.projects.isEmpty()) 35.dp else 22.dp))
         Text(
-            "Контекст, который\nне потеряется.",
-            color = White, fontSize = 34.sp, lineHeight = 39.sp,
+            if (state.projects.isEmpty()) "Контекст, который\nне потеряется." else "С возвращением.",
+            color = White, fontSize = if (state.projects.isEmpty()) 34.sp else 29.sp,
+            lineHeight = if (state.projects.isEmpty()) 39.sp else 34.sp,
             fontWeight = FontWeight.SemiBold, letterSpacing = (-0.9).sp
         )
-        Spacer(Modifier.height(13.dp))
+        Spacer(Modifier.height(11.dp))
         Text(
-            "Решения, задачи и факты из GitHub — в одном месте. Продолжай работу в новом чате без повторений.",
+            if (state.projects.isEmpty())
+                "Решения, задачи и факты из GitHub — в одном месте. Продолжай работу в новом чате без повторений."
+            else "Все проекты и решения под рукой. Найди нужный контекст или сохрани новый.",
             color = MutedText, fontSize = 14.sp, lineHeight = 21.sp
         )
-        Spacer(Modifier.height(26.dp))
-        CapsuleShowcase()
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(if (state.projects.isEmpty()) 26.dp else 17.dp))
+        if (state.projects.isEmpty()) {
+            CapsuleShowcase()
+            Spacer(Modifier.height(20.dp))
+        }
         Button(
             onClick = { showCreate = true },
             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -120,10 +130,38 @@ fun PremiumHomeContent(
             ) { Text(state.projects.size.toString(), color = MutedText, fontSize = 12.sp) }
         }
         Spacer(Modifier.height(14.dp))
+        if (state.projects.isNotEmpty()) {
+            OutlinedTextField(
+                value = search,
+                onValueChange = { search = it },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(15.dp),
+                label = { Text("Поиск по проектам") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = SoftText) },
+                trailingIcon = {
+                    if (search.isNotBlank()) {
+                        IconButton(onClick = { search = "" }) {
+                            Icon(Icons.Default.Close, contentDescription = "Очистить поиск", tint = MutedText)
+                        }
+                    }
+                }
+            )
+            Spacer(Modifier.height(14.dp))
+        }
         if (state.projects.isEmpty()) {
             FirstProjectPanel()
+        } else if (visibleProjects.isEmpty()) {
+            Column(
+                Modifier.fillMaxWidth().background(P, RoundedCornerShape(20.dp)).padding(20.dp)
+            ) {
+                Text("Ничего не найдено", color = White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(5.dp))
+                Text("Попробуй другое название или часть адреса GitHub.", color = MutedText, fontSize = 13.sp)
+                TextButton(onClick = { search = "" }) { Text("Сбросить поиск", color = BlueLight) }
+            }
         } else {
-            state.projects.forEachIndexed { index, project ->
+            visibleProjects.forEachIndexed { index, project ->
                 if (index != 0) Spacer(Modifier.height(10.dp))
                 Card(
                     onClick = { onOpen(project.id) },
