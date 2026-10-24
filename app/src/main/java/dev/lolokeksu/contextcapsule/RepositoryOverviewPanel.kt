@@ -13,6 +13,10 @@ import androidx.compose.material.icons.filled.FactCheck
 import androidx.compose.material.icons.filled.Source
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -24,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lolokeksu.contextcapsule.domain.GithubSnapshot
 import dev.lolokeksu.contextcapsule.domain.RepositoryAssessment
+import dev.lolokeksu.contextcapsule.domain.CommitComparison
 import dev.lolokeksu.contextcapsule.domain.ProjectPulse
 import dev.lolokeksu.contextcapsule.domain.ProjectTask
 import dev.lolokeksu.contextcapsule.github.RepositoryOverviewCodec
@@ -47,6 +52,7 @@ fun RepositoryOverviewPanel(
     val digest = snapshot?.let { RepositoryOverviewCodec.decode(it.summary) }
     val signal = RepositoryAssessment.assess(digest?.ciStatus, digest?.prCount, digest?.issueCount, digest?.commits?.size)
     val uri = LocalUriHandler.current
+    var expandFiles by remember(snapshot?.sha) { mutableStateOf(false) }
     val pulse = snapshot?.let {
         ProjectPulse.compare(digest?.previousSha, digest?.previousBranch, it.sha, it.branch)
     }
@@ -123,6 +129,68 @@ fun RepositoryOverviewPanel(
                                 Text("${pulse.oldSha?.take(8)} → ${pulse.newSha.take(8)}",
                                     color = Dim, fontSize = 12.sp)
                             }
+                        }
+                    }
+                    if (pulse?.hasNewCommits == true) {
+                        Spacer(Modifier.height(11.dp))
+                        val diff = digest?.comparison
+                        if (diff != null) {
+                            val reading = CommitComparison.explain(
+                                diff.status, diff.aheadBy, diff.behindBy,
+                                diff.aheadBy, diff.filesShown, diff.truncated
+                            )
+                            Column(
+                                Modifier.fillMaxWidth()
+                                    .background(Color(0xFF15283F), RoundedCornerShape(15.dp))
+                                    .padding(15.dp)
+                            ) {
+                                Text("ИЗМЕНЕНИЯ МЕЖДУ СНИМКАМИ",
+                                    color = Blue, fontSize = 10.sp, letterSpacing = 1.0.sp,
+                                    fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.height(7.dp))
+                                Text(reading.headline, color = White, fontSize = 15.sp,
+                                    fontWeight = FontWeight.SemiBold)
+                                Spacer(Modifier.height(5.dp))
+                                Text("Файлов в ответе: ${reading.filesLabel}",
+                                    color = Dim, fontSize = 12.sp)
+                                if (reading.warning) {
+                                    Spacer(Modifier.height(6.dp))
+                                    Text("История или список файлов могут быть неполными.",
+                                        color = Amber, fontSize = 12.sp, lineHeight = 17.sp)
+                                }
+                                val selected = if (expandFiles) diff.files else diff.files.take(3)
+                                selected.forEach { file ->
+                                    Spacer(Modifier.height(11.dp))
+                                    Column {
+                                        Text(file.path, color = White, fontSize = 12.sp,
+                                            lineHeight = 17.sp, maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis)
+                                        Text("${file.status} · +${file.added} / −${file.deleted}",
+                                            color = Dim, fontSize = 11.sp)
+                                    }
+                                }
+                                if (diff.files.size > 3) {
+                                    TextButton(onClick = { expandFiles = !expandFiles },
+                                        contentPadding = PaddingValues(0.dp)) {
+                                        Text(if (expandFiles) "Свернуть файлы" else "Показать ещё файлы",
+                                            color = Blue, fontSize = 12.sp)
+                                    }
+                                }
+                                if (diff.url.startsWith("https://github.com/")) {
+                                    TextButton(
+                                        onClick = { uri.openUri(diff.url) },
+                                        contentPadding = PaddingValues(0.dp)
+                                    ) {
+                                        Text("Открыть сравнение на GitHub",
+                                            color = Blue, fontSize = 12.sp)
+                                    }
+                                }
+                                Text("Изменения определены по API GitHub, а не по тексту коммитов.",
+                                    color = Muted, fontSize = 10.sp, lineHeight = 15.sp)
+                            }
+                        } else {
+                            Text("Подробное сравнение недоступно. Проверь ограничения API GitHub.",
+                                color = Dim, fontSize = 11.sp)
                         }
                     }
                     Spacer(Modifier.height(14.dp))
