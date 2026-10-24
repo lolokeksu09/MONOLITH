@@ -55,6 +55,39 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('filterFavorites',gallery)
         self.assertIn('GridItemSpan(2)',gallery)
 
+    def test_graphics_overdrive_quality_is_persistent_and_live(self):
+        data=self.read('core/data/src/main/java/studio/nox/data/SettingsRepository.kt')
+        viewmodel=self.read('app/src/main/java/studio/nox/app/NoxViewModel.kt')
+        ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
+        surface=self.read('core/renderer/src/main/java/studio/nox/renderer/NoxSurfaceView.kt')
+        egl=self.read('core/renderer/src/main/java/studio/nox/renderer/EglSession.kt')
+        wallpaper=self.read('feature/wallpaper/src/main/java/studio/nox/wallpaper/NoxWallpaperService.kt')
+        gl=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
+        for term in ('intPreferencesKey("visual_quality")','val quality:Int=1','suspend fun setQuality'):
+            self.assertIn(term,data)
+        self.assertIn('fun setQuality(value:Int)',viewmodel)
+        for term in ('settings.quality','onQuality=vm::setQuality','Rich','Ultra','Balanced'):
+            self.assertIn(term,ui)
+        self.assertIn('view.configure(config,fps,quality)',ui)
+        self.assertIn('fun configure(c:SceneConfig,frames:Int,quality:Int)',surface)
+        self.assertIn('session?.setQuality(quality)',surface)
+        self.assertIn('fun setQuality(value:Int)',egl)
+        self.assertIn('VisualQuality.effective(',egl)
+        self.assertIn('s.setQuality(last.quality)',wallpaper)
+        self.assertIn('session?.setQuality(prefs.quality)',wallpaper)
+        self.assertIn('uQuality',gl)
+
+    def test_graphics_overdrive_has_real_depth_for_all_nine_modes(self):
+        gl=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
+        for term in ('// OVERDRIVE FLUX','// OVERDRIVE HALO','// OVERDRIVE NEBULA',
+                     '// OVERDRIVE AURORA','// OVERDRIVE PULSE','// OVERDRIVE COMET',
+                     '// OVERDRIVE VEIL','// OVERDRIVE GRID','// OVERDRIVE SHARDS'):
+            self.assertIn(term,gl)
+        self.assertIn('float qualityMix=',gl)
+        self.assertIn('vec3 premiumDetail=',gl)
+        self.assertIn('uQuality',gl)
+        self.assertIn('min(sum,vec3(1.0))',gl)
+
     def test_spectra_modes_keep_previous_six_branches(self):
         shader=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
         for name,mode in (('VEIL','6f'),('GRID','7f'),('SHARDS','8f')):
