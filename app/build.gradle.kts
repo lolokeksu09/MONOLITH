@@ -6,12 +6,12 @@ android {
         applicationId = "studio.nox.light"
         minSdk = 26
         targetSdk = 36
-        versionCode = 13
-        versionName = "1.9.0"
+        versionCode = 14
+        versionName = "1.9.1"
         vectorDrawables { useSupportLibrary = true }
     }
     buildTypes {
-        debug { applicationIdSuffix = ".overdrive" }
+        debug { applicationIdSuffix = ".cinematic" }
         release { isMinifyEnabled = false }
     }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
