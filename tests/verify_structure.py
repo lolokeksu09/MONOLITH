@@ -337,8 +337,8 @@ class StructuralContracts(unittest.TestCase):
             self.assertIn(symbol, ui, 'NOX 1.1 must expose real editor or discovery functionality: ' + symbol)
     def test_app_upgrades_existing_install_in_place(self):
         app=self.read('app/build.gradle.kts')
-        for contract in ['applicationId = "studio.nox.light"', 'applicationIdSuffix = ".overdrive"', 'versionCode = 13',
-                         'versionName = "1.9.0"']:
+        for contract in ['applicationId = "studio.nox.light"', 'applicationIdSuffix = ".cinematic"', 'versionCode = 14',
+                         'versionName = "1.9.1"']:
             self.assertIn(contract, app)
     def test_build_workflow_creates_apk(self):
         workflow=self.read('.github/workflows/android.yml')
