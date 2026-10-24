@@ -29,7 +29,8 @@ data class CapsuleUiState(
 )
 
 class CapsuleViewModel(application: Application) : AndroidViewModel(application) {
-    private val db = Room.databaseBuilder(application, ProjectDatabase::class.java, "capsule-v1.db").build()
+    private val db = Room.databaseBuilder(application, ProjectDatabase::class.java, "capsule-v1.db")
+        .addMigrations(MIGRATION_1_2).build()
     private val dao = db.dao()
     private val github = PublicGithubClient()
     private val _state = MutableStateFlow(CapsuleUiState())
@@ -114,6 +115,51 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
         reload()
     }
 
+    fun editDecision(id: String, text: String) = work {
+        val projectId = requireNotNull(_state.value.active).id
+        val value = WorkspaceTools.normalizeSharedText(text)
+            ?: error("Введите заметку длиной от 1 до 20 000 символов")
+        withContext(Dispatchers.IO) {
+            val prior = requireNotNull(dao.decision(projectId, id)) { "Заметка не найдена" }
+            if (prior.text != value) require(dao.editDecision(projectId, id, value) == 1) { "Не удалось изменить заметку" }
+        }
+        reload()
+    }
+
+    fun pinDecision(id: String, pinned: Boolean) = work {
+        val projectId = requireNotNull(_state.value.active).id
+        withContext(Dispatchers.IO) {
+            require(dao.pinDecision(projectId, id, pinned) == 1) { "Заметка не найдена" }
+        }
+        reload()
+    }
+
+    fun deleteDecision(id: String) = work {
+        val projectId = requireNotNull(_state.value.active).id
+        withContext(Dispatchers.IO) {
+            require(dao.deleteDecision(projectId, id) == 1) { "Заметка не найдена" }
+        }
+        reload()
+    }
+
+    fun editTask(id: String, text: String) = work {
+        val projectId = requireNotNull(_state.value.active).id
+        val value = text.trim()
+        require(value.length in 1..500) { "Введите задачу длиной от 1 до 500 символов" }
+        withContext(Dispatchers.IO) {
+            require(dao.editTask(projectId, id, value) == 1) { "Задача не найдена" }
+        }
+        reload()
+    }
+
+    fun deleteTask(id: String) = work {
+        val projectId = requireNotNull(_state.value.active).id
+        withContext(Dispatchers.IO) {
+            require(dao.deleteTask(projectId, id) == 1) { "Задача не найдена" }
+        }
+        reload()
+    }
+
     fun sync() = work {
         val p = requireNotNull(_state.value.active)
         val repo = requireNotNull(p.repository) { "Link a public GitHub repository first" }
@@ -138,6 +184,7 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
         val s = _state.value
         val p = requireNotNull(s.active)
         fun d(row: Decision) = JSONObject().put("text", row.text).put("status", row.evidence.name)
+            .put("pinned", row.pinned)
         fun t(row: ProjectTask) = JSONObject().put("title", row.title).put("done", row.completed)
         return JSONObject().put("schemaVersion", 1)
             .put("project", JSONObject().put("title", p.title).put("repository", p.repository ?: ""))
@@ -163,7 +210,7 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
             val text = item.getString("text")
             require(text.length in 1..20000) { "Invalid note" }
             // An imported claim can never be promoted automatically.
-            text
+            text to item.optBoolean("pinned", false)
         }
         val validTasks = (0 until tasks.length()).map { i ->
             val item = tasks.getJSONObject(i)
@@ -175,7 +222,10 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
         withContext(Dispatchers.IO) {
             db.withTransaction {
                 dao.upsertProject(ProjectRow(newId, title, repo, System.currentTimeMillis()))
-                validNotes.forEach { dao.upsertDecision(DecisionRow(UUID.randomUUID().toString(), newId, it, "UNVERIFIED", System.currentTimeMillis())) }
+                validNotes.forEach { (text, pinned) ->
+                    dao.upsertDecision(DecisionRow(UUID.randomUUID().toString(), newId, text,
+                        "UNVERIFIED", System.currentTimeMillis(), pinned))
+                }
                 validTasks.forEach { (taskTitle, done) -> dao.upsertTask(TaskRow(UUID.randomUUID().toString(), newId, taskTitle, done, System.currentTimeMillis())) }
             }
         }

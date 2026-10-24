@@ -16,8 +16,12 @@ object WorkspaceTools {
         return items.filter {
             (!pendingOnly || it.evidence != EvidenceKind.OWNER_CONFIRMED) &&
                 (term.isEmpty() || it.text.contains(term, ignoreCase = true))
-        }
+        }.sortedWith(compareByDescending<Decision> { it.pinned }
+            .thenBy { it.createdAt }.thenBy { it.id })
     }
+
+    fun evidenceAfterEdit(before: EvidenceKind, old: String, edited: String): EvidenceKind =
+        if (old == edited) before else EvidenceKind.UNVERIFIED
 
     fun normalizeSharedText(raw: CharSequence?): String? {
         val text = raw?.toString()?.trim() ?: return null

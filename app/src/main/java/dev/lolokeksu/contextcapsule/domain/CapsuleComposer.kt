@@ -2,7 +2,7 @@ package dev.lolokeksu.contextcapsule.domain
 
 enum class EvidenceKind { VERIFIED_REMOTE, OWNER_CONFIRMED, UNVERIFIED, UNKNOWN }
 data class Project(val id: String, val title: String, val repository: String?, val createdAt: Long)
-data class Decision(val id: String, val projectId: String, val text: String, val evidence: EvidenceKind, val createdAt: Long)
+data class Decision(val id: String, val projectId: String, val text: String, val evidence: EvidenceKind, val createdAt: Long, val pinned: Boolean = false)
 data class ProjectTask(val id: String, val projectId: String, val title: String, val completed: Boolean, val createdAt: Long)
 data class GithubSnapshot(val projectId: String, val branch: String, val sha: String, val url: String,
     val checkedAt: Long, val summary: String, val warning: String?)
@@ -16,6 +16,11 @@ class CapsuleComposer {
         appendLine("## Goal")
         appendLine("Project: ${input.project.title.replace("\n", " ")}")
         appendLine("Repository: ${input.project.repository ?: "Not linked"}")
+        appendLine()
+        val pinned = input.decisions.filter { it.pinned }.sortedWith(compareBy(Decision::createdAt, Decision::id))
+        appendLine("## Pinned notes")
+        if (pinned.isEmpty()) appendLine("- None pinned")
+        pinned.forEach { appendLine("- [${it.evidence}] ${it.text.replace("\n", " ")}") }
         appendLine()
         appendLine("## Approved decisions")
         val confirmed = input.decisions.filter { it.evidence == EvidenceKind.OWNER_CONFIRMED }
