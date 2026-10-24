@@ -31,6 +31,24 @@ class CreateProjectSmokeTest {
         rule.onNodeWithText(project).assertExists()
     }
 
+    @Test fun projectScreenSeparatesOverviewAndMemoryButKeepsHandoffAccessible() {
+        val project = "Design ${System.currentTimeMillis()}"
+        rule.onNodeWithText("Создать проект").performClick()
+        rule.onNodeWithTag("project_name").performTextInput(project)
+        rule.onNodeWithTag("confirm_create").performClick()
+        rule.waitUntil(20_000) {
+            rule.onAllNodesWithText("Все проекты").fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithText("Обзор", useUnmergedTree = true).assertExists()
+        rule.onNodeWithText("Память", useUnmergedTree = true).assertExists()
+        rule.onNodeWithText("Важные решения").assertDoesNotExist()
+        rule.onNodeWithTag("handoff_copy").assertExists()
+        rule.onNodeWithText("Память", useUnmergedTree = true).performClick()
+        rule.onNodeWithText("Важные решения").assertExists()
+        rule.onNodeWithText("Следующие шаги").assertExists()
+        rule.onNodeWithTag("handoff_copy").assertExists()
+    }
+
     @Test fun invalidGithubUrlMustKeepFormVisibleWithError() {
         rule.onNodeWithText("Создать проект").performClick()
         rule.onNodeWithTag("project_name").performTextInput("Bad repo")
