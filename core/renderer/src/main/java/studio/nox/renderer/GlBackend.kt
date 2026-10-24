@@ -119,6 +119,22 @@ float hash(vec2 p) {
   return fract((q.x+q.y)*q.z);
 }
 float lightline(float dist, float thickness) { return exp(-abs(dist)*thickness); }
+// Smooth bilinear noise prevents visible rectangular gas-cloud cell boundaries.
+float smoothNoise(vec2 location) {
+  vec2 cell=floor(location);
+  vec2 fractional=fract(location);
+  vec2 smoothFraction=fractional*fractional*(3.0-2.0*fractional);
+  float a=hash(cell);
+  float b=hash(cell+vec2(1.0,0.0));
+  float c=hash(cell+vec2(0.0,1.0));
+  float d=hash(cell+vec2(1.0,1.0));
+  return mix(mix(a,b,smoothFraction.x),mix(c,d,smoothFraction.x),smoothFraction.y);
+}
+float cloudField(vec2 location) {
+  return 0.56*smoothNoise(location)+
+         0.29*smoothNoise(location*2.09+17.0)+
+         0.15*smoothNoise(location*4.11-13.0);
+}
 void main() {
   vec2 uv = vUv;
   vec2 p = vec2((uv.x-0.5)*uResolution.x/uResolution.y, uv.y-0.5);
@@ -434,6 +450,151 @@ void main() {
       float refraction=exp(-abs(crystal.x+crystal.y*0.6)*40.0)*inner;
       premiumDetail+=mix(uColorA,uColorB,facet)*
            (border*(0.10+0.23*uGlow)+inner*facet*0.055+refraction*0.082);
+    }
+    // CINEMATIC: foreground forms, middle glow and background structures.
+    // Every scene receives a distinct composition rather than a brightness boost.
+    vec3 cinematicDetail=vec3(0.0);
+    if(uMode<0.5) {
+      // CINEMATIC FLUX: sculpted flowing wings with bright nested filaments.
+      for(int i=0;i<4;++i) {
+        float n=float(i);
+        float ribbon=(n-1.5)*0.145+
+            0.125*sin(p.y*3.9+n*1.08+uTime*0.16)+
+            0.035*sin(p.y*11.0+n*0.9-uTime*0.26);
+        float d=abs(p.x-ribbon);
+        float deep=exp(-d*d/(0.0048+0.009*uDensity));
+        float bright=exp(-d*(78.0+22.0*uDensity));
+        float knot=0.70+0.30*pow(0.5+0.5*sin(p.y*14.0+n*2.4-uTime*0.29),3.0);
+        cinematicDetail+=mix(uColorA,uColorB,n/3.0)*
+            (deep*(0.09+0.12*uGlow)+bright*(0.05+0.11*uGlow))*knot;
+      }
+    } else if(uMode<1.5) {
+      // CINEMATIC HALO: multiple giant elliptical arcs and orbit beacons.
+      vec2 ellipsoid=p*vec2(1.05,0.72);
+      float r=length(ellipsoid);
+      float theta=atan(ellipsoid.y,ellipsoid.x);
+      float inner=exp(-abs(r-0.15)*28.0);
+      float outer=exp(-abs(r-0.34)*23.0);
+      float arcs=0.52+0.48*cos(theta*5.0+uTime*0.12);
+      vec2 beacon=vec2(0.31*cos(uTime*0.12),0.43*sin(uTime*0.12));
+      float orbiter=exp(-length(p-beacon)*41.0);
+      cinematicDetail+=uColorA*inner*(0.055+0.13*uGlow)+
+          uColorB*outer*arcs*(0.085+0.14*uGlow)+
+          mix(uColorA,uColorB,0.42)*orbiter*(0.09+0.22*uGlow);
+    } else if(uMode<2.5) {
+      // CINEMATIC NEBULA: continuous three-octave gas clouds and stellar ridges.
+      vec2 drift=p+vec2(uTime*0.012,-uTime*0.007);
+      vec2 gas=vec2(drift.x*5.9+1.2*sin(drift.y*6.0),
+                     drift.y*4.7+0.5*sin(drift.x*7.1));
+      float turbulence=cloudField(gas+uSeed*0.00013);
+      vec2 centre=vec2(0.015,-0.015);
+      float body=exp(-dot((p-centre)/vec2(0.31,0.36),
+                          (p-centre)/vec2(0.31,0.36))*1.3);
+      float ridge=smoothstep(0.33,0.72,turbulence);
+      float shell=exp(-dot((p-vec2(-0.13,0.17))/vec2(0.19,0.24),
+                          (p-vec2(-0.13,0.17))/vec2(0.19,0.24))*1.8);
+      float brightGas=body*ridge;
+      cinematicDetail+=uColorA*brightGas*(0.18+0.34*uGlow)+
+          uColorB*shell*smoothstep(0.24,0.66,turbulence)*(0.11+0.24*uGlow);
+    } else if(uMode<3.5) {
+      // CINEMATIC AURORA: taller folding curtains with luminous vein structure.
+      float vertical=smoothstep(-0.52,-0.38,p.y)*
+          (1.0-smoothstep(0.39,0.54,p.y));
+      for(int i=0;i<4;++i) {
+        float n=float(i);
+        float curtain=(n-1.5)*0.135+
+            0.077*sin(p.y*4.5+uTime*0.17+n*1.7);
+        float dd=abs(p.x-curtain);
+        float soft=exp(-dd*dd/(0.008+0.007*uDensity));
+        float detail=exp(-abs(p.x-curtain-0.017*sin(p.y*14.0+n))*107.0);
+        float folds=0.58+0.42*pow(0.5+0.5*sin(p.y*9.0-uTime*0.11+n),2.0);
+        cinematicDetail+=mix(uColorA,uColorB,n/3.0)*
+            (soft*(0.09+0.15*uGlow)+detail*(0.035+0.08*uGlow))*folds*vertical;
+      }
+    } else if(uMode<4.5) {
+      // CINEMATIC PULSE: an energy reactor, nested rings and moving plasma arcs.
+      vec2 target=vec2(0.0,0.015);
+      if(uTouch.x>=0.0) target=mix(target,
+          vec2((uTouch.x-0.5)*uResolution.x/uResolution.y,uTouch.y-0.5),0.78);
+      vec2 delta=p-target;
+      float r=length(delta);
+      float disc=exp(-r*r*104.0);
+      float ring=exp(-abs(r-0.22)*31.0);
+      float wave=exp(-abs(r-(0.34+0.025*sin(uTime*0.19)))*37.0);
+      float angular=0.57+0.43*cos(atan(delta.y,delta.x)*8.0-uTime*0.15);
+      cinematicDetail+=uColorA*disc*(0.09+0.22*uGlow)+
+          mix(uColorA,uColorB,0.42)*ring*angular*(0.07+0.16*uGlow)+
+          uColorB*wave*(0.028+0.095*uGlow);
+    } else if(uMode<5.5) {
+      // CINEMATIC COMET: moving secondary streaks behind the hero comet.
+      for(int i=0;i<3;++i) {
+        float n=float(i);
+        vec2 direction=normalize(vec2(0.76+0.08*n,-0.65+0.06*n));
+        vec2 perpendicular=vec2(-direction.y,direction.x);
+        vec2 head=vec2(0.15*sin(uTime*(0.10+n*0.03)+n*2.0),
+                       (n-1.0)*0.17+0.08*cos(uTime*0.14+n));
+        vec2 delta=p-head;
+        float longitudinal=dot(delta,direction);
+        float sideways=abs(dot(delta,perpendicular));
+        float trail=exp(-sideways*(42.0+11.0*n))*
+            (1.0-smoothstep(-0.008,0.006,longitudinal))*
+            exp(min(0.0,longitudinal)*(4.0+2.0*n));
+        float headLight=exp(-length(delta)*(30.0+6.0*n));
+        cinematicDetail+=mix(uColorA,uColorB,n/2.0)*
+            (trail*(0.07+0.13*uGlow)+headLight*(0.035+0.09*uGlow));
+      }
+    } else if(uMode<6.5) {
+      // CINEMATIC VEIL: smooth volumetric silk smoke, glowing veins and folds.
+      vec2 drift=vec2(p.x*5.0+uTime*0.045,p.y*4.8-uTime*0.018);
+      float texture=cloudField(drift+vec2(3.3,-4.8)+uSeed*0.00012);
+      float flow=0.06*sin(p.x*9.0+uTime*0.13);
+      float centre=exp(-pow((p.y-flow)/0.35,2.0));
+      float feathery=smoothstep(0.29,0.72,texture);
+      float filaments=exp(-abs(p.y-flow-0.12*sin(p.x*8.1+uTime*0.09))*16.0);
+      cinematicDetail+=mix(uColorA,uColorB,clamp(0.45+0.38*p.y,0.0,1.0))*
+          centre*(feathery*(0.16+0.26*uGlow)+
+                  filaments*(0.035+0.095*uGlow));
+    } else if(uMode<7.5) {
+      // CINEMATIC GRID: illuminated skyline columns over a glowing horizon.
+      float sky=smoothstep(0.12,0.27,p.y)*
+          (1.0-smoothstep(0.45,0.60,p.y));
+      float column=exp(-abs(fract((p.x+0.31)*17.0)-0.5)*28.0);
+      float verticalGlare=exp(-abs(p.x-0.11*sin(uTime*0.12))*18.0);
+      float beam=exp(-abs(p.y-0.135)*26.0);
+      cinematicDetail+=uColorA*sky*column*(0.06+0.14*uGlow)+
+          uColorB*verticalGlare*sky*(0.025+0.08*uGlow)+
+          mix(uColorA,uColorB,0.65)*beam*(0.05+0.11*uGlow);
+    } else {
+      // CINEMATIC SHARDS: several floating large facet silhouettes and highlights.
+      for(int i=0;i<4;++i) {
+        float n=float(i);
+        vec2 centre=vec2((n-1.5)*0.13+0.025*sin(uTime*0.11+n),
+                         0.20*cos(n*1.8+uTime*0.08));
+        vec2 displaced=p-centre;
+        float angle=0.13*n+uTime*(0.055+0.014*n);
+        mat2 rotation=mat2(cos(angle),-sin(angle),sin(angle),cos(angle));
+        vec2 facet=rotation*displaced;
+        float distance=abs(facet.x)*0.93+abs(facet.y)*1.12;
+        float radius=0.11+0.027*mod(n,2.0);
+        float edge=exp(-abs(distance-radius)*56.0);
+        float fill=1.0-smoothstep(radius*0.16,radius*0.85,distance);
+        float bevel=exp(-abs(facet.x-facet.y*0.35)*49.0)*fill;
+        cinematicDetail+=mix(uColorA,uColorB,n/3.0)*
+            (edge*(0.07+0.16*uGlow)+fill*0.034+bevel*0.065);
+      }
+    }
+    sum+=cinematicDetail*qualityMix;
+    if(uQuality>1.5) {
+      // Ultra: pinprick highlights live only inside already-illuminated shapes.
+      vec2 microUV=p*vec2(72.0,88.0);
+      vec2 microCell=floor(microUV);
+      vec2 microPoint=fract(microUV)-vec2(hash(microCell+7.1),
+                                          hash(microCell+23.4));
+      float microSpark=exp(-dot(microPoint,microPoint)*83.0)*
+          step(0.958,hash(microCell+54.0));
+      float activeLight=smoothstep(0.032,0.19,max(sum.r,max(sum.g,sum.b)));
+      sum+=mix(uColorA,uColorB,0.48)*microSpark*activeLight*
+          (0.052+0.094*uGlow);
     }
     // Preserve rich local contrast without washing black pixels to charcoal.
     sum+=premiumDetail*qualityMix;
