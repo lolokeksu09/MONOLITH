@@ -454,6 +454,7 @@ void main() {
     // CINEMATIC: foreground forms, middle glow and background structures.
     // Every scene receives a distinct composition rather than a brightness boost.
     vec3 cinematicDetail=vec3(0.0);
+    vec3 shapedVolume=vec3(0.0);
     if(uMode<0.5) {
       // CINEMATIC FLUX: sculpted flowing wings with bright nested filaments.
       for(int i=0;i<4;++i) {
@@ -468,6 +469,14 @@ void main() {
         cinematicDetail+=mix(uColorA,uColorB,n/3.0)*
             (deep*(0.09+0.12*uGlow)+bright*(0.05+0.11*uGlow))*knot;
       }
+      // VOLUMETRIC FLUX: broad energy sheets with an asymmetric specular rim.
+      float flowingAxis=p.x-0.16*sin(p.y*3.6+uTime*0.14);
+      float flowingSheet=exp(-flowingAxis*flowingAxis/0.055);
+      float bevelLight=exp(-abs(flowingAxis-0.14)*24.0);
+      float angledLight=0.30+0.70*smoothstep(-0.21,0.16,flowingAxis);
+      float heightMask=1.0-smoothstep(0.42,0.57,abs(p.y));
+      shapedVolume+=mix(uColorA,uColorB,0.38)*
+          (flowingSheet*angledLight*(0.06+0.10*uGlow)+bevelLight*0.05)*heightMask;
     } else if(uMode<1.5) {
       // CINEMATIC HALO: multiple giant elliptical arcs and orbit beacons.
       vec2 ellipsoid=p*vec2(1.05,0.72);
@@ -481,6 +490,13 @@ void main() {
       cinematicDetail+=uColorA*inner*(0.055+0.13*uGlow)+
           uColorB*outer*arcs*(0.085+0.14*uGlow)+
           mix(uColorA,uColorB,0.42)*orbiter*(0.09+0.22*uGlow);
+      // VOLUMETRIC HALO: translucent toroidal wall, brighter on the near face.
+      float ringCrossSection=r-0.275;
+      float toroidWall=exp(-ringCrossSection*ringCrossSection/0.014);
+      float nearFace=0.32+0.68*smoothstep(-0.23,0.22,ellipsoid.y);
+      float innerRim=exp(-abs(r-0.18)*27.0);
+      shapedVolume+=mix(uColorA,uColorB,0.57)*
+          (toroidWall*nearFace*(0.07+0.10*uGlow)+innerRim*0.035);
     } else if(uMode<2.5) {
       // CINEMATIC NEBULA: continuous three-octave gas clouds and stellar ridges.
       vec2 drift=p+vec2(uTime*0.012,-uTime*0.007);
@@ -496,6 +512,13 @@ void main() {
       float brightGas=body*ridge;
       cinematicDetail+=uColorA*brightGas*(0.18+0.34*uGlow)+
           uColorB*shell*smoothstep(0.24,0.66,turbulence)*(0.11+0.24*uGlow);
+      // VOLUMETRIC NEBULA: cloud body with directional light and denser knots.
+      float nebulaRelief=smoothstep(0.39,0.70,turbulence);
+      float nebulaFacing=0.36+0.64*smoothstep(-0.31,0.28,p.x*0.65-p.y*0.55);
+      float cloudMass=body*nebulaRelief*nebulaFacing;
+      float backScatter=shell*smoothstep(0.47,0.71,turbulence);
+      shapedVolume+=uColorA*cloudMass*(0.085+0.16*uGlow)+
+          uColorB*backScatter*(0.045+0.09*uGlow);
     } else if(uMode<3.5) {
       // CINEMATIC AURORA: taller folding curtains with luminous vein structure.
       float vertical=smoothstep(-0.52,-0.38,p.y)*
@@ -511,6 +534,13 @@ void main() {
         cinematicDetail+=mix(uColorA,uColorB,n/3.0)*
             (soft*(0.09+0.15*uGlow)+detail*(0.035+0.08*uGlow))*folds*vertical;
       }
+      // VOLUMETRIC AURORA: directional inner fold lighting on the tall curtain.
+      float curtainAxis=p.x-0.18*sin(p.y*3.25+uTime*0.12);
+      float curtainBody=exp(-curtainAxis*curtainAxis/0.041)*vertical;
+      float curtainFacing=0.39+0.61*smoothstep(-0.16,0.16,curtainAxis);
+      float foldedRim=exp(-abs(curtainAxis+0.095)*17.0)*vertical;
+      shapedVolume+=mix(uColorA,uColorB,0.31)*
+          (curtainBody*curtainFacing*(0.055+0.13*uGlow)+foldedRim*0.045);
     } else if(uMode<4.5) {
       // CINEMATIC PULSE: an energy reactor, nested rings and moving plasma arcs.
       vec2 target=vec2(0.0,0.015);
@@ -525,6 +555,13 @@ void main() {
       cinematicDetail+=uColorA*disc*(0.09+0.22*uGlow)+
           mix(uColorA,uColorB,0.42)*ring*angular*(0.07+0.16*uGlow)+
           uColorB*wave*(0.028+0.095*uGlow);
+      // VOLUMETRIC PULSE: sphere-like core and light-scattered outer shell.
+      float reactorBody=exp(-r*r*24.0);
+      float reactorShell=r-0.185;
+      float shellLight=exp(-reactorShell*reactorShell/0.007);
+      float reactorFacing=0.30+0.70*smoothstep(-0.22,0.24,delta.y+delta.x*0.45);
+      shapedVolume+=uColorA*reactorBody*reactorFacing*(0.07+0.14*uGlow)+
+          mix(uColorA,uColorB,0.55)*shellLight*(0.045+0.08*uGlow);
     } else if(uMode<5.5) {
       // CINEMATIC COMET: moving secondary streaks behind the hero comet.
       for(int i=0;i<3;++i) {
@@ -543,6 +580,17 @@ void main() {
         cinematicDetail+=mix(uColorA,uColorB,n/2.0)*
             (trail*(0.07+0.13*uGlow)+headLight*(0.035+0.09*uGlow));
       }
+      // VOLUMETRIC COMET: dense tapered plasma wake behind the hero streak.
+      vec2 plasmaAxis=normalize(vec2(0.78,-0.62));
+      vec2 plasmaOrigin=vec2(0.10*sin(uTime*0.1),-0.12+0.07*cos(uTime*0.13));
+      vec2 plasmaDelta=p-plasmaOrigin;
+      float plasmaLong=dot(plasmaDelta,plasmaAxis);
+      float plasmaSide=dot(plasmaDelta,vec2(-plasmaAxis.y,plasmaAxis.x));
+      float plasmaVolume=exp(-plasmaSide*plasmaSide/0.042)*
+          (1.0-smoothstep(0.01,0.17,plasmaLong))*exp(min(0.0,plasmaLong)*1.7);
+      float plasmaFacing=0.34+0.66*smoothstep(-0.15,0.14,plasmaSide);
+      shapedVolume+=mix(uColorA,uColorB,0.40)*plasmaVolume*plasmaFacing*
+          (0.08+0.13*uGlow);
     } else if(uMode<6.5) {
       // CINEMATIC VEIL: smooth volumetric silk smoke, glowing veins and folds.
       vec2 drift=vec2(p.x*5.0+uTime*0.045,p.y*4.8-uTime*0.018);
@@ -554,6 +602,13 @@ void main() {
       cinematicDetail+=mix(uColorA,uColorB,clamp(0.45+0.38*p.y,0.0,1.0))*
           centre*(feathery*(0.16+0.26*uGlow)+
                   filaments*(0.035+0.095*uGlow));
+      // VOLUMETRIC VEIL: translucent fold density and directional silk sheen.
+      float veilDensity=centre*smoothstep(0.34,0.73,texture);
+      float veilFacing=0.42+0.58*(0.5+0.5*sin(p.x*5.0+p.y*3.0+uTime*0.035));
+      float foldRidge=p.y-flow-0.13*sin(p.x*4.2);
+      float veilSheen=exp(-foldRidge*foldRidge/0.017)*centre;
+      shapedVolume+=mix(uColorA,uColorB,0.48)*
+          (veilDensity*veilFacing*(0.09+0.17*uGlow)+veilSheen*0.06);
     } else if(uMode<7.5) {
       // CINEMATIC GRID: illuminated skyline columns over a glowing horizon.
       float sky=smoothstep(0.12,0.27,p.y)*
@@ -564,6 +619,12 @@ void main() {
       cinematicDetail+=uColorA*sky*column*(0.06+0.14*uGlow)+
           uColorB*verticalGlare*sky*(0.025+0.08*uGlow)+
           mix(uColorA,uColorB,0.65)*beam*(0.05+0.11*uGlow);
+      // VOLUMETRIC GRID: visible bodies and recessed faces of light pillars.
+      float columnBody=exp(-abs(fract((p.x+0.31)*17.0)-0.5)*11.0)*sky;
+      float pillarFacing=0.39+0.61*smoothstep(-0.4,0.4,sin(p.x*53.4));
+      float distantFloor=exp(-abs(p.y-0.12)*14.0)*smoothstep(0.15,0.48,abs(p.x));
+      shapedVolume+=uColorA*columnBody*pillarFacing*(0.045+0.095*uGlow)+
+          uColorB*distantFloor*(0.025+0.065*uGlow);
     } else {
       // CINEMATIC SHARDS: several floating large facet silhouettes and highlights.
       for(int i=0;i<4;++i) {
@@ -582,7 +643,19 @@ void main() {
         cinematicDetail+=mix(uColorA,uColorB,n/3.0)*
             (edge*(0.07+0.16*uGlow)+fill*0.034+bevel*0.065);
       }
+      // VOLUMETRIC SHARDS: a broad faceted crystal with angled plane highlights.
+      vec2 prism=p-vec2(0.01,0.03);
+      float crystalDistance=abs(prism.x)*0.8+abs(prism.y)*1.06;
+      float crystalBody=1.0-smoothstep(0.09,0.36,crystalDistance);
+      float crystalFacing=0.30+0.70*smoothstep(-0.23,0.20,prism.x-prism.y*0.45);
+      float crystalRim=exp(-abs(crystalDistance-0.31)*31.0);
+      shapedVolume+=mix(uColorA,uColorB,0.50)*
+          (crystalBody*crystalFacing*(0.06+0.12*uGlow)+crystalRim*0.035);
     }
+    // Hide almost-black fill and retain deep AMOLED negative space.
+    float shapedEnergy=max(shapedVolume.r,max(shapedVolume.g,shapedVolume.b));
+    shapedVolume*=smoothstep(0.006,0.024,shapedEnergy);
+    sum+=shapedVolume*qualityMix;
     sum+=cinematicDetail*qualityMix;
     if(uQuality>1.5) {
       // Ultra: pinprick highlights live only inside already-illuminated shapes.
