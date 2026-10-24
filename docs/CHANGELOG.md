@@ -1,5 +1,14 @@
 # NOX — журнал изменений
 
+## [1.8.0 / Patch 3] — Nine-scene gallery and Surprise discovery (2026-10-24)
+
+- Home: added natural-language descriptions for VEIL, GRID, SHARDS while preserving immersive animated hero and nine-scene horizontal selector.
+- Gallery: added GPU-free Canvas miniatures for VEIL, GRID, SHARDS and retained existing filters, favorites, saved looks, pinned preview and background wallpaper.
+- Added **Сюрприз**: one-tap jump to a different scene and a curated look (or deterministic remix for older modes), only changing the unsaved Home draft. Existing presets remain untouched.
+- Added SceneSurprise deterministic JUnit tests, including Int.MIN_VALUE and user-facing UI contract.
+- Source commits: `a6d73b0`, `d1866ea`, `653bc42`; tests `8414dc1`, `6b281ef`.
+- **Verification:** CI for this code was still running when written. No device shader/GPU QA yet.
+
 ## [1.8.0 / Patch 2] — Three new procedural GPU wallpapers (2026-10-24)
 
 - Added new shared-GLES shader modes **VEIL=6**, **GRID=7**, **SHARDS=8**, using the existing time, colors, glow, density, motion, seed, and touch uniforms. Bounded loops; no extra EGL contexts.
