@@ -1,5 +1,15 @@
 # NOX — журнал изменений
 
+## [1.8.0 / Patch 1] — Nine-scene catalog and nine new looks (2026-10-24)
+
+- Added VEIL / GRID / SHARDS to the immutable SceneRegistry, preserving the original six scene IDs and defaults.
+- Added scene-specific 1.8 defaults and 3 named colorways for each (9 new variants, all using existing SceneConfig fields); no Room migration or network.
+- Updated the `NEW` flags to identify new 1.8 entries, rather than labeling prior release scenes as new.
+- Added `SpectraCatalogTest`; revised `SceneRegistryTest` for nine scenes and archive compatibility.
+- Source/test commit sequence: `16fc515`, `eda1551`, `830798b`, `9ec9818`, `123c5ba`, `6d8b7ce`.
+- **Verification:** tests/CI pending at time of this entry; GPU renderer still requires mode implementation.
+
+
 > Каждый следующий патч обязан обновлять этот файл и публиковаться коммитом в GitHub. См. [AGENTS.md](../AGENTS.md) и [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md).
 
 ## [1.7.1 / Patch 2] — Preview packaging and regression hardening (2026-10-23)
