@@ -243,14 +243,14 @@ void main() {
       float behind=1.0-smoothstep(-0.005,0.009,along);
       float trailFade=smoothstep(0.025,0.13,life)*
                        (1.0-smoothstep(0.87,0.995,life));
-      float active=step(hash(vec2(n+31.0,53.0)),0.37+0.63*uDensity);
+      float visibilityMask=step(hash(vec2(n+31.0,53.0)),0.37+0.63*uDensity);
       float distanceToHead=length(delta);
       float headGlow=exp(-distanceToHead*(160.0-24.0*randB));
       float softHalo=exp(-distanceToHead*35.0);
       vec3 spectrum=mix(uColorA,uColorB,randB);
       sum+=spectrum*(streak*behind*tail*(0.13+0.28*uGlow)+
           headGlow*(0.41+0.37*uGlow)+
-          softHalo*(0.010+0.024*uGlow))*depth*trailFade*active;
+          softHalo*(0.010+0.024*uGlow))*depth*trailFade*visibilityMask;
     }
   } else if (uMode < 6.5) {
     // VEIL 1.8: slow, layered luminous mist with an absolute black field.
@@ -313,7 +313,7 @@ void main() {
       float interior=1.0-smoothstep(radius*0.16,radius*0.90,diamond);
       float facet=0.46+0.54*smoothstep(-radius*0.6,radius*0.5,local.x-local.y);
       float seam=exp(-abs(local.x+local.y*0.5)*115.0)*interior;
-      float active=step(hash(vec2(n+5.0,37.0)),0.33+0.67*uDensity);
+      float visibilityMask=step(hash(vec2(n+5.0,37.0)),0.33+0.67*uDensity);
       vec3 crystal=mix(uColorA,uColorB,randB);
       sum+=crystal*active*(rim*(0.19+0.44*uGlow)+
            interior*facet*(0.009+0.032*uGlow)+
