@@ -1,5 +1,15 @@
 # NOX — журнал изменений
 
+## [1.9.1 / Cinematic Depth] — denser real-time composition (2026-10-24)
+
+**Branch:** `feature/nox-1-9-1-cinematic-depth` from 1.9 Graphics Overdrive. Unmerged; existing Android installs remain untouched.
+
+- **Patch 1 — design/tests:** added [design](superpowers/specs/2026-10-24-nox-1-9-1-cinematic-depth-design.md), [implementation plan](superpowers/plans/2026-10-24-nox-1-9-1-cinematic-depth.md), and RED structural test for all nine compositions, continuous gas noise, and separate Ultra details. Code contract SHA `ea437b33`.
+- **Patch 2 — GPU content:** added two smooth interpolated cloud-noise functions and a **distinct cinematic foreground/background pass to each of the existing 9 scenes** — sculpted FLUX ribbons, HALO arcs, NEBULA continuous clouds, AURORA curtains, PULSE reactor, layered COMET trails, VEIL volumetric folds, GRID skyline, SHARDS large facets. Ultra creates tiny highlights *only* over illuminated regions. No network, extra EGL contexts, database migration or new scene IDs. GPU implementation SHA `41d0e4c8`.
+- **Render semantics:** Balanced retains original 1.9 drawing; Rich adds noticeable scene geometry; Ultra adds intensity and microdetail. Existing `SceneConfig`, .nox export, FPS limits, thermal downgrade and pinned preview remain unchanged.
+- **Verification:** GitHub Actions including GLES 100 validation and Android build pending at time of this record; actual Lenovo Legion Y70 visual quality, frame rate and thermals unverified.
+
+
 ## [1.9.0 / Graphics Overdrive] — implementation and release QA (2026-10-24)
 
 **Status:** implementation published in feature branch; CI evidence to be recorded below. Lenovo hardware QA still required.
