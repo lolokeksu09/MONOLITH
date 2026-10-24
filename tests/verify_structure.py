@@ -69,6 +69,8 @@ class StructuralContracts(unittest.TestCase):
         for term in ('settings.quality','onQuality=vm::setQuality','Rich','Ultra','Balanced'):
             self.assertIn(term,ui)
         self.assertIn('it.configure(config,fps,quality)',ui)
+        self.assertIn('FullscreenPreview(config,fps,gyro,quality',ui)
+        self.assertIn('private fun FullscreenPreview(config:SceneConfig,fps:Int,gyro:Boolean,quality:Int',ui)
         self.assertIn('fun configure(c:SceneConfig,frames:Int,quality:Int)',surface)
         self.assertIn('session?.setQuality(quality)',surface)
         self.assertIn('fun setQuality(value:Int)',egl)
