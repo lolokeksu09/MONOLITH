@@ -13,12 +13,26 @@ data class RepositoryOverview(
     val issueCount: Int?,
     val commits: List<OverviewEntry>,
     val pullRequests: List<OverviewEntry>,
-    val issues: List<OverviewEntry>
+    val issues: List<OverviewEntry>,
+    val previousSha: String? = null,
+    val previousBranch: String? = null,
+    val previousCheckedAt: Long? = null
 )
 
 object RepositoryOverviewCodec {
     private const val MARKER = "cc-overview-v1"
     fun encode(overview: JSONObject): String = overview.put("format", MARKER).toString()
+    /** Persist the immediately preceding snapshot without changing the Room schema. */
+    fun withPrevious(raw: String, previous: dev.lolokeksu.contextcapsule.domain.GithubSnapshot?): String {
+        if (previous == null) return raw
+        val objectValue = JSONObject(raw)
+        if (objectValue.optString("format") != MARKER) return raw
+        objectValue.put("previousSha", previous.sha)
+        objectValue.put("previousBranch", previous.branch)
+        objectValue.put("previousCheckedAt", previous.checkedAt)
+        return objectValue.toString()
+    }
+
     /** Turns the saved structured snapshot into a human handoff, keeping unknowns explicit. */
     fun readable(raw: String): String {
         val overview = decode(raw) ?: return raw
@@ -56,7 +70,10 @@ object RepositoryOverviewCodec {
             prCount = if (json.has("prCount") && !json.isNull("prCount")) json.getInt("prCount") else null,
             issueCount = if (json.has("issueCount") && !json.isNull("issueCount")) json.getInt("issueCount") else null,
             commits = readEntries("commits"), pullRequests = readEntries("pullRequests"),
-            issues = readEntries("issues")
+            issues = readEntries("issues"),
+            previousSha = json.optString("previousSha").takeIf { it.isNotBlank() },
+            previousBranch = json.optString("previousBranch").takeIf { it.isNotBlank() },
+            previousCheckedAt = if (json.has("previousCheckedAt") && !json.isNull("previousCheckedAt")) json.getLong("previousCheckedAt") else null
         )
     }.getOrNull()
 }
