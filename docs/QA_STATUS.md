@@ -6,7 +6,9 @@
 - **RED tests:** [Actions #40086128072](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40086128072) failed two expected tests on the previous code: missing Vivid contrast curve and missing independent 1.9.3 package. Other 33 structural tests passed.
 - **Shader patch:** `590f7521` adds masked local exposure using `(sum * 2.6)/(1+sum*1.8)`, extra color chroma and bounded smooth threshold within Rich/Ultra. Black maps to black exactly; highlights use a compression shoulder instead of unrestricted multiplication. No new drawing passes.
 - **Build:** 1.9.3/code16, independent debug `studio.nox.light.vivid` and `NOX-1.9.3-vivid-APK` artifact name.
-- **Pending verification:** final GitHub Actions structure, GLES100 GLSL syntax, Kotlin/JUnit and Android assembleDebug plus artifact integrity and checksum. Do not claim a verified binary before completed CI.
+- **CI VERIFIED:** [Build NOX APK #40086316092](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40086316092) on full source/package/documentation HEAD `bbca1f4ac0c8e405e7d92832ea6ff1d9ad3a393c` completed success. Structural tests, GLES100 glslangValidator, Kotlin/JUnit, Android debug build and APK upload all succeeded.
+- **Artifact VERIFIED:** GitHub Actions artifact `NOX-1.9.3-vivid-APK` (ID `12557521130`). The Actions ZIP has 18,903,070 bytes and SHA-256 `533528409dac09c8f3b3c381b66ba455ff4060e8421dbb9bace1d97283efe3a2`. Extracted `app-debug.apk` 19,494,687 bytes, SHA-256 `c4d3156b7c061897ab022a1bff5178e1da9e8f911ad1cbc0f730b563b3b15a2b`. ZIP CRC and embedded APK ZIP CRC both validated; `AndroidManifest.xml`, `classes.dex` and `resources.arsc` present.
+- **Validation boundary:** successful shader syntax and APK packaging do **not** verify on-device visual improvement, effective quality mode, sustained frame rate or battery consumption.
 - **Device QA outstanding:** verify genuine stronger scene contrast in Rich/Ultra on Lenovo Legion Y70 (with battery saver off); appearance on AMOLED, preview versus applied wallpaper, GPU FPS, thermals, power consumption, wallpaper lifecycle and PNG export remain unmeasured.
 
 ---

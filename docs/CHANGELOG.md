@@ -10,7 +10,7 @@
 - **Verified RED evidence:** [CI #40086128072](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40086128072) failed only the two intended new Vivid contrast and 1.9.3 packaging tests; 33 existing structural contracts remained green.
 - **Patch 2 — shader:** `590f7521` adds black-safe Vivid spectral grading after existing quality-gated radiance. The bounded rational curve `(sum*2.6)/(1+sum*1.8)`, chroma lift and `smoothstep(0.022,0.11,...)` mask visibly target midtones without a blanket gray overlay. Balanced stays unchanged, no new scene or data schema.
 - **Patch 3 — standalone packaging:** Android 1.9.3/code16, separate preview `studio.nox.light.vivid`, launcher `NOX 1.9.3 Vivid`, CI artifact `NOX-1.9.3-vivid-APK`. README and QA ledger updated.
-- **Status:** final CI and APK integrity pending; device visual improvement, power/FPS and thermals must be measured on Legion Y70.
+- **CI/result:** [Run #40086316092](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40086316092) passed all structural, GLSL, Kotlin and Android build steps plus artifact upload for commit `bbca1f4a`. Verified artifact ID `12557521130`, ZIP CRC and APK CRC; APK SHA-256 `c4d3156b7c061897ab022a1bff5178e1da9e8f911ad1cbc0f730b563b3b15a2b` (19,494,687 bytes). **Device visual improvement, power/FPS and thermals still require Lenovo Legion Y70 testing.**
 
 ## [1.9.2 / Volumetric Light] — deeper shaped materials (2026-10-24)
 
