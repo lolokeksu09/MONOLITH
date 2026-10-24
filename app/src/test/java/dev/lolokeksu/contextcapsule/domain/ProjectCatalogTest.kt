@@ -11,7 +11,7 @@ class ProjectCatalogTest {
     )
 
     @Test fun archivedProjectsHiddenFromDefaultWorkspaceButRecoverable() {
-        assertEquals(listOf("1", "3"), ProjectCatalog.visible(records, false, "").map { it.id })
+        assertEquals(listOf("3", "1"), ProjectCatalog.visible(records, false, "").map { it.id })
         assertEquals(listOf("2"), ProjectCatalog.visible(records, true, "").map { it.id })
         assertEquals(listOf("2"), ProjectCatalog.visible(records, true, "закр").map { it.id })
     }
