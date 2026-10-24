@@ -77,6 +77,9 @@ class StructuralContracts(unittest.TestCase):
         for label in ('"VEIL" -> "','"GRID" -> "','"SHARDS" -> "'):
             self.assertIn(label,home)
         self.assertIn('SceneCatalog.ids.forEach',home)
+        self.assertIn('onSurprise',home)
+        self.assertIn('SceneSurprise.choose(homeScene',ui)
+        self.assertIn('homeDraft=next',ui)
         self.assertIn('ScenePresets.forScene(scene)',home)
         self.assertIn('LivePreview(config,fps,gyro,Modifier.fillMaxSize())',home)
 
