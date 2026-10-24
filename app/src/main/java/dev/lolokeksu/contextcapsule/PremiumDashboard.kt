@@ -24,6 +24,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -224,14 +225,14 @@ fun PremiumHomeContent(
                     Spacer(Modifier.height(16.dp))
                     OutlinedTextField(
                         value = title, onValueChange = { title = it; formError = null }, singleLine = true,
-                        label = { Text("Название проекта") }, modifier = Modifier.fillMaxWidth()
+                        label = { Text("Название проекта") }, modifier = Modifier.fillMaxWidth().testTag("project_name")
                     )
                     Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
                         value = repository, onValueChange = { repository = it; formError = null }, singleLine = true,
                         label = { Text("GitHub owner/repo или ссылка (необязательно)") },
                         isError = formError != null,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().testTag("project_repo")
                     )
                     formError?.let { error ->
                         Spacer(Modifier.height(8.dp))
@@ -254,7 +255,8 @@ fun PremiumHomeContent(
                                 // On failure, its notice remains visible here rather than disappearing.
                             }
                             .onFailure { formError = it.message ?: "Не удалось проверить данные" }
-                    }, enabled = title.isNotBlank() && !state.busy
+                    }, enabled = title.isNotBlank() && !state.busy,
+                    modifier = Modifier.testTag("confirm_create")
                 ) { Text("Создать", color = BlueLight) }
             },
             dismissButton = { TextButton(onClick = { showCreate = false }) { Text("Отмена", color = MutedText) } }
