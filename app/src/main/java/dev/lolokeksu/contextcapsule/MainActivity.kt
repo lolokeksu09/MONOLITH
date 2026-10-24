@@ -76,7 +76,7 @@ private fun CapsuleApp(vm: CapsuleViewModel, incoming: String?, onShareDismiss: 
         if (uri != null) runCatching {
             context.contentResolver.openOutputStream(uri)?.use { it.write(exportText.toByteArray(Charsets.UTF_8)) }
                 ?: error("Unable to open file")
-        }.onFailure { Toast.makeText(context, it.message ?: "Export failed", Toast.LENGTH_LONG).show() }
+        }.onFailure { Toast.makeText(context, it.message ?: "Не удалось сохранить файл", Toast.LENGTH_LONG).show() }
     }
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching {
@@ -84,7 +84,7 @@ private fun CapsuleApp(vm: CapsuleViewModel, incoming: String?, onShareDismiss: 
                 reader.readText().take(1_000_001).takeIf { it.length <= 1_000_000 } ?: error("File is too large")
             } ?: error("Unable to open document")
         }.onSuccess(vm::importBackup)
-            .onFailure { Toast.makeText(context, it.message ?: "Import failed", Toast.LENGTH_LONG).show() }
+            .onFailure { Toast.makeText(context, it.message ?: "Не удалось импортировать файл", Toast.LENGTH_LONG).show() }
     }
     val colors = darkColorScheme(primary = Accent, onPrimary = Ink, background = Ink,
         surface = Surface, onSurface = Color(0xFFF1F5FF), onBackground = Color(0xFFF1F5FF),
@@ -102,7 +102,7 @@ private fun CapsuleApp(vm: CapsuleViewModel, incoming: String?, onShareDismiss: 
                     onCopy = {
                         val clip = android.content.ClipData.newPlainText("Context Capsule", vm.capsule())
                         (context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).setPrimaryClip(clip)
-                        Toast.makeText(context, "Capsule copied", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Капсула скопирована", Toast.LENGTH_SHORT).show()
                     },
                     onShare = {
                         val send = Intent(Intent.ACTION_SEND).apply {
@@ -131,14 +131,14 @@ private fun CapsuleApp(vm: CapsuleViewModel, incoming: String?, onShareDismiss: 
         )
         if (showBackupWarning) AlertDialog(
             onDismissRequest = { showBackupWarning = false },
-            title = { Text("Unencrypted backup") },
-            text = { Text("This JSON file contains your private project notes in plain text. Save it only to a trusted location.") },
+            title = { Text("Незашифрованная резервная копия") },
+            text = { Text("Файл JSON содержит личные заметки в открытом виде. Сохраняй его только в надёжном месте.") },
             confirmButton = { TextButton(onClick = {
                 showBackupWarning = false
                 exportText = vm.backup()
                 exportLauncher.launch("context-capsule-backup.json")
-            }) { Text("Export backup") } },
-            dismissButton = { TextButton(onClick = { showBackupWarning = false }) { Text("Cancel") } }
+            }) { Text("Сохранить копию") } },
+            dismissButton = { TextButton(onClick = { showBackupWarning = false }) { Text("Отмена") } }
         )
         }
     }
