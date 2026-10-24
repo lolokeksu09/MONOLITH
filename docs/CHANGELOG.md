@@ -6,7 +6,9 @@
 
 - **Patch 1 — RED contract:** `4ba8b0a` added a regression for nine independently sculpted materials, Rich/Ultra-only application and suppression of low-level haze. The base 1.9.1 shader does not yet implement this; verification and implementation follow.
 - **Intended effect:** volumetric folds, toroidal profiles, dense gas lobes, depth-weighted curtains and comet wakes, energy-core shading, lit geometry and translucent crystal faces. Preserve existing shapes and nine mode IDs, `.nox` preset compatibility, pure-black AMOLED regions, pinned Studio preview and energy/thermal quality fallback.
-- **Status:** test-first work in progress. Not a completed Android release; no on-device visual/FPS/thermal claims.
+- **Patch 2 — source:** `677bcd13` adds nine distinct low-cost geometric lighting fields to the existing quality-gated cinematic branch: FLUX lit sheet; HALO tube; NEBULA scattering; AURORA fold; PULSE spherical core; COMET plasma wake; VEIL translucent fabric; GRID illuminated pillars; SHARDS angled crystal faces. A per-fragment low-energy gate suppresses diffuse haze. This preserves the prior nine scene IDs, shader inputs, Room and exports.
+- **Verification:** original missing-layer regression failed as expected in [CI #40083148531](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40083148531). The new shader requires the full GLSL/JUnit/Android CI gate before considering this implementation buildable; phone appearance/FPS/thermal testing remains outstanding.
+- **Status:** source implementation published; standalone 1.9.2 APK packaging and QA pending.
 
 ## [1.9.1 / Cinematic Depth] — denser real-time composition (2026-10-24)
 
