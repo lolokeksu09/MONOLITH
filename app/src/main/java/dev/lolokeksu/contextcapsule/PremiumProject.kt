@@ -87,7 +87,7 @@ fun PremiumProjectContent(
             Text(project.repository ?: "Локальный проект", color = BodyText, fontSize = 12.sp, maxLines = 2)
         }
         Spacer(Modifier.height(22.dp))
-        RepositoryOverviewPanel(state.snapshot, project.repository != null, state.busy, onSync)
+        RepositoryOverviewPanel(state.snapshot, project.repository != null, state.busy, onSync, onTask, state.tasks)
         Spacer(Modifier.height(25.dp))
 
         Column(
