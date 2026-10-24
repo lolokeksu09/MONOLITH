@@ -4,6 +4,16 @@
 
 CONTEXT CAPSULE is a proposed native Android application that keeps explicit project decisions, tasks and source-backed GitHub state in a portable local knowledge base. It exports a reviewed Markdown/JSON **context capsule** for continuing work in a new ChatGPT conversation. ChatGPT receives the capsule via user-initiated Android sharing or copy/paste — there is no automatic access to private chats.
 
+## 0.6.0 preview — рабочая структура проекта
+
+Экран проекта разделён на два понятных режима вместо одного длинного полотна:
+
+- **Обзор:** состояние GitHub, изменения после синхронизации, предлагаемые задачи и история коммитов.
+- **Память:** капсула, решения, поиск заметок, задачи и экспорт.
+- **Всегда доступно:** закреплённая внизу кнопка «Скопировать капсулу» из обоих режимов.
+
+Существующие действия и данные сохранены, данные Room не мигрируют. Все новые элементы представлены на русском языке. Тест Android-интерфейса должен подтвердить работу обеих вкладок и постоянный доступ к копированию.
+
 ## 0.5.0 preview — изменения и следующие действия
 
 При каждой ручной синхронизации приложение теперь сохраняет предыдущий HEAD в существующем GitHub-снимке. На экране видно, изменилась ли выбранная ветка с прошлого обновления, а также короткие SHA до и после. Первая синхронизация или смена ветки не выдаётся за новые коммиты.

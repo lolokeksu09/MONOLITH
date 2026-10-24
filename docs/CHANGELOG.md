@@ -1,5 +1,14 @@
 # CONTEXT CAPSULE — Changelog
 
+## 2026-10-24 — 0.6.0-preview · Focused navigation
+
+- Split the long project page into Overview (GitHub/commits/activity) and Memory (handoff, notes, decisions, tasks, export) using two native Compose tabs.
+- Move the real existing handoff copy action into a persistent bottom bar available in either tab, including long scroll sessions.
+- Remove redundant handoff-copy button in the memory card.
+- Add Android instrumentation regression for navigation between sections and permanent handoff availability.
+- Preserve Room schema, GitHub sync, project creation, notes, tasks and no-paid-API behavior; versionCode 6.
+- Verify exact build and emulator status before sharing the new APK.
+
 ## 2026-10-24 — 0.5.0-preview · Project Pulse
 
 - Snapshot-to-snapshot comparison of default-branch HEAD, preserving prior SHA/branch/timestamp in existing `GithubSnapshot.summary`; no Room migrations.
