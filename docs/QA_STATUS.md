@@ -1,3 +1,27 @@
+# NOX 1.9.1 Cinematic Depth — verified binary and device-QA ledger (2026-10-24)
+
+## Automated verification — passed
+- [GitHub Actions run #40080423955](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40080423955) at source+version commit `9a0bfc4242c39dcdc0e9b7dd5d65ae76f674a6f2` completed **success**.
+- GitHub steps: structural regressions, GLES100 vertex and fragment shader validation with glslangValidator, Kotlin/JUnit model unit tests, Android `:app:assembleDebug`, artifact upload — **all successful**.
+- GitHub artifact ID `12555061380`, name `NOX-1.9.1-cinematic-APK`. Extracted APK (original artifact member `app-debug.apk`) size **19,494,691 bytes**; SHA-256 `398724e17bfeab8e18c766fa7eff2246e4f9de468f4ad3f88ffa5de0aad81c93`.
+- GitHub artifact ZIP and APK both passed ZIP CRC check. APK contains `AndroidManifest.xml`, `classes.dex`, and `resources.arsc`.
+- User delivery ZIP `NOX-1.9.1-Cinematic-APK.zip` contains the verified original APK bytes as `NOX-1.9.1-Cinematic.apk`, 18,878,336 bytes, SHA-256 `8aa462268734a6a7d1a97d1a81ccfbb7ab6eca3a66b2fe916fe587592609a5bf`. ZIP round-trip against extracted APK passed.
+- NOX 1.9.1 code 14 debug package suffix `.cinematic` keeps existing 1.9 data/install separate.
+
+## What changed
+- Existing nine live scenes now have additional cinematic silhouette/foreground and midground geometry; smooth interpolated cloud noise reduces visible cell boundaries in NEBULA and VEIL. GPU rendering retains previously wired Rich/Ultra quality preferences and thermal/power fallback, pinned preview and offline operation.
+- Original presets, model schema and .nox archive V1 unchanged.
+
+## Not verified on actual Lenovo Legion Y70
+- Real GPU-driver rendering/shader linking, actual visual fullness and compositing, 60/120 FPS, power draw, temperature, motion/touch, PNG export and Android wallpaper visibility transitions.
+- Android/GLSL source compilation does **not** establish that the output is visually impressive. Compare 1.9 and 1.9.1 in Rich vs Ultra on the device; submit captured screenshots when an effect still looks empty.
+- Existing packages have separate private preset databases; **do not uninstall 1.9** to test 1.9.1.
+
+## References
+[Design](superpowers/specs/2026-10-24-nox-1-9-1-cinematic-depth-design.md) · [Plan](superpowers/plans/2026-10-24-nox-1-9-1-cinematic-depth.md) · [Changelog](CHANGELOG.md) · [AGENTS](../AGENTS.md)
+
+---
+
 # NOX 1.9 Graphics Overdrive — verified CI / hardware QA pending (2026-10-24)
 
 ## Confirmed, not inferred
