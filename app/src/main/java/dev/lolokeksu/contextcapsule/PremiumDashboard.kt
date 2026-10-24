@@ -240,7 +240,7 @@ fun PremiumHomeContent(
                     state.notice?.let { message ->
                         Spacer(Modifier.height(8.dp))
                         Text(message, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
-                    )
+                    }
                 }
             },
             confirmButton = {
