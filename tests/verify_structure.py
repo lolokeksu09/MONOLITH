@@ -79,6 +79,19 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('session?.setQuality(prefs.quality)',wallpaper)
         self.assertIn('uQuality',gl)
 
+    def test_cinematic_depth_all_nine_are_quality_gated(self):
+        src=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
+        self.assertIn('float smoothNoise(vec2 location)',src)
+        self.assertIn('float cloudField(vec2 location)',src)
+        for scene in ('FLUX','HALO','NEBULA','AURORA','PULSE','COMET','VEIL','GRID','SHARDS'):
+            self.assertIn('// CINEMATIC '+scene+':',src)
+        self.assertIn('vec3 cinematicDetail=vec3(0.0);',src)
+        self.assertIn('sum+=cinematicDetail*qualityMix;',src)
+        self.assertIn('if(uQuality>1.5)',src)
+        self.assertIn('float microSpark=',src)
+        self.assertIn('float activeLight=',src)
+        self.assertIn('min(sum,vec3(1.0))',src)
+
     def test_graphics_overdrive_has_real_depth_for_all_nine_modes(self):
         gl=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
         for term in ('// OVERDRIVE FLUX','// OVERDRIVE HALO','// OVERDRIVE NEBULA',
