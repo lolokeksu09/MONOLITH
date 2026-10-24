@@ -15,6 +15,10 @@
 - Implementation commits: `98dc26a`, `cf29390`, `a475176`, `92f5560`.
 - IMPORTANT: Independent glslangValidator pass is needed; GLSL syntax correctness is distinct from actual GPU visual quality.
 
+### Patch 4: Preview regression fixes
+- Updated pinned Studio preview structural assertion for the extra quality argument (`8d193271`). Fresh structural and GLES validation passed in GitHub CI run #40078110208; Android build revealed a missing quality parameter in FullscreenPreview.
+- Fixed immersive FullscreenPreview quality propagation (`f7c3bb6e`), added regression (`4b04e44c`). Android build must be rerun; successful release status **not yet claimed**.
+
 ### Patch 3: Premium UI and packaging
 - Real three-tile settings `Balanced / Rich / Ultra` with descriptions, immediate preview updates, and thermal caveat; fixed pinned Studio preview preserved.
 - Android version 1.9.0/code13, separate debug application ID `studio.nox.light.overdrive`, launcher `NOX 1.9 Overdrive`; CI artifact `NOX-1.9-overdrive-APK`.
