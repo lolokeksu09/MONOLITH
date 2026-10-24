@@ -1,5 +1,13 @@
 # NOX — журнал изменений
 
+## [1.8.0 / Patch 2] — Three new procedural GPU wallpapers (2026-10-24)
+
+- Added new shared-GLES shader modes **VEIL=6**, **GRID=7**, **SHARDS=8**, using the existing time, colors, glow, density, motion, seed, and touch uniforms. Bounded loops; no extra EGL contexts.
+- VEIL: layered drifting mist; GRID: bounded perspective grid; SHARDS: rotating luminous diamonds with facets and softened edges.
+- Preserved original FLUX/HALO/NEBULA/AURORA/PULSE/COMET shader computations, mode IDs and global tone handling. COMET now uses explicit `uMode<5.5` dispatch to allow additional branches.
+- Structural shader regression tests written in `tests/verify_structure.py` before implementation.
+- Commit series: `2eaa26a` (red tests), `4a13bcd` (GPU modes). **Hardware shader compilation/thermals remain untested** until installation on Lenovo Legion Y70.
+
 ## [1.8.0 / Patch 1] — Nine-scene catalog and nine new looks (2026-10-24)
 
 - Added VEIL / GRID / SHARDS to the immutable SceneRegistry, preserving the original six scene IDs and defaults.
