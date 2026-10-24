@@ -1,15 +1,8 @@
-# NOX — журнал изменений
+# CONTEXT CAPSULE changelog
 
-> Правило владельца: **каждый патч = коммит в GitHub + обновление документации**. Инструкции: [AGENTS.md](../AGENTS.md), [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md).
+## 2026-10-24 — repository cleanup
 
-## [docs-policy] — 2026-10-23
-
-- Закреплены постоянные правила для разработчиков и AI-агентов в `AGENTS.md`.
-- Описан обязательный цикл: проверка состояния → спецификация/тест → изменение → документация → коммит GitHub → CI → ссылка на артефакт только после проверки.
-- Файлы: `AGENTS.md`, `docs/DEVELOPMENT_WORKFLOW.md`, `README.md`, `docs/CHANGELOG.md`.
-- Коммиты политики: `71f51e7772891885071085ff3880763bbb04e1b4`, `747e4a6d578d5c1da4d4db24983155c145e2cea5`.
-- Статус: документы, без изменений Android-кода; APK и аппаратные тесты не применимы.
-
-## История feature-веток
-
-Основная ветка `main` содержит раннюю основу NOX 1.0. Новые версии развиваются в отдельных ветках; не следует считать их опубликованными в `main` без отдельного подтверждённого merge. Для NOX 1.7 см. `feature/nox-1-7-living-scenes` и отдельный `docs/CHANGELOG.md` этой ветки.
+- Removed the former Android product's source, Gradle modules, tests, assets and workflow from the current branch tree.
+- Kept CONTEXT CAPSULE documentation for future implementation.
+- Git commit history is not rewritten. Existing branch cleanup is tracked separately.
+- No code compilation or APK is claimed.
