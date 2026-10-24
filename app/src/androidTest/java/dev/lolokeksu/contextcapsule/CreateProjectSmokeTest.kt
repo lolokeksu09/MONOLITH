@@ -1,8 +1,5 @@
 package dev.lolokeksu.contextcapsule
 
-import androidx.compose.ui.test.assertExists
-import androidx.compose.ui.test.hasSetTextAction
-import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
