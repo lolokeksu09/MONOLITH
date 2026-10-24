@@ -17,6 +17,9 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.HistoryEdu
 import androidx.compose.material.icons.filled.IosShare
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
+import dev.lolokeksu.contextcapsule.domain.WorkspaceTools
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -57,6 +60,9 @@ fun PremiumProjectContent(
     var note by remember(project.id) { mutableStateOf("") }
     var task by remember(project.id) { mutableStateOf("") }
     var preview by remember(project.id) { mutableStateOf(false) }
+    var decisionQuery by remember(project.id) { mutableStateOf("") }
+    var pendingOnly by remember(project.id) { mutableStateOf(false) }
+    val shownDecisions = WorkspaceTools.filterDecisions(state.decisions, decisionQuery, pendingOnly)
 
     Column(
         Modifier.fillMaxSize().background(InkBlack).verticalScroll(rememberScrollState())
@@ -198,7 +204,40 @@ fun PremiumProjectContent(
                 modifier = Modifier.align(Alignment.End)
             ) { Text("Сохранить заметку") }
         }
-        state.decisions.forEach { d ->
+        if (state.decisions.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = decisionQuery,
+                onValueChange = { decisionQuery = it },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                label = { Text("Найти решение или заметку") },
+                leadingIcon = {
+                    Icon(Icons.Default.Search, contentDescription = null, tint = SubText)
+                },
+                trailingIcon = {
+                    if (decisionQuery.isNotBlank()) IconButton(onClick = { decisionQuery = "" }) {
+                        Icon(Icons.Default.Close, contentDescription = "Очистить поиск", tint = SubText)
+                    }
+                }
+            )
+            Spacer(Modifier.height(7.dp))
+            FilterChip(
+                selected = pendingOnly,
+                onClick = { pendingOnly = !pendingOnly },
+                label = { Text("На проверку · ${state.decisions.count { it.evidence != EvidenceKind.OWNER_CONFIRMED }}") }
+            )
+            if (shownDecisions.isEmpty()) {
+                Spacer(Modifier.height(9.dp))
+                Text("Под эти условия заметок нет.", color = BodyText, fontSize = 12.sp)
+            }
+        } else {
+            Spacer(Modifier.height(9.dp))
+            Text("Сохрани первое решение или поделись текстом из другого приложения.",
+                color = BodyText, fontSize = 12.sp, lineHeight = 18.sp)
+        }
+        shownDecisions.forEach { d ->
             Spacer(Modifier.height(9.dp))
             ProjectPlate {
                 Text(d.text, color = WhiteText, fontSize = 14.sp, lineHeight = 20.sp)
