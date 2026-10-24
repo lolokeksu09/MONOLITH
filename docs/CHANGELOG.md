@@ -2,6 +2,8 @@
 
 ## 2026-10-24 — Android 0.1.0 implementation branch (unverified build)
 
+- Privacy refinement: JSON backup now requires explicit plaintext warning/confirmation; document import reads are bounded to 1 MB.
+
 - Started native Kotlin/Jetpack Compose application in `feature/context-capsule-v1` with new Android package `dev.lolokeksu.contextcapsule`.
 - Added Room project/decision/task/snapshot entities; all imported notes start unverified; explicit owner confirmation is required.
 - Implemented public GitHub read-only synchronization with HEAD SHA, commits, PR and Actions summary (partial responses marked).
