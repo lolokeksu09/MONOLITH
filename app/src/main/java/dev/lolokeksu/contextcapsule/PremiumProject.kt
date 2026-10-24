@@ -86,6 +86,8 @@ fun PremiumProjectContent(
             Spacer(Modifier.width(7.dp))
             Text(project.repository ?: "Локальный проект", color = BodyText, fontSize = 12.sp, maxLines = 2)
         }
+        Spacer(Modifier.height(22.dp))
+        RepositoryOverviewPanel(state.snapshot, project.repository != null, state.busy, onSync)
         Spacer(Modifier.height(25.dp))
 
         Column(
@@ -94,13 +96,13 @@ fun PremiumProjectContent(
                 .border(1.dp, Color(0xFF3A5883), RoundedCornerShape(23.dp))
                 .padding(21.dp)
         ) {
-            Text("КАПСУЛА ПРОЕКТА", fontSize = 10.sp, fontWeight = FontWeight.SemiBold,
+            Text("ПЕРЕДАЧА КОНТЕКСТА", fontSize = 10.sp, fontWeight = FontWeight.SemiBold,
                 letterSpacing = 1.6.sp, color = Electric)
             Spacer(Modifier.height(8.dp))
-            Text("Всё, чтобы продолжить", fontSize = 20.sp, color = WhiteText,
+            Text("Продолжить с того же места", fontSize = 20.sp, color = WhiteText,
                 fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(6.dp))
-            Text("Решения, незавершённые задачи и последний сохранённый снимок GitHub.",
+            Text("Готовый пакет решений, задач и подтверждённых данных GitHub для нового чата.",
                 color = BodyText, fontSize = 12.sp, lineHeight = 18.sp)
             Spacer(Modifier.height(20.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -143,46 +145,6 @@ fun PremiumProjectContent(
                         ),
                         color = BodyText, fontSize = 12.sp, lineHeight = 19.sp
                     )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(29.dp))
-        SectionTitle("Источник данных", "GitHub")
-        Spacer(Modifier.height(12.dp))
-        ProjectPlate {
-            if (project.repository == null) {
-                Text("GitHub не подключён", color = WhiteText, fontWeight = FontWeight.Medium)
-                Spacer(Modifier.height(4.dp))
-                Text("Локальную память можно использовать без репозитория.", color = BodyText, fontSize = 12.sp)
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Последний снимок", color = WhiteText, fontWeight = FontWeight.Medium)
-                        Text(
-                            state.snapshot?.sha?.take(12) ?: "Синхронизация не выполнялась",
-                            color = Electric, fontSize = 13.sp
-                        )
-                    }
-                    OutlinedButton(
-                        onClick = onSync, enabled = !state.busy,
-                        shape = RoundedCornerShape(13.dp),
-                        border = BorderStroke(1.dp, Line),
-                        contentPadding = PaddingValues(horizontal = 13.dp, vertical = 7.dp)
-                    ) {
-                        Icon(Icons.Default.Sync, contentDescription = null, tint = Electric, modifier = Modifier.size(17.dp))
-                        Spacer(Modifier.width(5.dp))
-                        Text("Обновить", color = WhiteText, fontSize = 12.sp)
-                    }
-                }
-                state.snapshot?.let { snapshot ->
-                    Spacer(Modifier.height(11.dp))
-                    Text("Проверено: ${java.text.DateFormat.getDateTimeInstance().format(snapshot.checkedAt)}",
-                        color = SubText, fontSize = 11.sp)
-                    if (snapshot.warning != null) {
-                        Spacer(Modifier.height(5.dp))
-                        Text("Неполные данные: ${snapshot.warning}", color = Caution, fontSize = 12.sp)
-                    }
                 }
             }
         }
