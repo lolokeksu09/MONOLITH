@@ -1,5 +1,15 @@
 # CONTEXT CAPSULE — Changelog
 
+## 2026-10-25 — 0.9.0-preview · Workspace overhaul
+
+- Distinct Overview, Memory, and Plan project sections; the existing Android share receiver, GitHub snapshots, note approval and editing flows remain wired.
+- New premium task board with completion progress, filters, quick add, and edit/delete dialogs.
+- Source-of-truth local metrics per project using correlated Room COUNT queries; compact dashboard with project progress and pending trust reviews.
+- True compact handoff (not the prior full export with an extra line), explicitly retaining provenance, uncertainty, confirmed decisions and open tasks. The chosen mode is applied to copy, share, preview, and Markdown export.
+- Strengthened DAO isolation for decision confirmation and task completion using both active project ID and record ID.
+- No Room schema migration (v2), no paid AI API, no additional app permissions.
+- Tests: `WorkspaceV9Test`, `TaskBoardTest`, `WorkspaceMetricsTest` plus existing Android creation / migration / dialog suites. Build and emulator must both pass on the exact commit before publishing an APK.
+
 ## 2026-10-24 — 0.8.0-preview · Memory management
 
 - Editable decisions/notes and tasks, with explicit validated input controls.

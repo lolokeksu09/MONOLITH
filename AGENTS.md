@@ -22,4 +22,4 @@
 - Never silently delete or replace projects or overwrite backups.
 
 ## Current state
-Documentation only. No Android source code, compile checks, APK or release artifacts are part of this repository's current `main`. Do not run old NOX build commands or promise an APK until the new project is implemented and tested.
+The default `main` remains the documentation baseline. Android implementation and the ongoing v0.9 workspace redesign live on `feature/context-capsule-v1` / draft PR #15. Verify the exact commit's Actions results and artifact before installing or merging. Do not confuse the legacy repository slug with the package name.

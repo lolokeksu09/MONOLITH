@@ -2,7 +2,22 @@
 
 **Android project memory · Offline-first · No paid AI API**
 
-CONTEXT CAPSULE is a proposed native Android application that keeps explicit project decisions, tasks and source-backed GitHub state in a portable local knowledge base. It exports a reviewed Markdown/JSON **context capsule** for continuing work in a new ChatGPT conversation. ChatGPT receives the capsule via user-initiated Android sharing or copy/paste — there is no automatic access to private chats.
+CONTEXT CAPSULE is a native Android application that keeps explicit project decisions, tasks and source-backed GitHub state in a portable local knowledge base. It exports a reviewed Markdown/JSON **context capsule** for continuing work in a new ChatGPT conversation. ChatGPT receives the capsule via user-initiated Android sharing or copy/paste — there is no automatic access to private chats.
+
+## 0.9.0-preview — Workspace overhaul
+
+Новый рабочий интерфейс вместо длинных экранов:
+
+- **Главная:** компактный «Рабочий пульс» — число проектов, активных задач и решений на проверку. Карточки показывают реальные локальные счётчики и прогресс выполнения задач; отсутствие задач не выдаётся за 100% готовности.
+- **Обзор:** текущий GitHub-статус и изменения с предыдущего обновления, без скрытой отправки личных данных.
+- **Память:** сохранение, поиск, закрепление, проверка, редактирование и удаление заметок, резервные копии и предпросмотр капсулы.
+- **План:** отдельный экран задач с быстрым добавлением, прогрессом, фильтрами «Открыто / Все / Готово», отметками, редактированием и подтверждением удаления.
+- **Передача в ChatGPT:** закреплённая панель с настоящим выбором «Кратко / Полностью». Выбранный формат влияет на копирование, системную отправку, предпросмотр и экспорт Markdown. Краткий формат сохраняет источники GitHub, границы доверия и незавершённые задачи, но исключает завершённые задачи.
+- **Защита данных:** подтверждение решения и отметка выполнения задачи теперь ограничены активным `projectId`; добавлен тест изоляции двух проектов.
+
+**Совместимость:** Room остаётся v2, новые разрешения и платный AI API не добавлены. При установке поверх предыдущей версии данные сохраняются при совпадающей подписи APK. При смене подписи нельзя удалять приложение без JSON-резервной копии. Действия в GitHub только read-only.
+
+**QA:** JUnit и Android UI-тесты в GitHub Actions, включая отдельные сценарии нового плана и изоляции проектов. Эмулятор не заменяет тестирование на физическом Lenovo Legion Y70 с Android 16.
 
 ## 0.8.0 preview — управление памятью
 
@@ -103,7 +118,7 @@ The repository's name is still `NOX-LEGION`. Renaming it to `CONTEXT-CAPSULE` re
 
 No root, no proprietary server, no hidden chat collection, no paid OpenAI API.
 
-## Architecture (planned, not implemented)
+## Architecture (current feature branch)
 
 - Device: Lenovo Legion Y70 2026, Android 16.
 - Kotlin + Jetpack Compose + Material 3, Room, coroutines/Flow, Android Storage Access Framework.
@@ -118,4 +133,4 @@ No root, no proprietary server, no hidden chat collection, no paid OpenAI API.
 - [Developer rules](AGENTS.md)
 - [Changelog](docs/CHANGELOG.md)
 
-**Next milestone:** review the specification and plan, then create a feature branch, write tests before code, implement the Android client and verify its APK through GitHub Actions. A debug APK is only available after an Android Actions run succeeds; no build result has been validated yet.
+**Build guidance:** use the newest successful Android GitHub Actions run for the exact feature-branch HEAD. A source commit without passing jobs is not a verified APK; device-side QA is still required.
