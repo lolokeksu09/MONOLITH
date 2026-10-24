@@ -10,7 +10,8 @@
 - **Verification:** original missing-layer regression failed as expected in [CI #40083148531](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40083148531). The new shader requires the full GLSL/JUnit/Android CI gate before considering this implementation buildable; phone appearance/FPS/thermal testing remains outstanding.
 - **Patch 3 — independent preview packaging:** structural contract `571528e9`; Android version `1.9.2` / code `15` in `7407ccd3`, independent debug suffix `.volumetric` and label `NOX 1.9.2 Volumetric` in `1ca40031`, workflow artifact `NOX-1.9.2-volumetric-APK` in `70c2f568`. Existing 1.9.1 installation/data unchanged.
 - **Docs:** README and QA ledger updated with scene details and explicit lack of device testing.
-- **Status:** Android/GLSL and artifact validation pending on latest branch head. No on-device visual, FPS or thermal claims.
+- **Automated verification:** [CI #40083615236](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40083615236) on branch head `9218b433` passed Python regressions, GLES100 glslangValidator, Kotlin JUnit, Android build and artifact upload. GitHub [CI #40083507707](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40083507707) provided checked distributable `NOX-1.9.2-volumetric-APK` (artifact `12555887751`). Validated APK SHA-256 `ed281947ffd58af4e30570051141a366575c67c4e861358eb25d668a11e0a738`; full ZIP/APK CRC verified and archive contains manifest/DEX/resources. See [QA_STATUS](QA_STATUS.md).
+- **Status:** Android source/build and ZIP integrity verified; target Lenovo Legion Y70 GPU visuals, FPS, thermal and battery usage **not yet measured**.
 
 ## [1.9.1 / Cinematic Depth] — denser real-time composition (2026-10-24)
 
