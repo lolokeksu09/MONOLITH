@@ -2,6 +2,8 @@ package dev.lolokeksu.contextcapsule
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import org.junit.Assert.assertEquals
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.lolokeksu.contextcapsule.domain.GithubSnapshot
 import dev.lolokeksu.contextcapsule.github.RepositoryOverviewCodec
@@ -34,6 +36,27 @@ class RepositoryOverviewUiTest {
         rule.onNodeWithText("Community project").assertExists()
         rule.onNodeWithText("2").assertExists()
         rule.onNodeWithText("4").assertExists()
+    }
+
+    @Test fun headChangeAndRecommendedTaskAppearOnlyFromEvidence() {
+        val body = JSONObject()
+            .put("ciStatus", "failure")
+            .put("prCount", 1)
+            .put("issueCount", 0)
+            .put("previousSha", "oldabc")
+            .put("previousBranch", "main")
+            .put("commits", JSONArray())
+        val snapshot = GithubSnapshot("p", "main", "newabc",
+            "https://github.com/o/r/commit/newabc", 2000L,
+            RepositoryOverviewCodec.encode(body), null)
+        var added = ""
+        rule.setContent {
+            RepositoryOverviewPanel(snapshot, true, false, {}, onAddTask = { added = it })
+        }
+        rule.onNodeWithText("Обнаружены изменения HEAD").assertExists()
+        rule.onNodeWithText("Проверить ошибки последнего CI").assertExists()
+        rule.onNodeWithText("В задачи", useUnmergedTree = true).performClick()
+        rule.runOnIdle { assertEquals("Проверить ошибки последнего CI", added) }
     }
 
     @Test fun missingSnapshotIsNotCalledHealthy() {
