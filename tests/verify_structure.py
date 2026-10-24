@@ -92,6 +92,21 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('float activeLight=',src)
         self.assertIn('min(sum,vec3(1.0))',src)
 
+    def test_volumetric_light_keeps_nine_shaped_depth_layers_quality_gated(self):
+        shader=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
+        volumetric=shader.split('vec3 cinematicDetail=vec3(0.0);',1)[1].split('sum+=cinematicDetail*qualityMix;',1)[0]
+        self.assertIn('vec3 shapedVolume=vec3(0.0);',volumetric)
+        for scene in ('FLUX','HALO','NEBULA','AURORA','PULSE','COMET','VEIL','GRID','SHARDS'):
+            self.assertIn('// VOLUMETRIC '+scene+':',volumetric,scene+' must have a distinct lit 3D mass')
+        self.assertGreaterEqual(volumetric.count('shapedVolume+='),9,
+            'Each scene should shape its own illuminated material, not share a blanket glow')
+        self.assertIn('shapedVolume*=smoothstep(',volumetric,
+            'Suppress low-level haze in deep black pixels')
+        self.assertIn('sum+=shapedVolume*qualityMix;',shader,
+            'Only Rich and Ultra may add 1.9.2 volume')
+        self.assertIn('if(uQuality>0.5)',shader,
+            'Balanced must retain its lean pipeline')
+
     def test_graphics_overdrive_has_real_depth_for_all_nine_modes(self):
         gl=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
         for term in ('// OVERDRIVE FLUX','// OVERDRIVE HALO','// OVERDRIVE NEBULA',
