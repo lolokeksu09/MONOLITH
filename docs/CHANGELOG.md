@@ -1,5 +1,14 @@
 # CONTEXT CAPSULE — Changelog
 
+## 2026-10-24 — Android 0.1.0 implementation branch (unverified build)
+
+- Started native Kotlin/Jetpack Compose application in `feature/context-capsule-v1` with new Android package `dev.lolokeksu.contextcapsule`.
+- Added Room project/decision/task/snapshot entities; all imported notes start unverified; explicit owner confirmation is required.
+- Implemented public GitHub read-only synchronization with HEAD SHA, commits, PR and Actions summary (partial responses marked).
+- Added deterministic Markdown capsule formatting, JUnit contract tests, a premium AMOLED projects UI, manual copy/share, document export and versioned JSON backup import.
+- Added Android GitHub Actions workflow for unit tests and debug APK. CI, actual device installation, instrumentation tests and real APK publication are **not yet verified**.
+- No paid AI API, root, backend or access to ChatGPT private history. No modifications to `main`.
+
 ## 2026-10-24 — repository documentation alignment
 
 - Rechecked GitHub after legacy cleanup: default branch `main` contains only five documentation/configuration files, and no Android source or CI workflow.
