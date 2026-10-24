@@ -1,5 +1,17 @@
 # CONTEXT CAPSULE — Changelog
 
+## 2026-10-25 — 0.10.0-preview · Project Control Center
+
+- New project settings with title/public GitHub relink, backup export, archive/unarchive and explicitly confirmed removal.
+- Archive/active filters on home, archive badges and source-backed project progress.
+- Switching GitHub repository atomically invalidates the prior read-only snapshot; local notes/tasks remain untouched.
+- Exact-title deletion + independent acknowledgement required in UI and exact title validated again in ViewModel.
+- Room v3 migration ADD COLUMN projects.archived INTEGER NOT NULL DEFAULT 0; legacy projects stay active.
+- JSON backup schema remains version 1 with optional project.archived, backwards-compatible with older backups.
+- Added pure catalog tests, Android migration preservation test and UI tests for archive/relink/destruction.
+- No extra Android permissions, root, paid API or Github write access.
+- Exact HEAD CI and APK must be verified before recommending installation.
+
 ## 2026-10-25 — 0.9.0-preview · Workspace overhaul
 
 - Distinct Overview, Memory, and Plan project sections; the existing Android share receiver, GitHub snapshots, note approval and editing flows remain wired.

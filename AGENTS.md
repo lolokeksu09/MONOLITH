@@ -22,4 +22,4 @@
 - Never silently delete or replace projects or overwrite backups.
 
 ## Current state
-The default `main` remains the documentation baseline. Android implementation and the ongoing v0.9 workspace redesign live on `feature/context-capsule-v1` / draft PR #15. Verify the exact commit's Actions results and artifact before installing or merging. Do not confuse the legacy repository slug with the package name.
+The default `main` remains the documentation baseline. Android implementation and the ongoing v0.10 Project Control Center live on `feature/context-capsule-v1` / draft PR #15. Verify the exact commit's Actions results and artifact before installing or merging. Do not confuse the legacy repository slug with the package name.

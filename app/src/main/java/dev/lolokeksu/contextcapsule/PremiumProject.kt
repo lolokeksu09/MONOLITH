@@ -371,7 +371,10 @@ fun PremiumProjectContent(
             project = project, busy = state.busy,
             onSave = onUpdateProject,
             onArchive = onArchiveProject,
-            onBackup = { onExport(true, false) },
+            onBackup = {
+                showSettings = false
+                onExport(true, false)
+            },
             onRequestDelete = { showProjectDelete = true },
             onDismiss = { showSettings = false }
         )

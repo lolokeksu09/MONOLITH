@@ -29,6 +29,21 @@ class ProjectManagementUiTest {
         rule.runOnIdle { assertEquals("My Project", deleted) }
     }
 
+    @Test fun archiveActionIsExplicitAndDoesNotInvokeDelete() {
+        var newArchive: Boolean? = null
+        var deleteCalled = false
+        rule.setContent {
+            ProjectSettingsDialog(project, false,
+                onSave = { _, _ -> }, onArchive = { newArchive = it },
+                onBackup = {}, onRequestDelete = { deleteCalled = true }, onDismiss = {})
+        }
+        rule.onNodeWithTag("settings_archive").performClick()
+        rule.runOnIdle {
+            assertEquals(true, newArchive)
+            assertFalse(deleteCalled)
+        }
+    }
+
     @Test fun settingsNormalizePublicGithubLinkWithoutDeletingContent() {
         var saved: Pair<String, String>? = null
         rule.setContent {
