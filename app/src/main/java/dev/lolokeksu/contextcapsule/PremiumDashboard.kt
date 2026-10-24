@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
 import dev.lolokeksu.contextcapsule.domain.WorkspaceTools
+import dev.lolokeksu.contextcapsule.domain.ProjectInput
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -52,6 +53,7 @@ fun PremiumHomeContent(
     var showCreate by remember { mutableStateOf(false) }
     var title by remember { mutableStateOf("") }
     var repository by remember { mutableStateOf("") }
+    var formError by remember { mutableStateOf<String?>(null) }
     var search by remember { mutableStateOf("") }
     val visibleProjects = WorkspaceTools.filterProjects(state.projects, search)
     Column(
@@ -221,24 +223,38 @@ fun PremiumHomeContent(
                     Text("Создай отдельную память для разработки или личного проекта.", color = MutedText, fontSize = 13.sp)
                     Spacer(Modifier.height(16.dp))
                     OutlinedTextField(
-                        value = title, onValueChange = { title = it }, singleLine = true,
+                        value = title, onValueChange = { title = it; formError = null }, singleLine = true,
                         label = { Text("Название проекта") }, modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
-                        value = repository, onValueChange = { repository = it }, singleLine = true,
-                        label = { Text("GitHub owner/repo (необязательно)") }, modifier = Modifier.fillMaxWidth()
+                        value = repository, onValueChange = { repository = it; formError = null }, singleLine = true,
+                        label = { Text("GitHub owner/repo или ссылка (необязательно)") },
+                        isError = formError != null,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    formError?.let { error ->
+                        Spacer(Modifier.height(8.dp))
+                        Text(error, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                    }
+                    state.notice?.let { message ->
+                        Spacer(Modifier.height(8.dp))
+                        Text(message, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
                     )
                 }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        onCreate(title, repository)
-                        showCreate = false
-                        title = ""
-                        repository = ""
-                    }, enabled = title.isNotBlank()
+                        runCatching { ProjectInput.parse(title, repository) }
+                            .onSuccess { draft ->
+                                formError = null
+                                onCreate(draft.title, draft.repository.orEmpty())
+                                // Keep the dialog visible until the ViewModel actually opens the new project.
+                                // On failure, its notice remains visible here rather than disappearing.
+                            }
+                            .onFailure { formError = it.message ?: "Не удалось проверить данные" }
+                    }, enabled = title.isNotBlank() && !state.busy
                 ) { Text("Создать", color = BlueLight) }
             },
             dismissButton = { TextButton(onClick = { showCreate = false }) { Text("Отмена", color = MutedText) } }
