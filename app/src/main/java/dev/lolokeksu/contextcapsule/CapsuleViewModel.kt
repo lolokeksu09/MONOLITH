@@ -8,6 +8,7 @@ import androidx.room.withTransaction
 import dev.lolokeksu.contextcapsule.data.*
 import dev.lolokeksu.contextcapsule.domain.*
 import dev.lolokeksu.contextcapsule.github.PublicGithubClient
+import dev.lolokeksu.contextcapsule.github.RepositoryOverviewCodec
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -125,7 +126,8 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
     fun capsule(compact: Boolean = false): String {
         val s = _state.value
         val p = s.active ?: return ""
-        return CapsuleComposer().toMarkdown(CapsuleInput(p, s.decisions, s.tasks, s.snapshot), compact)
+        val exportSnapshot = s.snapshot?.copy(summary = RepositoryOverviewCodec.readable(s.snapshot.summary))
+        return CapsuleComposer().toMarkdown(CapsuleInput(p, s.decisions, s.tasks, exportSnapshot), compact)
     }
 
     fun backup(): String {

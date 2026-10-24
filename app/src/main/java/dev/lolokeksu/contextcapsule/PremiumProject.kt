@@ -140,7 +140,8 @@ fun PremiumProjectContent(
                     Text(
                         dev.lolokeksu.contextcapsule.domain.CapsuleComposer().toMarkdown(
                             dev.lolokeksu.contextcapsule.domain.CapsuleInput(
-                                project, state.decisions, state.tasks, state.snapshot
+                                project, state.decisions, state.tasks,
+                                state.snapshot?.copy(summary = dev.lolokeksu.contextcapsule.github.RepositoryOverviewCodec.readable(state.snapshot.summary))
                             )
                         ),
                         color = BodyText, fontSize = 12.sp, lineHeight = 19.sp
