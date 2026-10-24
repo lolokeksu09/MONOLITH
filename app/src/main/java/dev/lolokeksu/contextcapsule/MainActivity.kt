@@ -74,7 +74,7 @@ private fun CapsuleApp(vm: CapsuleViewModel) {
                 PremiumHomeContent(state, onOpen = vm::open, onCreate = vm::create,
                     onImport = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) })
             } else {
-                ProjectContent(state, onBack = { vm.open(null) }, onSync = vm::sync,
+                PremiumProjectContent(state, onBack = { vm.open(null) }, onSync = vm::sync,
                     onNote = vm::addDecision, onConfirm = vm::confirmDecision,
                     onTask = vm::addTask, onToggle = vm::toggleTask,
                     onCopy = {
@@ -87,7 +87,7 @@ private fun CapsuleApp(vm: CapsuleViewModel) {
                             type = "text/plain"
                             putExtra(Intent.EXTRA_TEXT, vm.capsule())
                         }
-                        context.startActivity(Intent.createChooser(send, "Continue in ChatGPT"))
+                        context.startActivity(Intent.createChooser(send, "Передать контекст в ChatGPT"))
                     },
                     onExport = { backup ->
                         if (backup) showBackupWarning = true
@@ -113,101 +113,3 @@ private fun CapsuleApp(vm: CapsuleViewModel) {
     }
 }
 
-@Composable
-private fun ProjectContent(state: CapsuleUiState, onBack: () -> Unit, onSync: () -> Unit,
-    onNote: (String) -> Unit, onConfirm: (String) -> Unit, onTask: (String) -> Unit,
-    onToggle: (String, Boolean) -> Unit, onCopy: () -> Unit, onShare: () -> Unit,
-    onExport: (Boolean) -> Unit) {
-    val p = state.active ?: return
-    var note by remember(p.id) { mutableStateOf("") }
-    var task by remember(p.id) { mutableStateOf("") }
-    var preview by remember(p.id) { mutableStateOf(false) }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 18.dp)) {
-        TextButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null); Text("Projects") }
-        Spacer(Modifier.height(8.dp))
-        Text(p.title, fontSize = 32.sp, fontWeight = FontWeight.Medium)
-        Text(p.repository ?: "Local project", color = Muted, fontSize = 13.sp)
-        Spacer(Modifier.height(18.dp))
-        if (p.repository != null) {
-            Button(onClick = onSync, enabled = !state.busy, shape = RoundedCornerShape(12.dp)) {
-                Icon(Icons.Default.Sync, contentDescription = null)
-                Spacer(Modifier.width(7.dp))
-                Text(if (state.busy) "Syncing…" else "Sync GitHub")
-            }
-        }
-        state.snapshot?.let { s ->
-            Spacer(Modifier.height(12.dp))
-            SurfaceCard {
-                Text("GITHUB SNAPSHOT", color = Accent, fontSize = 11.sp, letterSpacing = 1.5.sp)
-                Spacer(Modifier.height(8.dp))
-                Text(s.sha.take(12), fontSize = 21.sp, fontWeight = FontWeight.Bold)
-                Text("Branch ${s.branch} • Checked at ${java.text.DateFormat.getDateTimeInstance().format(s.checkedAt)}", color = Muted, fontSize = 12.sp)
-                if (s.warning != null) Text("INCOMPLETE: ${s.warning}", color = Color(0xFFFFBC76), fontSize = 12.sp)
-                if (s.summary.isNotBlank()) Text(s.summary, color = Muted, fontSize = 12.sp)
-            }
-        }
-        Spacer(Modifier.height(24.dp))
-        Text("DECISIONS & NOTES", fontSize = 15.sp, letterSpacing = 1.2.sp, color = Accent)
-        Spacer(Modifier.height(9.dp))
-        OutlinedTextField(note, { note = it }, label = { Text("Paste an important decision") },
-            minLines = 2, maxLines = 5, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(8.dp))
-        OutlinedButton(onClick = { onNote(note); note = "" }, enabled = note.isNotBlank()) { Text("Save as unverified") }
-        state.decisions.forEach { d ->
-            Spacer(Modifier.height(9.dp))
-            SurfaceCard {
-                Text(d.text, fontSize = 14.sp)
-                Spacer(Modifier.height(8.dp))
-                Text(d.evidence.name, color = if (d.evidence == EvidenceKind.OWNER_CONFIRMED) Color(0xFF79DCBD) else Color(0xFFFFBC76), fontSize = 11.sp)
-                if (d.evidence != EvidenceKind.OWNER_CONFIRMED) TextButton(onClick = { onConfirm(d.id) }) { Text("Confirm my decision") }
-            }
-        }
-        Spacer(Modifier.height(26.dp))
-        Text("NEXT ACTIONS", fontSize = 15.sp, letterSpacing = 1.2.sp, color = Accent)
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(task, { task = it }, label = { Text("Task") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(8.dp))
-        OutlinedButton(onClick = { onTask(task); task = "" }, enabled = task.isNotBlank()) { Text("Add task") }
-        state.tasks.forEach { t ->
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(checked = t.completed, onCheckedChange = { onToggle(t.id, it) })
-                Text(t.title, color = if (t.completed) Muted else Color.White)
-            }
-        }
-        Spacer(Modifier.height(26.dp))
-        Text("HANDOFF CAPSULE", fontSize = 15.sp, letterSpacing = 1.2.sp, color = Accent)
-        Spacer(Modifier.height(8.dp))
-        Text("Includes decisions, GitHub evidence, open tasks, and uncertainty labels.", color = Muted, fontSize = 13.sp)
-        Spacer(Modifier.height(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Button(onClick = onCopy) { Text("Copy") }
-            OutlinedButton(onClick = onShare) { Text("Share") }
-            OutlinedButton(onClick = { preview = !preview }) { Text(if (preview) "Hide" else "Preview") }
-        }
-        Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextButton(onClick = { onExport(false) }) { Text("Save Markdown") }
-            TextButton(onClick = { onExport(true) }) { Text("Backup JSON") }
-        }
-        if (preview) {
-            Spacer(Modifier.height(12.dp))
-            SurfaceCard {
-                SelectionContainer {
-                    Text(dev.lolokeksu.contextcapsule.domain.CapsuleComposer().toMarkdown(
-                        dev.lolokeksu.contextcapsule.domain.CapsuleInput(p, state.decisions, state.tasks, state.snapshot)
-                    ), fontSize = 12.sp, lineHeight = 18.sp)
-                }
-            }
-        }
-        state.notice?.let { Spacer(Modifier.height(16.dp)); Text(it, color = Color(0xFFFFBC76), fontSize = 13.sp) }
-        if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-        Spacer(Modifier.height(40.dp))
-    }
-}
-
-@Composable
-private fun SurfaceCard(content: @Composable ColumnScope.() -> Unit) {
-    Card(colors = CardDefaults.cardColors(containerColor = Surface), shape = RoundedCornerShape(20.dp)) {
-        Column(Modifier.fillMaxWidth().padding(18.dp), content = content)
-    }
-}
