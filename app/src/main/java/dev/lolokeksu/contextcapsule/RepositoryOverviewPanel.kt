@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lolokeksu.contextcapsule.domain.GithubSnapshot
 import dev.lolokeksu.contextcapsule.domain.RepositoryAssessment
+import dev.lolokeksu.contextcapsule.domain.ProjectPulse
+import dev.lolokeksu.contextcapsule.domain.ProjectTask
 import dev.lolokeksu.contextcapsule.github.RepositoryOverviewCodec
 import dev.lolokeksu.contextcapsule.github.OverviewEntry
 import java.text.DateFormat
@@ -37,10 +39,19 @@ private val Teal = Color(0xFF79D7C1)
 private val Amber = Color(0xFFFFCE83)
 
 @Composable
-fun RepositoryOverviewPanel(snapshot: GithubSnapshot?, hasRepository: Boolean, busy: Boolean, onSync: () -> Unit) {
+fun RepositoryOverviewPanel(
+    snapshot: GithubSnapshot?, hasRepository: Boolean, busy: Boolean,
+    onSync: () -> Unit, onAddTask: (String) -> Unit = {},
+    existingTasks: List<ProjectTask> = emptyList()
+) {
     val digest = snapshot?.let { RepositoryOverviewCodec.decode(it.summary) }
     val signal = RepositoryAssessment.assess(digest?.ciStatus, digest?.prCount, digest?.issueCount, digest?.commits?.size)
     val uri = LocalUriHandler.current
+    val pulse = snapshot?.let {
+        ProjectPulse.compare(digest?.previousSha, digest?.previousBranch, it.sha, it.branch)
+    }
+    val recommendations = ProjectPulse.suggestions(digest?.ciStatus, digest?.prCount, digest?.issueCount)
+        .filterNot { suggestion -> existingTasks.any { it.title == suggestion } }
 
     Column(Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
@@ -94,6 +105,26 @@ fun RepositoryOverviewPanel(snapshot: GithubSnapshot?, hasRepository: Boolean, b
                                 color = Dim, fontSize = 11.sp)
                         }
                     }
+                    if (pulse != null) {
+                        Spacer(Modifier.height(15.dp))
+                        Column(
+                            Modifier.fillMaxWidth().background(
+                                if (pulse.hasNewCommits) Color(0xFF1B3D51) else Color(0xFF172A41),
+                                RoundedCornerShape(15.dp)
+                            ).padding(13.dp)
+                        ) {
+                            Text("ПОСЛЕ ПРЕДЫДУЩЕЙ СИНХРОНИЗАЦИИ", color = Blue,
+                                fontSize = 10.sp, letterSpacing = 1.0.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(5.dp))
+                            Text(pulse.headline, color = White, fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold)
+                            if (pulse.hasNewCommits) {
+                                Spacer(Modifier.height(5.dp))
+                                Text("${pulse.oldSha?.take(8)} → ${pulse.newSha.take(8)}",
+                                    color = Dim, fontSize = 12.sp)
+                            }
+                        }
+                    }
                     Spacer(Modifier.height(14.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         InsightStat(signal.openPRs?.let { if (it >= 100) "100+" else "$it" } ?: "—", "PR", Modifier.weight(1f))
@@ -129,6 +160,32 @@ fun RepositoryOverviewPanel(snapshot: GithubSnapshot?, hasRepository: Boolean, b
                     Spacer(Modifier.height(7.dp))
                     Text("¹ Только последние загруженные записи. CI относится к последнему запуску выбранной ветки.",
                         color = Muted, fontSize = 10.sp, lineHeight = 14.sp)
+                }
+            }
+        }
+        if (digest != null && recommendations.isNotEmpty()) {
+            Spacer(Modifier.height(16.dp))
+            Column(
+                Modifier.fillMaxWidth().background(Color(0xFF101722), RoundedCornerShape(17.dp))
+                    .padding(16.dp)
+            ) {
+                Text("ЧТО ПРОВЕРИТЬ ДАЛЬШЕ", color = Blue, fontSize = 10.sp,
+                    letterSpacing = 1.2.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(6.dp))
+                Text("Предложения по сохранённому снимку. Ничего не добавляется автоматически.",
+                    color = Dim, fontSize = 12.sp, lineHeight = 17.sp)
+                recommendations.forEach { recommendation ->
+                    Spacer(Modifier.height(10.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(recommendation, color = White, fontSize = 12.sp,
+                            lineHeight = 17.sp, modifier = Modifier.weight(1f))
+                        Spacer(Modifier.width(8.dp))
+                        OutlinedButton(
+                            onClick = { onAddTask(recommendation) },
+                            border = BorderStroke(1.dp, Edge),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 3.dp)
+                        ) { Text("В задачи", color = Blue, fontSize = 11.sp) }
+                    }
                 }
             }
         }
