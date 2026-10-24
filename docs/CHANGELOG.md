@@ -1,5 +1,14 @@
 # CONTEXT CAPSULE — Changelog
 
+## 2026-10-24 — 0.5.0-preview · Project Pulse
+
+- Snapshot-to-snapshot comparison of default-branch HEAD, preserving prior SHA/branch/timestamp in existing `GithubSnapshot.summary`; no Room migrations.
+- New compact activity banner distinguishes first sync, changed HEAD, unchanged HEAD and branch switches.
+- Deterministic follow-up suggestions for failed/running CI, open PRs and Issues; user explicitly creates a local task, never writes to GitHub.
+- Deduplicates suggested tasks against already saved local titles.
+- New pure `ProjectPulseTest` and Android `RepositoryOverviewUiTest` for HEAD delta and action dispatch; prior create-project smoke retained.
+- Version code 5, `0.5.0-preview`; Android build and emulator results tracked in GitHub Actions.
+
 ## 2026-10-24 — 0.4.0-preview · GitHub Project Intelligence
 
 - Read-only evidence-based repository overview: description/README, commits, default-branch CI, open PR and Issues; explicit status for unavailable and truncated data.

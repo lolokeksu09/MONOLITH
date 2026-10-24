@@ -43,6 +43,10 @@ object RepositoryOverviewCodec {
             appendLine("CI status: ${overview.ciStatus ?: "UNKNOWN"} (не доказательство готовности продукта)")
             appendLine("Открытые PR: ${overview.prCount?.toString() ?: "UNKNOWN"}")
             appendLine("Открытые Issues: ${overview.issueCount?.toString() ?: "UNKNOWN"}")
+            overview.previousSha?.let {
+                appendLine("Предыдущий HEAD (последнее сравнение): $it")
+                appendLine("Предыдущая ветка: ${overview.previousBranch ?: "UNKNOWN"}")
+            }
             overview.lastCommit?.let { appendLine("Последний коммит: $it") }
             for (entry in overview.commits.take(4)) appendLine("Коммит: ${entry.title} — ${entry.url}")
             for (entry in overview.pullRequests.take(3)) appendLine("PR: ${entry.title} — ${entry.url}")
