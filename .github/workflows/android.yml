@@ -1,0 +1,36 @@
+name: Context Capsule Android
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, feature/context-capsule-v1]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Install SDK
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Unit tests
+        run: gradle :app:testDebugUnitTest --stacktrace
+      - name: Compile debug APK
+        run: gradle :app:assembleDebug --stacktrace
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CONTEXT-CAPSULE-debug-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
