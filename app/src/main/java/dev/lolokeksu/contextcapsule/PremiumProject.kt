@@ -33,6 +33,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lolokeksu.contextcapsule.domain.EvidenceKind
+import dev.lolokeksu.contextcapsule.domain.Decision
+import dev.lolokeksu.contextcapsule.domain.ProjectTask
 
 private val InkBlack = Color(PremiumPalette.Background.toInt())
 private val WhiteText = Color(PremiumPalette.Title.toInt())
@@ -53,6 +55,11 @@ fun PremiumProjectContent(
     onConfirm: (String) -> Unit,
     onTask: (String) -> Unit,
     onToggle: (String, Boolean) -> Unit,
+    onEditDecision: (String, String) -> Unit,
+    onPinDecision: (String, Boolean) -> Unit,
+    onDeleteDecision: (String) -> Unit,
+    onEditTask: (String, String) -> Unit,
+    onDeleteTask: (String) -> Unit,
     onCopy: () -> Unit,
     onShare: () -> Unit,
     onExport: (Boolean) -> Unit
@@ -64,6 +71,10 @@ fun PremiumProjectContent(
     var decisionQuery by remember(project.id) { mutableStateOf("") }
     var pendingOnly by remember(project.id) { mutableStateOf(false) }
     var selectedSection by remember(project.id) { mutableIntStateOf(0) }
+    var editingNote by remember(project.id) { mutableStateOf<Decision?>(null) }
+    var deletingNote by remember(project.id) { mutableStateOf<Decision?>(null) }
+    var editingTask by remember(project.id) { mutableStateOf<ProjectTask?>(null) }
+    var deletingTask by remember(project.id) { mutableStateOf<ProjectTask?>(null) }
     val shownDecisions = WorkspaceTools.filterDecisions(state.decisions, decisionQuery, pendingOnly)
 
     Column(Modifier.fillMaxSize().background(InkBlack)) {
@@ -223,9 +234,36 @@ fun PremiumProjectContent(
                         color = if (confirmed) Positive else Caution, fontSize = 11.sp)
                 }
                 if (d.evidence != EvidenceKind.OWNER_CONFIRMED) {
-                    TextButton(onClick = { onConfirm(d.id) }) {
+                    TextButton(onClick = { onConfirm(d.id) }, enabled = !state.busy) {
                         Text("Подтвердить решение", color = Electric, fontSize = 13.sp)
                     }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = { onPinDecision(d.id, !d.pinned) },
+                        enabled = !state.busy,
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
+                        modifier = Modifier.testTag("note_pin_${d.id}")
+                    ) {
+                        Text(if (d.pinned) "Открепить" else "Закрепить",
+                            color = if (d.pinned) Positive else Electric, fontSize = 12.sp)
+                    }
+                    TextButton(
+                        onClick = { editingNote = d },
+                        enabled = !state.busy,
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
+                        modifier = Modifier.testTag("note_edit_${d.id}")
+                    ) { Text("Изменить", color = BodyText, fontSize = 12.sp) }
+                    TextButton(
+                        onClick = { deletingNote = d },
+                        enabled = !state.busy,
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
+                        modifier = Modifier.testTag("note_delete_${d.id}")
+                    ) { Text("Удалить", color = Caution, fontSize = 12.sp) }
                 }
             }
         }
@@ -242,9 +280,24 @@ fun PremiumProjectContent(
                 shape = RoundedCornerShape(13.dp)
             ) { Text("Добавить задачу") }
             state.tasks.forEach { item ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(item.completed, { onToggle(item.id, it) })
-                    Text(item.title, color = if (item.completed) SubText else WhiteText, fontSize = 13.sp)
+                Column(Modifier.fillMaxWidth()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(item.completed, { onToggle(item.id, it) }, enabled = !state.busy)
+                        Text(item.title, color = if (item.completed) SubText else WhiteText,
+                            fontSize = 13.sp, modifier = Modifier.weight(1f))
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        TextButton(
+                            onClick = { editingTask = item },
+                            enabled = !state.busy,
+                            modifier = Modifier.testTag("task_edit_${item.id}")
+                        ) { Text("Изменить", color = Electric, fontSize = 12.sp) }
+                        TextButton(
+                            onClick = { deletingTask = item },
+                            enabled = !state.busy,
+                            modifier = Modifier.testTag("task_delete_${item.id}")
+                        ) { Text("Удалить", color = Caution, fontSize = 12.sp) }
+                    }
                 }
             }
         }
@@ -288,6 +341,48 @@ fun PremiumProjectContent(
                 Text("Скопировать капсулу", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
             }
         }
+    }
+    editingNote?.let { selected ->
+        MemoryEditDialog(
+            heading = "Изменить заметку", initial = selected.text, maxLength = 20_000,
+            tag = "confirm_edit_note",
+            onDismiss = { editingNote = null },
+            onSave = { updated ->
+                onEditDecision(selected.id, updated)
+                editingNote = null
+            }
+        )
+    }
+    deletingNote?.let { selected ->
+        MemoryDeleteDialog(
+            itemType = "заметку", preview = selected.text, tag = "confirm_delete_note",
+            onDismiss = { deletingNote = null },
+            onDelete = {
+                onDeleteDecision(selected.id)
+                deletingNote = null
+            }
+        )
+    }
+    editingTask?.let { selected ->
+        MemoryEditDialog(
+            heading = "Изменить задачу", initial = selected.title, maxLength = 500,
+            tag = "confirm_edit_task",
+            onDismiss = { editingTask = null },
+            onSave = { updated ->
+                onEditTask(selected.id, updated)
+                editingTask = null
+            }
+        )
+    }
+    deletingTask?.let { selected ->
+        MemoryDeleteDialog(
+            itemType = "задачу", preview = selected.title, tag = "confirm_delete_task",
+            onDismiss = { deletingTask = null },
+            onDelete = {
+                onDeleteTask(selected.id)
+                deletingTask = null
+            }
+        )
     }
 }
 

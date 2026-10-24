@@ -99,6 +99,9 @@ private fun CapsuleApp(vm: CapsuleViewModel, incoming: String?, onShareDismiss: 
                 PremiumProjectContent(state, onBack = { vm.open(null) }, onSync = vm::sync,
                     onNote = vm::addDecision, onConfirm = vm::confirmDecision,
                     onTask = vm::addTask, onToggle = vm::toggleTask,
+                    onEditDecision = vm::editDecision, onPinDecision = vm::pinDecision,
+                    onDeleteDecision = vm::deleteDecision,
+                    onEditTask = vm::editTask, onDeleteTask = vm::deleteTask,
                     onCopy = {
                         val clip = android.content.ClipData.newPlainText("Context Capsule", vm.capsule())
                         (context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).setPrimaryClip(clip)
