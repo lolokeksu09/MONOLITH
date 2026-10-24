@@ -19,6 +19,24 @@ data class RepositoryOverview(
 object RepositoryOverviewCodec {
     private const val MARKER = "cc-overview-v1"
     fun encode(overview: JSONObject): String = overview.put("format", MARKER).toString()
+    /** Turns the saved structured snapshot into a human handoff, keeping unknowns explicit. */
+    fun readable(raw: String): String {
+        val overview = decode(raw) ?: return raw
+        return buildString {
+            overview.description?.let { appendLine("Описание: $it") }
+            overview.readme?.let { appendLine("README: $it") }
+            overview.ciLabel?.let { appendLine("Последний workflow: $it") }
+            appendLine("CI status: ${overview.ciStatus ?: "UNKNOWN"} (не доказательство готовности продукта)")
+            appendLine("Открытые PR: ${overview.prCount?.toString() ?: "UNKNOWN"}")
+            appendLine("Открытые Issues: ${overview.issueCount?.toString() ?: "UNKNOWN"}")
+            overview.lastCommit?.let { appendLine("Последний коммит: $it") }
+            for (entry in overview.commits.take(4)) appendLine("Коммит: ${entry.title} — ${entry.url}")
+            for (entry in overview.pullRequests.take(3)) appendLine("PR: ${entry.title} — ${entry.url}")
+            for (entry in overview.issues.take(3)) appendLine("Issue: ${entry.title} — ${entry.url}")
+            appendLine("Значения подсчитаны по доступным ответам API; для более чем 100 открытых элементов данные неполные.")
+        }.trim()
+    }
+
     fun decode(raw: String): RepositoryOverview? = runCatching {
         val json = JSONObject(raw)
         if (json.optString("format") != MARKER) return null
