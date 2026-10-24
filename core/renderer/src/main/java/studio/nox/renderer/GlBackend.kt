@@ -315,7 +315,7 @@ void main() {
       float seam=exp(-abs(local.x+local.y*0.5)*115.0)*interior;
       float visibilityMask=step(hash(vec2(n+5.0,37.0)),0.33+0.67*uDensity);
       vec3 crystal=mix(uColorA,uColorB,randB);
-      sum+=crystal*active*(rim*(0.19+0.44*uGlow)+
+      sum+=crystal*visibilityMask*(rim*(0.19+0.44*uGlow)+
            interior*facet*(0.009+0.032*uGlow)+
            seam*(0.013+0.031*uGlow));
     }
