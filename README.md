@@ -4,6 +4,17 @@
 
 CONTEXT CAPSULE is a proposed native Android application that keeps explicit project decisions, tasks and source-backed GitHub state in a portable local knowledge base. It exports a reviewed Markdown/JSON **context capsule** for continuing work in a new ChatGPT conversation. ChatGPT receives the capsule via user-initiated Android sharing or copy/paste — there is no automatic access to private chats.
 
+## 0.3.0 preview — проектная память без лишних действий
+
+- **Системное «Поделиться» → CONTEXT CAPSULE:** выдели текст в ChatGPT, Telegram или браузере, открой меню Android «Поделиться», выбери CONTEXT CAPSULE, проверь текст и укажи проект. Сохранение происходит только после выбора; импортированные утверждения остаются `UNVERIFIED`.
+- **Поиск проектов:** по названию и адресу GitHub, с понятным пустым результатом.
+- **Поиск по решениям:** внутри проекта; фильтр «На проверку» показывает записи, которые ещё не подтверждены.
+- **Компактный главный экран:** когда проекты существуют, исчезает большой рекламный блок, освобождая место рабочим карточкам.
+- Защита: текст из других приложений ограничен 20 000 символами и не передаётся во внешние сервисы автоматически.
+- Не требует доступа к приватной истории ChatGPT, OpenAI API, root или новых сетевых разрешений.
+
+**Ограничения:** принимается только обычный текст `text/plain`, а не фотографии, файлы или весь архив чатов. Локальная база остаётся прежней (Room v1) и не мигрирует. Android-сборка и установка на реальном устройстве проверяются отдельно.
+
 ## 0.2.0 preview — visual identity
 
 The Android feature branch now uses a refined, **Russian-localized AMOLED dashboard and project workspace**:
@@ -23,10 +34,10 @@ The Android feature branch now uses a refined, **Russian-localized AMOLED dashbo
 | Default branch | `main` |
 | Tracked files | Android source under feature/context-capsule-v1; main remains docs-only |
 | Old Android code, graphics, Gradle, APK workflow | Absent from `main` (new workflow on feature branch) |
-| Active feature branches | None at the last verification |
-| Open pull requests | None at the last verification |
-| CONTEXT CAPSULE Android implementation | **Source code added on feature branch; build unverified** |
-| APK / GitHub Actions build | **Workflow created; first build pending** |
+| Active feature branches | `feature/context-capsule-v1` |
+| Open pull requests | [PR #15](https://github.com/lolokeksu09/NOX-LEGION/pull/15) |
+| CONTEXT CAPSULE Android implementation | Debug preview available in feature branch |
+| APK / GitHub Actions build | See latest successful GitHub Actions artifact for the exact commit |
 
 The repository's name is still `NOX-LEGION`. Renaming it to `CONTEXT-CAPSULE` requires a separate GitHub repository-settings operation. Historic commits may still contain the old app; branch deletion is not Git-history erasure.
 

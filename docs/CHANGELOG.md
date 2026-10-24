@@ -1,5 +1,14 @@
 # CONTEXT CAPSULE — Changelog
 
+## 2026-10-24 — 0.3.0-preview · Search & Share Inbox
+
+- Native text sharing receiver (`ACTION_SEND` + `text/plain`), user reviews received text and selects a destination project before saving.
+- Every external share is marked `UNVERIFIED` and can be confirmed later; 20,000-character bound avoids silently truncated project memory.
+- Search across local projects by title/repository, with compact returning-user dashboard.
+- Search decisions within the active project, and filter those that need confirmation.
+- Added `WorkspaceToolsTest` covering case-insensitive search, evidence filtering, incoming text validation.
+- Version bump to `0.3.0-preview` (code 3), Room schema unchanged. CI and device verification are separate.
+
 ## 2026-10-24 — 0.2.0-preview · AMOLED UX redesign
 
 - Fixed unreadable black title on near-black background by using explicit high-contrast UI colors, supported by palette contrast tests.
