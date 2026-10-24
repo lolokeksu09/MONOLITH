@@ -350,6 +350,28 @@ class StructuralContracts(unittest.TestCase):
         for symbol in ['SceneLooks.looks', 'SceneLooks.shuffle(', 'FullscreenPreview(',
                        'SceneCatalog.fromHex(', 'Найти композицию', 'SearchableLibrary']:
             self.assertIn(symbol, ui, 'NOX 1.1 must expose real editor or discovery functionality: ' + symbol)
+    def test_vivid_light_strengthens_subjects_without_lifting_black(self):
+        # Shader constants are checked numerically; actual GLES compilation is
+        # independently exercised by verify_glsl.py in Android CI.
+        import math
+        shader=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
+        self.assertIn('vec3 spectralGrade=',shader)
+        self.assertIn('sum=mix(sum,spectralGrade,luminousMask);',shader)
+        quality=shader.split('if(uQuality>0.5)',1)[1]
+        self.assertIn('sum=mix(sum,spectralGrade,luminousMask);',quality)
+        expression=re.search(r'vec3 spectralGrade=\\(sum\\*([0-9.]+)\\)/\\(vec3\\(1.0\\)\\+sum\\*([0-9.]+)\\);',shader)
+        self.assertIsNotNone(expression,'Missing bounded per-channel spectral exposure')
+        exposure,shoulder=map(float,expression.groups())
+        self.assertGreater(exposure,2.3)
+        self.assertGreater(shoulder,1.4)
+        mapped=lambda v:(v*exposure)/(1.0+v*shoulder)
+        self.assertEqual(mapped(0.0),0.0,'True-black regions must stay black')
+        self.assertGreater(mapped(0.12),0.22,'Weak light structures need a visible boost')
+        self.assertLess(mapped(0.8),1.0,'Bright details need a shoulder, not clipping')
+        self.assertIn('luminousMask=smoothstep(0.022,0.11,luminousSignal)',shader)
+        self.assertIn('spectralLuma=dot(spectralGrade',shader)
+        self.assertIn('mix(vec3(spectralLuma),spectralGrade,1.23)',shader)
+
     def test_volumetric_preview_has_separate_versioned_package(self):
         app=self.read('app/build.gradle.kts')
         for contract in ['applicationId = "studio.nox.light"', 'applicationIdSuffix = ".volumetric"', 'versionCode = 15',
