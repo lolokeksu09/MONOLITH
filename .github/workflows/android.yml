@@ -23,6 +23,12 @@ jobs:
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
       - name: Structural regression tests
         run: python3 -m unittest discover -s tests -p 'verify_structure.py' -v
+      - name: Install GLSL validator
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+      - name: Validate OpenGL shaders
+        run: python3 tests/verify_glsl.py
       - name: Unit tests
         run: gradle :core:model:test --stacktrace
       - name: Build APK
