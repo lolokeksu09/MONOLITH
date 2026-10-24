@@ -7,7 +7,10 @@
 - **Observed issue:** User reports the nine live wallpapers still look washed out/dim despite added depth. Code review shows small scene radiance coefficients and only `sum*=1.0+qualityMix*0.22` before hard `min(sum,vec3(1.0))` clipping. This cannot increase localized weak highlights enough and loses contrast in hotter peaks. This is a source-level hypothesis, not a measured device colorimetry finding.
 - **Patch 1, red test:** `d260b8bf` adds numeric spectral-grade expectations (black input stays exactly black; a 0.12 neutral highlight rises above 0.22; a 0.8 highlight stays below clipping) and isolated 1.9.3 preview packaging contracts. Validation must fail against the unchanged 1.9.2 production code.
 - **Targeted remedy:** a quality-gated, masked, bounded spectral tone curve on existing scene light, saturation recovery, no blanket black lift, no additional geometry loops or textures. Balanced and energy/thermal fallbacks remain unchanged, as do all nine IDs and existing `.nox` presets.
-- **Status:** regression/design recorded; CI red-green evidence, GLSL syntax, Kotlin tests, APK and device tests to be recorded separately.
+- **Verified RED evidence:** [CI #40086128072](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40086128072) failed only the two intended new Vivid contrast and 1.9.3 packaging tests; 33 existing structural contracts remained green.
+- **Patch 2 — shader:** `590f7521` adds black-safe Vivid spectral grading after existing quality-gated radiance. The bounded rational curve `(sum*2.6)/(1+sum*1.8)`, chroma lift and `smoothstep(0.022,0.11,...)` mask visibly target midtones without a blanket gray overlay. Balanced stays unchanged, no new scene or data schema.
+- **Patch 3 — standalone packaging:** Android 1.9.3/code16, separate preview `studio.nox.light.vivid`, launcher `NOX 1.9.3 Vivid`, CI artifact `NOX-1.9.3-vivid-APK`. README and QA ledger updated.
+- **Status:** final CI and APK integrity pending; device visual improvement, power/FPS and thermals must be measured on Legion Y70.
 
 ## [1.9.2 / Volumetric Light] — deeper shaped materials (2026-10-24)
 

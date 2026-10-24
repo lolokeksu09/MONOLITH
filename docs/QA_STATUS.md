@@ -1,3 +1,16 @@
+# NOX 1.9.3 Vivid Light — QA ledger (2026-10-24)
+
+**Review branch:** `feature/nox-1-9-3-vivid-light` from NOX 1.9.2; [PR #14](https://github.com/lolokeksu09/NOX-LEGION/pull/14), not merged into `main`.
+
+- **Observed:** User reports the existing wallpapers still look dim. The 1.9.2 GLES final path applies small local radiance contributions, then `sum*=1.0+qualityMix*0.22` and output clipping at 1.0; source-based hypothesis is that weak midtones fail to become visually prominent. Device RGB screenshots have not been supplied.
+- **RED tests:** [Actions #40086128072](https://github.com/lolokeksu09/NOX-LEGION/actions/runs/40086128072) failed two expected tests on the previous code: missing Vivid contrast curve and missing independent 1.9.3 package. Other 33 structural tests passed.
+- **Shader patch:** `590f7521` adds masked local exposure using `(sum * 2.6)/(1+sum*1.8)`, extra color chroma and bounded smooth threshold within Rich/Ultra. Black maps to black exactly; highlights use a compression shoulder instead of unrestricted multiplication. No new drawing passes.
+- **Build:** 1.9.3/code16, independent debug `studio.nox.light.vivid` and `NOX-1.9.3-vivid-APK` artifact name.
+- **Pending verification:** final GitHub Actions structure, GLES100 GLSL syntax, Kotlin/JUnit and Android assembleDebug plus artifact integrity and checksum. Do not claim a verified binary before completed CI.
+- **Device QA outstanding:** verify genuine stronger scene contrast in Rich/Ultra on Lenovo Legion Y70 (with battery saver off); appearance on AMOLED, preview versus applied wallpaper, GPU FPS, thermals, power consumption, wallpaper lifecycle and PNG export remain unmeasured.
+
+---
+
 # NOX 1.9.2 Volumetric Light — QA ledger (2026-10-24)
 
 **Branch:** `feature/nox-1-9-2-volumetric-light`; PR [#13](https://github.com/lolokeksu09/NOX-LEGION/pull/13) targeting 1.9.1. No merge to `main`.
