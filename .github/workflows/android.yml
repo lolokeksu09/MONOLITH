@@ -2,8 +2,12 @@ name: Context Capsule Android
 on:
   workflow_dispatch:
   push:
-    branches: [main, feature/context-capsule-v1]
+    branches: [main]
   pull_request:
+    branches: [main]
+concurrency:
+  group: android-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:

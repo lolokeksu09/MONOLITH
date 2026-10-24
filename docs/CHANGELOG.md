@@ -1,5 +1,14 @@
 # CONTEXT CAPSULE — Changelog
 
+## 2026-10-24 — 0.4.0-preview · GitHub Project Intelligence
+
+- Read-only evidence-based repository overview: description/README, commits, default-branch CI, open PR and Issues; explicit status for unavailable and truncated data.
+- Dense AMOLED dashboard above the handoff capsule, direct links to verified GitHub elements, removal of duplicate legacy snapshot UI.
+- Deterministic CI interpretation (no implication that the product is finished), and readable cited briefing inside exported Markdown capsules.
+- Zero paid AI/API keys, no change to Room schema and private notes not sent to GitHub.
+- Tests: `RepositoryAssessmentTest` for safe CI interpretation and `RepositoryOverviewUiTest` in Android emulator; existing project creation smoke remains.
+- Android versionCode 4, versionName `0.4.0-preview`. Build and on-device QA require verified CI and actual device check.
+
 ## 2026-10-24 — 0.3.0-preview · Search & Share Inbox
 
 - Native text sharing receiver (`ACTION_SEND` + `text/plain`), user reviews received text and selects a destination project before saving.
