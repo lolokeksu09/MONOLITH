@@ -1,5 +1,12 @@
 # NOX — журнал изменений
 
+## [1.8.0 / Patch 5] — Build-time GLES shader validation (2026-10-24)
+
+- Added `tests/verify_glsl.py` which extracts the real VERTEX/FRAGMENT shader strings from GlBackend.kt, prepends `#version 100`, and compiles both with `glslangValidator`.
+- GitHub Actions installs `glslang-tools` and runs GPU shader syntax/semantic checks *before* model unit tests and APK packaging.
+- This catches GLSL compile problems beyond Android/Kotlin build validation. It does **not** verify phone-driver compatibility or thermal performance.
+- Commit series: `b3a7055` (validator), `2c24cec` (CI). Results require a successful exact-head GitHub run.
+
 ## [1.8.0 / Patch 4] — Side-by-side Android preview and CI packaging (2026-10-24)
 
 - Updated versionName `1.8.0`, versionCode `12`, independent debug package `studio.nox.light.spectra`, launcher `NOX 1.8 Spectra`.
