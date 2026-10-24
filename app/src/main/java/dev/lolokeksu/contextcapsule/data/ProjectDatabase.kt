@@ -18,8 +18,27 @@ data class TaskRow(@PrimaryKey val id: String, val projectId: String, val title:
 @Entity(tableName = "snapshots", foreignKeys = [ForeignKey(entity = ProjectRow::class, parentColumns = ["id"], childColumns = ["projectId"], onDelete = ForeignKey.CASCADE)])
 data class SnapshotRow(@PrimaryKey val projectId: String, val branch: String, val sha: String, val url: String, val checkedAt: Long, val summary: String, val warning: String?)
 
+data class ProjectMetricsRow(
+    val projectId: String,
+    val openTasks: Int,
+    val completedTasks: Int,
+    val pendingNotes: Int,
+    val confirmedNotes: Int,
+    val pinnedNotes: Int
+)
+
 @Dao
 interface ProjectDao {
+    @Query("""
+        SELECT p.id AS projectId,
+        (SELECT COUNT(*) FROM tasks t WHERE t.projectId=p.id AND t.completed=0) AS openTasks,
+        (SELECT COUNT(*) FROM tasks t WHERE t.projectId=p.id AND t.completed=1) AS completedTasks,
+        (SELECT COUNT(*) FROM decisions d WHERE d.projectId=p.id AND d.evidence!='OWNER_CONFIRMED') AS pendingNotes,
+        (SELECT COUNT(*) FROM decisions d WHERE d.projectId=p.id AND d.evidence='OWNER_CONFIRMED') AS confirmedNotes,
+        (SELECT COUNT(*) FROM decisions d WHERE d.projectId=p.id AND d.pinned=1) AS pinnedNotes
+        FROM projects p
+    """)
+    suspend fun projectMetrics(): List<ProjectMetricsRow>
     @Query("SELECT * FROM projects ORDER BY createdAt DESC") suspend fun projects(): List<ProjectRow>
     @Query("SELECT * FROM projects WHERE id=:id") suspend fun project(id: String): ProjectRow?
     @Query("SELECT * FROM decisions WHERE projectId=:id ORDER BY pinned DESC, createdAt ASC") suspend fun decisions(id: String): List<DecisionRow>
@@ -41,8 +60,10 @@ interface ProjectDao {
     suspend fun editTask(projectId: String, id: String, title: String): Int
     @Query("DELETE FROM tasks WHERE projectId=:projectId AND id=:id")
     suspend fun deleteTask(projectId: String, id: String): Int
-    @Query("UPDATE decisions SET evidence='OWNER_CONFIRMED' WHERE id=:id") suspend fun confirmDecision(id: String)
-    @Query("UPDATE tasks SET completed=:done WHERE id=:id") suspend fun toggleTask(id: String, done: Boolean)
+    @Query("UPDATE decisions SET evidence='OWNER_CONFIRMED' WHERE projectId=:projectId AND id=:id")
+    suspend fun confirmDecision(projectId: String, id: String): Int
+    @Query("UPDATE tasks SET completed=:done WHERE projectId=:projectId AND id=:id")
+    suspend fun toggleTask(projectId: String, id: String, done: Boolean): Int
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {

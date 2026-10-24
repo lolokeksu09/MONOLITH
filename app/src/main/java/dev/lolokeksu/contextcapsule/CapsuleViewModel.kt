@@ -25,7 +25,8 @@ data class CapsuleUiState(
     val tasks: List<ProjectTask> = emptyList(),
     val snapshot: GithubSnapshot? = null,
     val busy: Boolean = false,
-    val notice: String? = null
+    val notice: String? = null,
+    val projectStats: Map<String, WorkspaceStats> = emptyMap()
 )
 
 class CapsuleViewModel(application: Application) : AndroidViewModel(application) {
@@ -50,11 +51,17 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
     private suspend fun reload(selected: String? = _state.value.active?.id) {
         val loaded = withContext(Dispatchers.IO) {
             val projects = dao.projects().map { it.toDomain() }
+            val projectStats = dao.projectMetrics().associate { row ->
+                row.projectId to WorkspaceStats(
+                    row.openTasks, row.completedTasks,
+                    row.confirmedNotes, row.pendingNotes, row.pinnedNotes
+                )
+            }
             val active = projects.find { it.id == selected }
             val decisions = active?.let { dao.decisions(it.id).map(DecisionRow::toDomain) } ?: emptyList()
             val tasks = active?.let { dao.tasks(it.id).map(TaskRow::toDomain) } ?: emptyList()
             val snapshot = active?.let { dao.snapshot(it.id)?.toDomain() }
-            CapsuleUiState(projects, active, decisions, tasks, snapshot)
+            CapsuleUiState(projects, active, decisions, tasks, snapshot, projectStats = projectStats)
         }
         _state.value = loaded.copy(busy = _state.value.busy, notice = _state.value.notice)
     }
@@ -97,7 +104,10 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun confirmDecision(id: String) = work {
-        withContext(Dispatchers.IO) { dao.confirmDecision(id) }
+        val projectId = requireNotNull(_state.value.active).id
+        withContext(Dispatchers.IO) {
+            require(dao.confirmDecision(projectId, id) == 1) { "Решение не найдено" }
+        }
         reload()
     }
 
@@ -111,7 +121,10 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun toggleTask(id: String, done: Boolean) = work {
-        withContext(Dispatchers.IO) { dao.toggleTask(id, done) }
+        val projectId = requireNotNull(_state.value.active).id
+        withContext(Dispatchers.IO) {
+            require(dao.toggleTask(projectId, id, done) == 1) { "Задача не найдена" }
+        }
         reload()
     }
 
