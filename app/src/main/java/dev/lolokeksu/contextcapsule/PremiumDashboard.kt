@@ -96,6 +96,35 @@ fun PremiumHomeContent(
             color = MutedText, fontSize = 14.sp, lineHeight = 21.sp
         )
         Spacer(Modifier.height(if (state.projects.isEmpty()) 26.dp else 17.dp))
+        if (state.projects.isNotEmpty()) {
+            val stats = state.projectStats.values
+            Column(
+                modifier = Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(Brush.linearGradient(
+                        listOf(Color(0xFF172945), Color(0xFF0D1828))
+                    ))
+                    .border(1.dp, Color(0xFF2D4569), RoundedCornerShape(22.dp))
+                    .padding(17.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("РАБОЧИЙ ПУЛЬС", color = BlueLight, fontWeight = FontWeight.Bold,
+                        fontSize = 10.sp, letterSpacing = 1.4.sp)
+                    Spacer(Modifier.weight(1f))
+                    Text("Локальные данные", color = SoftText, fontSize = 10.sp)
+                }
+                Spacer(Modifier.height(13.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                    HomeMetric(
+                        state.projects.size.toString(), "Проектов", Modifier.weight(1f))
+                    HomeMetric(
+                        stats.sumOf { it.openTasks }.toString(), "Задач", Modifier.weight(1f))
+                    HomeMetric(
+                        stats.sumOf { it.pendingNotes }.toString(), "На проверку", Modifier.weight(1f))
+                }
+            }
+            Spacer(Modifier.height(21.dp))
+        }
         if (state.projects.isEmpty()) {
             CapsuleShowcase()
             Spacer(Modifier.height(20.dp))
@@ -166,11 +195,14 @@ fun PremiumHomeContent(
         } else {
             visibleProjects.forEachIndexed { index, project ->
                 if (index != 0) Spacer(Modifier.height(10.dp))
+                val metrics = state.projectStats[project.id]
                 Card(
                     onClick = { onOpen(project.id) },
                     shape = RoundedCornerShape(20.dp),
-                    border = BorderStroke(1.dp, StrokeBlue),
-                    colors = CardDefaults.cardColors(containerColor = P)
+                    border = BorderStroke(1.dp, if (index == 0) Color(0xFF426A9A) else StrokeBlue),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (index == 0) Color(0xFF142338) else P
+                    )
                 ) {
                     Column(Modifier.fillMaxWidth().padding(19.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -192,10 +224,31 @@ fun PremiumHomeContent(
                             Icon(Icons.Default.ChevronRight, contentDescription = "Открыть", tint = BlueLight)
                         }
                         Spacer(Modifier.height(14.dp))
-                        Text(
-                            if (project.repository == null) "Память хранится на устройстве" else "GitHub • синхронизация по запросу",
-                            color = SoftText, fontSize = 11.sp
-                        )
+                        if (metrics != null) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(13.dp)) {
+                                Text("${metrics.openTasks} открытых задач",
+                                    color = MutedText, fontSize = 12.sp)
+                                Text("${metrics.pendingNotes} на проверку",
+                                    color = if (metrics.pendingNotes > 0) Color(0xFFFFCE83) else SoftText,
+                                    fontSize = 12.sp)
+                            }
+                            Spacer(Modifier.height(11.dp))
+                            LinearProgressIndicator(
+                                progress = { metrics.progressPercent / 100f },
+                                modifier = Modifier.fillMaxWidth().height(4.dp),
+                                color = Color(PremiumPalette.Teal.toInt()),
+                                trackColor = Color(0xFF2B3D57)
+                            )
+                            Spacer(Modifier.height(7.dp))
+                            Text("Выполнено ${metrics.progressPercent}% задач",
+                                color = SoftText, fontSize = 11.sp)
+                        } else {
+                            Text(
+                                if (project.repository == null) "Память хранится на устройстве"
+                                else "GitHub • синхронизация по запросу",
+                                color = SoftText, fontSize = 11.sp
+                            )
+                        }
                     }
                 }
             }
@@ -261,6 +314,18 @@ fun PremiumHomeContent(
             },
             dismissButton = { TextButton(onClick = { showCreate = false }) { Text("Отмена", color = MutedText) } }
         )
+    }
+}
+
+@Composable
+private fun HomeMetric(value: String, label: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.clip(RoundedCornerShape(13.dp))
+            .background(Color(0xFF1B3050))
+            .padding(horizontal = 11.dp, vertical = 12.dp)
+    ) {
+        Text(value, color = White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Text(label, color = MutedText, fontSize = 11.sp, maxLines = 1)
     }
 }
 
