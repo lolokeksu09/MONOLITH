@@ -1,5 +1,13 @@
 # NOX — журнал изменений
 
+## [1.9.2 / Volumetric Light] — deeper shaped materials (2026-10-24)
+
+**Base:** 1.9.1 Cinematic Depth `3e5f592`; separate branch `feature/nox-1-9-2-volumetric-light`, not merged to `main`.
+
+- **Patch 1 — RED contract:** `4ba8b0a` added a regression for nine independently sculpted materials, Rich/Ultra-only application and suppression of low-level haze. The base 1.9.1 shader does not yet implement this; verification and implementation follow.
+- **Intended effect:** volumetric folds, toroidal profiles, dense gas lobes, depth-weighted curtains and comet wakes, energy-core shading, lit geometry and translucent crystal faces. Preserve existing shapes and nine mode IDs, `.nox` preset compatibility, pure-black AMOLED regions, pinned Studio preview and energy/thermal quality fallback.
+- **Status:** test-first work in progress. Not a completed Android release; no on-device visual/FPS/thermal claims.
+
 ## [1.9.1 / Cinematic Depth] — denser real-time composition (2026-10-24)
 
 **Branch:** `feature/nox-1-9-1-cinematic-depth` from 1.9 Graphics Overdrive. Unmerged; existing Android installs remain untouched.
