@@ -350,11 +350,15 @@ class StructuralContracts(unittest.TestCase):
         for symbol in ['SceneLooks.looks', 'SceneLooks.shuffle(', 'FullscreenPreview(',
                        'SceneCatalog.fromHex(', 'Найти композицию', 'SearchableLibrary']:
             self.assertIn(symbol, ui, 'NOX 1.1 must expose real editor or discovery functionality: ' + symbol)
-    def test_app_upgrades_existing_install_in_place(self):
+    def test_volumetric_preview_has_separate_versioned_package(self):
         app=self.read('app/build.gradle.kts')
-        for contract in ['applicationId = "studio.nox.light"', 'applicationIdSuffix = ".cinematic"', 'versionCode = 14',
-                         'versionName = "1.9.1"']:
+        for contract in ['applicationId = "studio.nox.light"', 'applicationIdSuffix = ".volumetric"', 'versionCode = 15',
+                         'versionName = "1.9.2"']:
             self.assertIn(contract, app)
+        manifest=self.read('app/src/debug/AndroidManifest.xml')
+        self.assertIn('NOX 1.9.2 Volumetric',manifest)
+        workflow=self.read('.github/workflows/android.yml')
+        self.assertIn('NOX-1.9.2-volumetric-APK',workflow)
     def test_build_workflow_creates_apk(self):
         workflow=self.read('.github/workflows/android.yml')
         self.assertIn('gradle :app:assembleDebug',workflow)
