@@ -67,6 +67,7 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('GL_TRIANGLE_STRIP',shader)
         self.assertIn('uniform vec2 uResolution, uMotion, uTouch;',shader)
         self.assertIn('// COMET 1.7.1: depth-layered trails',shader)
+        self.assertNotIn('float active=',shader)
 
     def test_spectra_gallery_canvas_and_home(self):
         ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
@@ -95,7 +96,7 @@ class StructuralContracts(unittest.TestCase):
             'vec2 focus=',
             '// COMET 1.7.1: depth-layered trails',
             'float depth=',
-            'float active=step(',
+            'float visibilityMask=step(',
             'float trailFade='
         ):
             self.assertIn(expected,src)
