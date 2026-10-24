@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.lolokeksu.contextcapsule.domain.EvidenceKind
+import dev.lolokeksu.contextcapsule.domain.WorkspaceTools
+import kotlinx.coroutines.flow.MutableStateFlow
 
 private val Ink = Color(PremiumPalette.Background.toInt())
 private val Surface = Color(PremiumPalette.Panel.toInt())
@@ -35,17 +37,37 @@ private val Muted = Color(0xFF96A2B5)
 
 class MainActivity : ComponentActivity() {
     private val vm: CapsuleViewModel by viewModels()
+    private val incomingText = MutableStateFlow<String?>(null)
+
+    private fun readShare(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
+            incomingText.value = WorkspaceTools.normalizeSharedText(
+                intent.getCharSequenceExtra(Intent.EXTRA_TEXT)
+            )
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        readShare(intent)
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.statusBarColor = android.graphics.Color.BLACK
         window.navigationBarColor = android.graphics.Color.BLACK
-        setContent { CapsuleApp(vm) }
+        readShare(intent)
+        setContent {
+            val shared by incomingText.collectAsStateWithLifecycle()
+            CapsuleApp(vm, shared, onShareDismiss = { incomingText.value = null })
+        }
     }
 }
 
 @Composable
-private fun CapsuleApp(vm: CapsuleViewModel) {
+private fun CapsuleApp(vm: CapsuleViewModel, incoming: String?, onShareDismiss: () -> Unit) {
     val context = LocalContext.current
     val state by vm.state.collectAsStateWithLifecycle()
     var exportText by remember { mutableStateOf("") }
@@ -98,6 +120,15 @@ private fun CapsuleApp(vm: CapsuleViewModel) {
                     })
             }
         }
+        if (incoming != null) ShareInboxDialog(
+            text = incoming,
+            projects = state.projects,
+            onSave = { id ->
+                vm.captureSharedText(id, incoming)
+                onShareDismiss()
+            },
+            onDismiss = onShareDismiss
+        )
         if (showBackupWarning) AlertDialog(
             onDismissRequest = { showBackupWarning = false },
             title = { Text("Unencrypted backup") },
