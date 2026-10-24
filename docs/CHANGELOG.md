@@ -1,5 +1,16 @@
 # CONTEXT CAPSULE — Changelog
 
+## 2026-10-24 — 0.8.0-preview · Memory management
+
+- Editable decisions/notes and tasks, with explicit validated input controls.
+- Pinned note ordering independent of trust/evidence labels; only user confirmation can mark approved.
+- Explicit delete-confirmation dialog; no silent deletion. All data edits/deletes scoped to active project ID.
+- Editing confirmed text sets note evidence to UNVERIFIED; notes with unchanged text keep their status.
+- Room v2 migration uses ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0, preserving legacy data.
+- Backup JSON remains schemaVersion 1 with optional pinned field; legacy backups remain importable and imported claims remain UNVERIFIED.
+- New JVM trust-and-ordering tests, instrumented edit/delete dialog tests, migration preservation test; existing project/create/share/overview smoke retained.
+- Version code 8, version name 0.8.0-preview; verify exact build CI and emulator before APK announcement.
+
 ## 2026-10-24 — 0.7.0-preview · GitHub Diff Inspector
 
 - Compares previous and current GitHub HEAD using the read-only `compare/{base}...{head}` API endpoint, only for the same branch and well-formed SHA values.
