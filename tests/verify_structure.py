@@ -41,7 +41,7 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('onVariant(variant)',home)
         self.assertIn('homeDraft=variant.config',ui)
         self.assertIn('onExport(config)',home)
-        self.assertIn('LivePreview(config,fps,gyro,Modifier.fillMaxSize())',home)
+        self.assertIn('LivePreview(config,fps,gyro,quality,Modifier.fillMaxSize())',home)
 
     def test_new_scenes_use_canvas_minis_and_category_filter(self):
         ui=self.read('app/src/main/java/studio/nox/app/NoxApp.kt')
@@ -68,7 +68,7 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('fun setQuality(value:Int)',viewmodel)
         for term in ('settings.quality','onQuality=vm::setQuality','Rich','Ultra','Balanced'):
             self.assertIn(term,ui)
-        self.assertIn('view.configure(config,fps,quality)',ui)
+        self.assertIn('it.configure(config,fps,quality)',ui)
         self.assertIn('fun configure(c:SceneConfig,frames:Int,quality:Int)',surface)
         self.assertIn('session?.setQuality(quality)',surface)
         self.assertIn('fun setQuality(value:Int)',egl)
@@ -115,7 +115,7 @@ class StructuralContracts(unittest.TestCase):
         self.assertIn('SceneSurprise.choose(homeScene',ui)
         self.assertIn('homeDraft=next',ui)
         self.assertIn('ScenePresets.forScene(scene)',home)
-        self.assertIn('LivePreview(config,fps,gyro,Modifier.fillMaxSize())',home)
+        self.assertIn('LivePreview(config,fps,gyro,quality,Modifier.fillMaxSize())',home)
 
     def test_light_dynamics_three_live_scenes(self):
         src=self.read('core/renderer/src/main/java/studio/nox/renderer/GlBackend.kt')
