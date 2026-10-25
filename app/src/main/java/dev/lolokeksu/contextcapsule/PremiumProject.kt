@@ -75,10 +75,12 @@ fun PremiumProjectContent(
     var task by remember(project.id) { mutableStateOf("") }
     var preview by remember(project.id) { mutableStateOf(false) }
     var compactBrief by remember(project.id) { mutableStateOf(true) }
-    var decisionQuery by remember(project.id, focus?.recordId) {
+    var decisionQuery by remember(project.id, focus?.recordId) { mutableStateOf("") }
+    var focusedNoteId by remember(project.id, focus?.recordId) {
         mutableStateOf(
-            if (focus?.projectId == project.id && focus.category == SearchCategory.NOTES)
-                focus.text else ""
+            focus?.takeIf {
+                it.projectId == project.id && it.category == SearchCategory.NOTES
+            }?.recordId
         )
     }
     var pendingOnly by remember(project.id) { mutableStateOf(false) }
@@ -93,7 +95,9 @@ fun PremiumProjectContent(
     var deletingNote by remember(project.id) { mutableStateOf<Decision?>(null) }
     var showSettings by remember(project.id) { mutableStateOf(false) }
     var showProjectDelete by remember(project.id) { mutableStateOf(false) }
-    val shownDecisions = WorkspaceTools.filterDecisions(state.decisions, decisionQuery, pendingOnly)
+    val shownDecisions = if (focusedNoteId != null)
+        state.decisions.filter { it.id == focusedNoteId }
+    else WorkspaceTools.filterDecisions(state.decisions, decisionQuery, pendingOnly)
 
     Column(Modifier.fillMaxSize().background(InkBlack)) {
         Column(
@@ -226,7 +230,10 @@ fun PremiumProjectContent(
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
                 value = decisionQuery,
-                onValueChange = { decisionQuery = it },
+                onValueChange = {
+                    decisionQuery = it
+                    focusedNoteId = null
+                },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -254,6 +261,24 @@ fun PremiumProjectContent(
             Spacer(Modifier.height(9.dp))
             Text("Сохрани первое решение или поделись текстом из другого приложения.",
                 color = BodyText, fontSize = 12.sp, lineHeight = 18.sp)
+        }
+        if (focusedNoteId != null) {
+            Surface(
+                color = Color(0xFF182C45), shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, Line)
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Найденная заметка", color = WhiteText,
+                        modifier = Modifier.weight(1f), fontSize = 12.sp)
+                    TextButton(onClick = { focusedNoteId = null }) {
+                        Text("Все заметки", color = Electric)
+                    }
+                }
+            }
+            Spacer(Modifier.height(9.dp))
         }
         shownDecisions.forEach { d ->
             Spacer(Modifier.height(9.dp))
