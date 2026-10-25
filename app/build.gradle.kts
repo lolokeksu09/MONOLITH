@@ -11,8 +11,8 @@ android {
         applicationId = "dev.lolokeksu.contextcapsule"
         minSdk = 26
         targetSdk = 36
-        versionCode = 10
-        versionName = "0.10.0-preview"
+        versionCode = 11
+        versionName = "0.11.0-preview"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes { release { isMinifyEnabled = false } }

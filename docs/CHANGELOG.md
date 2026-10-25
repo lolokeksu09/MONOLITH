@@ -1,5 +1,16 @@
 # CONTEXT CAPSULE — Changelog
 
+## 2026-10-25 — 0.11.0-preview · Global Knowledge Search
+
+- Cross-project local full-text substring search over notes and tasks, with Unicode case-insensitive Kotlin matching.
+- New AMOLED search dialog with category chips and explicit opt-in for archived projects.
+- Source project name, content, and trust/completion state on each result; result cap of 80 with newest-first ordering.
+- Tap a result to navigate directly to its project and matching note or task via stable record ID. No long note text is inserted into a search field.
+- Search runs asynchronously on Dispatchers.IO and cancels superseded requests; Compose 180 ms debounce.
+- No Room migrations, new permissions, paid API, GitHub write, or remote indexing.
+- Tests: `UnifiedSearchTest`, `GlobalSearchUiTest`; existing CI includes migration/project creation/navigation tests.
+- versionCode 11, versionName 0.11.0-preview. Confirm exact HEAD Actions outcome and artifact before device install.
+
 ## 2026-10-25 — 0.10.0-preview · Project Control Center
 
 - New project settings with title/public GitHub relink, backup export, archive/unarchive and explicitly confirmed removal.
