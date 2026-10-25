@@ -2,7 +2,125 @@
 
 **Android project memory · Offline-first · No paid AI API**
 
-CONTEXT CAPSULE is a proposed native Android application that keeps explicit project decisions, tasks and source-backed GitHub state in a portable local knowledge base. It exports a reviewed Markdown/JSON **context capsule** for continuing work in a new ChatGPT conversation. ChatGPT receives the capsule via user-initiated Android sharing or copy/paste — there is no automatic access to private chats.
+CONTEXT CAPSULE is a native Android application that keeps explicit project decisions, tasks and source-backed GitHub state in a portable local knowledge base. It exports a reviewed Markdown/JSON **context capsule** for continuing work in a new ChatGPT conversation. ChatGPT receives the capsule via user-initiated Android sharing or copy/paste — there is no automatic access to private chats.
+
+## 0.11.0-preview — глобальный поиск по проектам
+
+Главный экран теперь содержит действие **«Поиск по всем заметкам и задачам»**.
+
+- Поиск выполняется исключительно по локальной базе Room, без серверов, аналитики, GitHub API или платного ИИ.
+- Доступны фильтры **Все / Заметки / Задачи** и переключатель **Искать также в архиве**; архив исключён по умолчанию.
+- Результаты показывают название исходного проекта, текст и состояние записи: подтверждена/на проверке либо выполнена/открыта.
+- Нажатие открывает нужный проект на вкладке **Память** или **План** и показывает конкретную запись по ID. Кнопка **Все заметки / Все задачи** возвращает исходный список.
+- Поиск не требует смены Room schema v3. Для корректного поиска русского текста регистр сравнивается в Kotlin; одинаково выглядящие кириллические и латинские буквы не смешиваются.
+- Результаты ограничены первыми 80 совпадениями, отсортированы по времени создания, длинные заметки ограничиваются тремя строками на карточке.
+- При выборе другого проекта данные не объединяются: действия по редактированию и удалению по-прежнему ограничены текущим `projectId`.
+- Защита приватности: поиск запускается только из интерфейса и читает данные приложения; ничего не экспортируется без явного действия пользователя.
+
+**Проверка:** JVM-тесты Unicode/архива/категорий, Android Compose-тест открытия результата, существующие сценарии создания проектов и миграций.
+
+## 0.10.0-preview — управление проектами
+
+Новый центр управления проектом открывается кнопкой **«Настроить»** в верхней части рабочего пространства.
+
+- **Редактирование названия и GitHub-адреса:** данные проверяются существующим `ProjectInput`. При смене публичного репозитория старый GitHub-снимок удаляется, чтобы не выдавать сведения одного проекта за сведения другого; заметки и задачи остаются.
+- **Архив / восстановление:** проекты можно убрать из основного списка и вернуть обратно. Архивирование не удаляет локальную информацию. На главной доступны переключатели **«Активные» / «Архив»**.
+- **Удаление с подтверждением:** необходимо вручную ввести точное название и подтвердить понимание последствий. Удаляются связанные локальные заметки, задачи и снимок GitHub, поэтому сначала рекомендуется сохранить JSON-копию.
+- **Кнопка резервной копии в настройках** использует существующий безопасный экспорт, предупреждающий о незашифрованном JSON.
+- **Миграция Room 2 → 3:** добавлено поле `projects.archived INTEGER NOT NULL DEFAULT 0`; старые проекты по умолчанию активны. Миграции `1 → 2 → 3` применяются последовательно, без destructive fallback.
+- **Совместимая копия:** JSON schemaVersion 1 получила необязательное поле `project.archived`. Старые файлы импортируются как активные; новые сохраняют состояние архива.
+
+Нет платного ИИ, root, сервера и дополнительных разрешений Android. Архивированные записи остаются локальными. После архивирования проект можно найти во вкладке «Архив».
+
+**Безопасность обновления:** резервная JSON-копия рекомендуется перед изменением структуры базы и обязательна, прежде чем удалять установленное приложение из-за несовпадения подписи отладочного APK.
+
+## 0.9.0-preview — Workspace overhaul
+
+Новый рабочий интерфейс вместо длинных экранов:
+
+- **Главная:** компактный «Рабочий пульс» — число проектов, активных задач и решений на проверку. Карточки показывают реальные локальные счётчики и прогресс выполнения задач; отсутствие задач не выдаётся за 100% готовности.
+- **Обзор:** текущий GitHub-статус и изменения с предыдущего обновления, без скрытой отправки личных данных.
+- **Память:** сохранение, поиск, закрепление, проверка, редактирование и удаление заметок, резервные копии и предпросмотр капсулы.
+- **План:** отдельный экран задач с быстрым добавлением, прогрессом, фильтрами «Открыто / Все / Готово», отметками, редактированием и подтверждением удаления.
+- **Передача в ChatGPT:** закреплённая панель с настоящим выбором «Кратко / Полностью». Выбранный формат влияет на копирование, системную отправку, предпросмотр и экспорт Markdown. Краткий формат сохраняет источники GitHub, границы доверия и незавершённые задачи, но исключает завершённые задачи.
+- **Защита данных:** подтверждение решения и отметка выполнения задачи теперь ограничены активным `projectId`; добавлен тест изоляции двух проектов.
+
+**Совместимость:** Room остаётся v2, новые разрешения и платный AI API не добавлены. При установке поверх предыдущей версии данные сохраняются при совпадающей подписи APK. При смене подписи нельзя удалять приложение без JSON-резервной копии. Действия в GitHub только read-only.
+
+**QA:** JUnit и Android UI-тесты в GitHub Actions, включая отдельные сценарии нового плана и изоляции проектов. Эмулятор не заменяет тестирование на физическом Lenovo Legion Y70 с Android 16.
+
+## 0.8.0 preview — управление памятью
+
+- Редактирование заметок и задач непосредственно на вкладке «Память».
+- Закрепление и открепление важных заметок; закреплённые записи показываются первыми, но не получают автоматически статус подтверждённых.
+- Удаление только через отдельный диалог с явным предупреждением; отмена не изменяет данные.
+- После изменения текста подтверждённой заметки она снова становится `UNVERIFIED` и требует повторного подтверждения. Без изменения текста статус не меняется.
+- Автоматическая безопасная миграция Room `1 → 2`: в таблицу `decisions` добавляется поле `pinned` с `DEFAULT 0`. Существующие проекты, задачи, заметки и снимки сохраняются.
+- Закрепление переносится в JSON-резервную копию (совместимый необязательный `pinned` при импорте) и учитывается в Markdown-капсуле.
+- Никаких дополнительных разрешений, root, платного ИИ или сетевого доступа для этой функции.
+
+**Важно:** перед установкой версии с миграцией базы сохрани локальную резервную копию. Не удаляй приложение: при удалении локальная база стирается. CI проверяет миграцию и UI-диалоги, но не заменяет проверку на физическом устройстве.
+
+## 0.7.0 preview — подробные изменения между синхронизациями
+
+Теперь при повторном ручном обновлении GitHub приложение использует официальный read-only Compare API, чтобы показать не только два SHA, но и число коммитов по версии GitHub и изменённые файлы. В карточке «Обзор» доступны первые три пути, разворачивание до восьми файлов и ссылка на сравнение в GitHub. В экспорт капсулы включается проверяемая сводка.
+
+Сравнение выполняется только при смене HEAD той же ветки; если API недоступен, приложение честно сообщает, что подробности неизвестны. Истории `behind` и `diverged` не выдаются за обычное появление новых коммитов; при ограничении GitHub на список файлов появляется предупреждение. Никакие заметки на GitHub не отправляются. Схема Room не меняется.
+
+## 0.6.0 preview — рабочая структура проекта
+
+Экран проекта разделён на два понятных режима вместо одного длинного полотна:
+
+- **Обзор:** состояние GitHub, изменения после синхронизации, предлагаемые задачи и история коммитов.
+- **Память:** капсула, решения, поиск заметок, задачи и экспорт.
+- **Всегда доступно:** закреплённая внизу кнопка «Скопировать капсулу» из обоих режимов.
+
+Существующие действия и данные сохранены, данные Room не мигрируют. Все новые элементы представлены на русском языке. Тест Android-интерфейса должен подтвердить работу обеих вкладок и постоянный доступ к копированию.
+
+## 0.5.0 preview — изменения и следующие действия
+
+При каждой ручной синхронизации приложение теперь сохраняет предыдущий HEAD в существующем GitHub-снимке. На экране видно, изменилась ли выбранная ветка с прошлого обновления, а также короткие SHA до и после. Первая синхронизация или смена ветки не выдаётся за новые коммиты.
+
+Если в сохранённом ответе GitHub есть данные о неуспешном CI, открытых PR или Issues, приложение предложит конкретные задачи. **Создание задачи — только по нажатию**; существующие задачи с таким же заголовком скрывают повторную рекомендацию. Это не самостоятельное управление GitHub.
+
+Редизайн: под статусом CI появился компактный блок «После предыдущей синхронизации» и отдельная карточка предлагаемых действий. Room v1 остаётся без миграции, приватные заметки не передаются GitHub, платного API нет.
+
+Ограничения: сравнивается только HEAD выбранной ветки, **не** число изменений/строк, не содержание отдельных файлов. Отсутствие нового HEAD не означает отсутствие новых Issues, PR или изменений других веток. Результат зависит от последнего доступного API-снимка.
+
+## 0.4.0 preview — умный обзор проекта
+
+При нажатии «Обновить» приложение напрямую считывает из публичного GitHub:
+- README / описание проекта, последние 6 коммитов (ссылки на исходные изменения).
+- Последний запуск CI для default branch: `success`, `failure`, `in_progress` или `unknown` без выдуманных статусов.
+- Открытые PR и Issues с первыми связанными ссылками (данные первых 100, предупреждение о неполноте).
+- Краткий вывод по CI из проверяемых правил, а не платной или «волшебной» нейросети.
+- Читаемую сводку в экспортируемой капсуле для продолжения чата.
+
+Экраны теперь начинают проект с обзора репозитория, ниже остаются капсула, решения и задачи. Данные сохраняются в существующем поле `GithubSnapshot.summary`, миграция Room не требуется. Старые снимки не переименовываются в новые и требуют повторной синхронизации.
+
+**Ограничения:** публичный GitHub API имеет лимит без авторизации; данные снимка могут устареть. Успех CI не доказывает готовность продукта. Приложение не читает приватные чаты или закрытые репозитории и не использует OpenAI API.
+
+## 0.3.0 preview — проектная память без лишних действий
+
+- **Системное «Поделиться» → CONTEXT CAPSULE:** выдели текст в ChatGPT, Telegram или браузере, открой меню Android «Поделиться», выбери CONTEXT CAPSULE, проверь текст и укажи проект. Сохранение происходит только после выбора; импортированные утверждения остаются `UNVERIFIED`.
+- **Поиск проектов:** по названию и адресу GitHub, с понятным пустым результатом.
+- **Поиск по решениям:** внутри проекта; фильтр «На проверку» показывает записи, которые ещё не подтверждены.
+- **Компактный главный экран:** когда проекты существуют, исчезает большой рекламный блок, освобождая место рабочим карточкам.
+- Защита: текст из других приложений ограничен 20 000 символами и не передаётся во внешние сервисы автоматически.
+- Не требует доступа к приватной истории ChatGPT, OpenAI API, root или новых сетевых разрешений.
+
+**Ограничения:** принимается только обычный текст `text/plain`, а не фотографии, файлы или весь архив чатов. Локальная база остаётся прежней (Room v1) и не мигрирует. Android-сборка и установка на реальном устройстве проверяются отдельно.
+
+## 0.2.0 preview — visual identity
+
+The Android feature branch now uses a refined, **Russian-localized AMOLED dashboard and project workspace**:
+- Explicit WCAG-oriented text contrast; no black-on-black fallback.
+- Product-specific glowing capsule geometry drawn in native Compose Canvas (no remote imagery/assets).
+- A distinctive project overview with primary Create action, real empty-state onboarding, truthful local/GitHub status.
+- Project detail with source verification, approved/unverified decisions, next tasks and a prominent ChatGPT handoff.
+- No new permissions, backend or paid API.
+
+**Build status:** GitHub Actions is the source of truth. A source commit is not a verified device installation. Debug signing may vary across GitHub runners; back up existing local projects before changing installed builds.
 
 ## Current status — 24 October 2026
 
@@ -10,12 +128,12 @@ CONTEXT CAPSULE is a proposed native Android application that keeps explicit pro
 | --- | --- |
 | Repository | `lolokeksu09/NOX-LEGION` (legacy GitHub name) |
 | Default branch | `main` |
-| Tracked files | Design and development documentation only |
-| Old Android code, graphics, Gradle, APK workflow | Absent from `main` |
-| Active feature branches | None at the last verification |
-| Open pull requests | None at the last verification |
-| CONTEXT CAPSULE Android implementation | **Not yet implemented** |
-| APK / GitHub Actions build | **Not available** |
+| Tracked files | Android source under feature/context-capsule-v1; main remains docs-only |
+| Old Android code, graphics, Gradle, APK workflow | Absent from `main` (new workflow on feature branch) |
+| Active feature branches | `feature/context-capsule-v1` |
+| Open pull requests | [PR #15](https://github.com/lolokeksu09/NOX-LEGION/pull/15) |
+| CONTEXT CAPSULE Android implementation | Debug preview available in feature branch |
+| APK / GitHub Actions build | See latest successful GitHub Actions artifact for the exact commit |
 
 The repository's name is still `NOX-LEGION`. Renaming it to `CONTEXT-CAPSULE` requires a separate GitHub repository-settings operation. Historic commits may still contain the old app; branch deletion is not Git-history erasure.
 
@@ -30,7 +148,7 @@ The repository's name is still `NOX-LEGION`. Renaming it to `CONTEXT-CAPSULE` re
 
 No root, no proprietary server, no hidden chat collection, no paid OpenAI API.
 
-## Architecture (planned, not implemented)
+## Architecture (current feature branch)
 
 - Device: Lenovo Legion Y70 2026, Android 16.
 - Kotlin + Jetpack Compose + Material 3, Room, coroutines/Flow, Android Storage Access Framework.
@@ -45,4 +163,4 @@ No root, no proprietary server, no hidden chat collection, no paid OpenAI API.
 - [Developer rules](AGENTS.md)
 - [Changelog](docs/CHANGELOG.md)
 
-**Next milestone:** review the specification and plan, then create a feature branch, write tests before code, implement the Android client and verify its APK through GitHub Actions. There is no download or runnable application at this stage.
+**Build guidance:** use the newest successful Android GitHub Actions run for the exact feature-branch HEAD. A source commit without passing jobs is not a verified APK; device-side QA is still required.
