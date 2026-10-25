@@ -51,8 +51,10 @@ interface ProjectDao {
     @Query("DELETE FROM snapshots WHERE projectId=:projectId")
     suspend fun deleteSnapshot(projectId: String): Int
     @Query("SELECT * FROM decisions WHERE projectId=:id ORDER BY pinned DESC, createdAt ASC") suspend fun decisions(id: String): List<DecisionRow>
+    @Query("SELECT * FROM decisions ORDER BY createdAt DESC") suspend fun allDecisions(): List<DecisionRow>
     @Query("SELECT * FROM decisions WHERE projectId=:projectId AND id=:id") suspend fun decision(projectId: String, id: String): DecisionRow?
     @Query("SELECT * FROM tasks WHERE projectId=:id ORDER BY createdAt ASC") suspend fun tasks(id: String): List<TaskRow>
+    @Query("SELECT * FROM tasks ORDER BY createdAt DESC") suspend fun allTasks(): List<TaskRow>
     @Query("SELECT * FROM snapshots WHERE projectId=:id") suspend fun snapshot(id: String): SnapshotRow?
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun upsertProject(row: ProjectRow)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun upsertDecision(row: DecisionRow)

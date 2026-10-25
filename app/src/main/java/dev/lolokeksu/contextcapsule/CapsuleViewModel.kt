@@ -11,6 +11,7 @@ import dev.lolokeksu.contextcapsule.github.PublicGithubClient
 import dev.lolokeksu.contextcapsule.github.RepositoryOverviewCodec
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -36,6 +37,37 @@ class CapsuleViewModel(application: Application) : AndroidViewModel(application)
     private val github = PublicGithubClient()
     private val _state = MutableStateFlow(CapsuleUiState())
     val state = _state.asStateFlow()
+    private val _searchHits = MutableStateFlow<List<SearchHit>>(emptyList())
+    val searchHits = _searchHits.asStateFlow()
+    private var searchJob: Job? = null
+
+    /** No external API: each query is evaluated over local Room data off the UI thread. */
+    fun searchAcrossProjects(query: String, category: SearchCategory, includeArchived: Boolean) {
+        searchJob?.cancel()
+        val term = query.trim().take(120)
+        if (term.isEmpty()) {
+            _searchHits.value = emptyList()
+            return
+        }
+        searchJob = viewModelScope.launch {
+            val matches = withContext(Dispatchers.IO) {
+                UnifiedSearch.find(
+                    projects = dao.projects().map(ProjectRow::toDomain),
+                    notes = dao.allDecisions().map(DecisionRow::toDomain),
+                    tasks = dao.allTasks().map(TaskRow::toDomain),
+                    query = term,
+                    category = category,
+                    includeArchived = includeArchived
+                )
+            }
+            _searchHits.value = matches
+        }
+    }
+
+    fun clearSearch() {
+        searchJob?.cancel()
+        _searchHits.value = emptyList()
+    }
 
     init { refresh() }
 
