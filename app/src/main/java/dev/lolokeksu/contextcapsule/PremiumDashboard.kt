@@ -49,7 +49,8 @@ fun PremiumHomeContent(
     state: CapsuleUiState,
     onOpen: (String?) -> Unit,
     onCreate: (String, String) -> Unit,
-    onImport: () -> Unit
+    onImport: () -> Unit,
+    onGlobalSearch: () -> Unit = {}
 ) {
     var showCreate by remember { mutableStateOf(false) }
     var title by remember { mutableStateOf("") }
@@ -167,6 +168,19 @@ fun PremiumHomeContent(
         }
         Spacer(Modifier.height(14.dp))
         if (state.projects.isNotEmpty()) {
+            OutlinedButton(
+                onClick = onGlobalSearch,
+                modifier = Modifier.fillMaxWidth().height(52.dp).testTag("global_search_open"),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, StrokeBlue),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = BlueLight)
+            ) {
+                Icon(Icons.Default.Search, contentDescription = null,
+                    modifier = Modifier.size(19.dp))
+                Spacer(Modifier.width(10.dp))
+                Text("Поиск по всем заметкам и задачам", fontSize = 13.sp)
+            }
+            Spacer(Modifier.height(14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.fillMaxWidth()) {
                 FilterChip(

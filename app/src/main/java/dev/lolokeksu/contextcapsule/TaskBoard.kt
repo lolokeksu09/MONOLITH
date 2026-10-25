@@ -30,16 +30,24 @@ fun TaskBoard(
     onAdd: (String) -> Unit,
     onToggle: (String, Boolean) -> Unit,
     onEdit: (String, String) -> Unit,
-    onDelete: (String) -> Unit
+    onDelete: (String) -> Unit,
+    focusTaskId: String? = null
 ) {
-    var scope by remember { mutableStateOf(TaskScope.OPEN) }
+    var scope by remember(focusTaskId) {
+        mutableStateOf(if (focusTaskId == null) TaskScope.OPEN else TaskScope.ALL)
+    }
+    var focusOnly by remember(focusTaskId) { mutableStateOf(focusTaskId != null) }
     var draft by remember { mutableStateOf("") }
     var editing by remember { mutableStateOf<ProjectTask?>(null) }
     var deleting by remember { mutableStateOf<ProjectTask?>(null) }
     val open = tasks.count { !it.completed }
     val done = tasks.count { it.completed }
     val total = tasks.size
-    val visible = WorkspaceV9.tasks(tasks, scope)
+    val visible = WorkspaceV9.tasks(tasks, scope).let { selected ->
+        if (focusOnly && focusTaskId != null)
+            tasks.filter { it.id == focusTaskId }
+        else selected
+    }
     Column(Modifier.fillMaxWidth()) {
         Text("ПЛАН РАБОТЫ", color = PlanBlue, letterSpacing = 1.5.sp, fontSize = 11.sp,
             fontWeight = FontWeight.Bold)
@@ -93,6 +101,23 @@ fun TaskBoard(
             }
         }
         Spacer(Modifier.height(20.dp))
+        if (focusOnly && focusTaskId != null) {
+            Surface(
+                color = Color(0xFF182C45), shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, PlanLine)
+            ) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text("Найденная задача", color = PlanWhite, fontSize = 12.sp,
+                        modifier = Modifier.weight(1f))
+                    TextButton(
+                        onClick = { focusOnly = false },
+                        modifier = Modifier.testTag("show_all_tasks")
+                    ) { Text("Все задачи", color = PlanBlue) }
+                }
+            }
+            Spacer(Modifier.height(11.dp))
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(7.dp), modifier = Modifier.fillMaxWidth()) {
             listOf(
                 TaskScope.OPEN to "Открыто",

@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.lolokeksu.contextcapsule.domain.EvidenceKind
 import dev.lolokeksu.contextcapsule.domain.WorkspaceTools
+import dev.lolokeksu.contextcapsule.domain.SearchHit
 import kotlinx.coroutines.flow.MutableStateFlow
 
 private val Ink = Color(PremiumPalette.Background.toInt())
@@ -70,6 +71,9 @@ class MainActivity : ComponentActivity() {
 private fun CapsuleApp(vm: CapsuleViewModel, incoming: String?, onShareDismiss: () -> Unit) {
     val context = LocalContext.current
     val state by vm.state.collectAsStateWithLifecycle()
+    val searchHits by vm.searchHits.collectAsStateWithLifecycle()
+    var globalSearchVisible by remember { mutableStateOf(false) }
+    var focusedHit by remember { mutableStateOf<SearchHit?>(null) }
     var exportText by remember { mutableStateOf("") }
     var showBackupWarning by remember { mutableStateOf(false) }
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
@@ -93,10 +97,14 @@ private fun CapsuleApp(vm: CapsuleViewModel, incoming: String?, onShareDismiss: 
         CompositionLocalProvider(LocalContentColor provides Color(PremiumPalette.Title.toInt())) {
         Column(Modifier.fillMaxSize().background(Ink).statusBarsPadding().navigationBarsPadding()) {
             if (state.active == null) {
-                PremiumHomeContent(state, onOpen = vm::open, onCreate = vm::create,
-                    onImport = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) })
+                PremiumHomeContent(state,
+                    onOpen = { id -> focusedHit = null; vm.open(id) },
+                    onCreate = vm::create,
+                    onImport = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) },
+                    onGlobalSearch = { globalSearchVisible = true })
             } else {
-                PremiumProjectContent(state, onBack = { vm.open(null) }, onSync = vm::sync,
+                PremiumProjectContent(state,
+                    onBack = { focusedHit = null; vm.open(null) }, onSync = vm::sync,
                     onNote = vm::addDecision, onConfirm = vm::confirmDecision,
                     onTask = vm::addTask, onToggle = vm::toggleTask,
                     onEditDecision = vm::editDecision, onPinDecision = vm::pinDecision,
@@ -117,6 +125,7 @@ private fun CapsuleApp(vm: CapsuleViewModel, incoming: String?, onShareDismiss: 
                         }
                         context.startActivity(Intent.createChooser(send, "Передать контекст в ChatGPT"))
                     },
+                    focus = focusedHit,
                     onExport = { backup, brief ->
                         if (backup) showBackupWarning = true
                         else {
@@ -125,6 +134,22 @@ private fun CapsuleApp(vm: CapsuleViewModel, incoming: String?, onShareDismiss: 
                         }
                     })
             }
+        }
+        if (globalSearchVisible && state.active == null) {
+            GlobalSearchDialog(
+                results = searchHits,
+                onSearch = vm::searchAcrossProjects,
+                onPick = { hit ->
+                    focusedHit = hit
+                    globalSearchVisible = false
+                    vm.clearSearch()
+                    vm.open(hit.projectId)
+                },
+                onDismiss = {
+                    globalSearchVisible = false
+                    vm.clearSearch()
+                }
+            )
         }
         if (incoming != null) ShareInboxDialog(
             text = incoming,

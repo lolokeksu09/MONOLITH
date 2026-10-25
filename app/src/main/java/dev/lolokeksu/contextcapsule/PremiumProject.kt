@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.sp
 import dev.lolokeksu.contextcapsule.domain.EvidenceKind
 import dev.lolokeksu.contextcapsule.domain.Decision
 import dev.lolokeksu.contextcapsule.domain.ProjectTask
+import dev.lolokeksu.contextcapsule.domain.SearchCategory
+import dev.lolokeksu.contextcapsule.domain.SearchHit
 
 private val InkBlack = Color(PremiumPalette.Background.toInt())
 private val WhiteText = Color(PremiumPalette.Title.toInt())
@@ -65,16 +67,28 @@ fun PremiumProjectContent(
     onDeleteProject: (String) -> Unit,
     onCopy: (Boolean) -> Unit,
     onShare: (Boolean) -> Unit,
-    onExport: (Boolean, Boolean) -> Unit
+    onExport: (Boolean, Boolean) -> Unit,
+    focus: SearchHit? = null
 ) {
     val project = state.active ?: return
     var note by remember(project.id) { mutableStateOf("") }
     var task by remember(project.id) { mutableStateOf("") }
     var preview by remember(project.id) { mutableStateOf(false) }
     var compactBrief by remember(project.id) { mutableStateOf(true) }
-    var decisionQuery by remember(project.id) { mutableStateOf("") }
+    var decisionQuery by remember(project.id, focus?.recordId) {
+        mutableStateOf(
+            if (focus?.projectId == project.id && focus.category == SearchCategory.NOTES)
+                focus.text else ""
+        )
+    }
     var pendingOnly by remember(project.id) { mutableStateOf(false) }
-    var selectedSection by remember(project.id) { mutableIntStateOf(0) }
+    var selectedSection by remember(project.id, focus?.recordId) {
+        mutableIntStateOf(
+            if (focus?.projectId != project.id) 0
+            else if (focus.category == SearchCategory.NOTES) 1
+            else 2
+        )
+    }
     var editingNote by remember(project.id) { mutableStateOf<Decision?>(null) }
     var deletingNote by remember(project.id) { mutableStateOf<Decision?>(null) }
     var showSettings by remember(project.id) { mutableStateOf(false) }
@@ -318,7 +332,10 @@ fun PremiumProjectContent(
                 onAdd = onTask,
                 onToggle = onToggle,
                 onEdit = onEditTask,
-                onDelete = onDeleteTask
+                onDelete = onDeleteTask,
+                focusTaskId = focus?.takeIf {
+                    it.projectId == project.id && it.category == SearchCategory.TASKS
+                }?.recordId
             )
         }
         }
