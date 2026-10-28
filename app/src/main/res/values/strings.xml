@@ -8,6 +8,11 @@
     <string name="loading">Loading applications…</string>
     <string name="no_results">No applications found</string>
     <string name="empty_pinned">Long-press any app in All apps to pin it here.</string>
+    <string name="pin_hint">Long-press an app to pin or unpin it.</string>
+    <string name="pin_app">Pin app</string>
+    <string name="unpin_app">Unpin app</string>
+    <string name="open_app">Open app</string>
+    <string name="make_default">Set as default home screen</string>
     <string name="launch_failed">Unable to launch this app</string>
     <string name="catalog_failed">Unable to load installed apps</string>
 </resources>

@@ -19,10 +19,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.13'
-      - name: Compile, test and assemble
-        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
+      - name: Verify and assemble
+        run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
       - uses: actions/upload-artifact@v4
         if: success()
         with:
           name: MONOLITH-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
