@@ -45,6 +45,7 @@ import dev.monolith.launcher.data.WidgetIdsStore
 import dev.monolith.launcher.data.WidgetSizeStore
 import dev.monolith.launcher.data.DEFAULT_WIDGET_HEIGHT_DP
 import dev.monolith.launcher.data.stepWidgetHeight
+import dev.monolith.launcher.data.moveWidget
 import dev.monolith.launcher.data.addAppToFolder
 import dev.monolith.launcher.data.createHomeFolder
 import dev.monolith.launcher.data.moveAppOutOfFolder
@@ -245,6 +246,7 @@ class MainActivity : ComponentActivity() {
                 onChooseWidget = ::selectWidget,
                 onRemoveWidget = ::removeWidget,
                 onResizeWidget = ::resizeWidget,
+                onMoveWidget = ::moveWidgetInHome,
                 onExportHome = { exportHomeLauncher.launch("MONOLITH-home-backup.json") },
                 onImportHome = { importHomeLauncher.launch(arrayOf("application/json", "text/plain")) },
                 onHideApp = { app ->
@@ -372,6 +374,13 @@ class MainActivity : ComponentActivity() {
         runCatching { widgetHost.deleteAppWidgetId(id) }
         if (pendingWidgetId == id) pendingWidgetId = null
         widgetError = true
+    }
+
+    private fun moveWidgetInHome(widgetId: Int, direction: Int) {
+        val next = moveWidget(widgetIds, widgetId, direction)
+        if (next == widgetIds) return
+        widgetIds = next
+        widgetIdsStore.write(next)
     }
 
     private fun removeWidget(id: Int) {
