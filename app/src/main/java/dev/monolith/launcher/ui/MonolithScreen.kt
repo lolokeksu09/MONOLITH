@@ -1,14 +1,21 @@
 package dev.monolith.launcher.ui
 
+import android.appwidget.AppWidgetHost
+import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProviderInfo
 import android.content.ComponentName
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,13 +24,18 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,18 +59,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
+import androidx.compose.ui.viewinterop.AndroidView
+import android.widget.TextView
+import kotlin.math.roundToInt
 import dev.monolith.launcher.R
+import dev.monolith.launcher.data.HomeLayout
+import dev.monolith.launcher.data.HomeEntry
 import dev.monolith.launcher.data.LaunchableApp
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.filterApps
@@ -72,129 +95,135 @@ private val Panel = Color(0xFF171717)
 private val Muted = Color(0xFFACACAC)
 private val MainText = Color(0xFFF5F5F5)
 private val Outline = Color(0xFF333333)
-private enum class Screen { HOME, ALL_APPS, SETTINGS }
+private enum class Screen { HOME, ALL_APPS, SETTINGS, WIDGETS }
 
 @Composable
 fun MonolithScreen(
     apps: List<LaunchableApp>,
-    pinnedIds: List<String>,
+    layout: HomeLayout,
     preferences: LauncherPreferences,
     loading: Boolean,
     loadError: Boolean,
+    widgetIds: List<Int>,
+    widgetHost: AppWidgetHost,
+    widgetManager: AppWidgetManager,
+    widgetProviders: List<AppWidgetProviderInfo>,
+    widgetError: Boolean,
     isDefaultHome: Boolean,
     onMakeDefaultHome: () -> Unit,
     onRetry: () -> Unit,
     onLaunch: (LaunchableApp) -> Unit,
-    onTogglePin: (LaunchableApp) -> Unit,
-    onMovePinned: (LaunchableApp, Int) -> Unit,
+    onPin: (LaunchableApp) -> Unit,
+    onUnpin: (LaunchableApp) -> Unit,
+    onNewFolder: (LaunchableApp) -> Unit,
+    onAddToFolder: (LaunchableApp, String) -> Unit,
+    onRenameFolder: (String, String) -> Unit,
+    onDeleteFolder: (String) -> Unit,
+    onMoveOutOfFolder: (LaunchableApp, String) -> Unit,
+    onReorder: (Int, Int) -> Unit,
     onAppInfo: (LaunchableApp) -> Unit,
-    onPreferencesChange: (LauncherPreferences) -> Unit
+    onPreferencesChange: (LauncherPreferences) -> Unit,
+    onShowWidgets: () -> Unit,
+    onChooseWidget: (AppWidgetProviderInfo) -> Unit,
+    onRemoveWidget: (Int) -> Unit
 ) {
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
     var query by rememberSaveable { mutableStateOf("") }
+    var editing by rememberSaveable { mutableStateOf(false) }
     var selectedApp by remember { mutableStateOf<LaunchableApp?>(null) }
-    BackHandler(enabled = screen != Screen.HOME) {
-        screen = Screen.HOME
-        query = ""
-    }
-    val pinned = remember(apps, pinnedIds) {
-        val byId = apps.associateBy { it.id }
-        pinnedIds.mapNotNull(byId::get)
-    }
+    var selectedFolderId by remember { mutableStateOf<String?>(null) }
+    val pinnedIds = remember(layout) { layout.appIds }
     val visibleApps = remember(apps, query) { filterApps(apps, query) }
+    val byId = remember(apps) { apps.associateBy { it.id } }
+    val folders = remember(layout) { layout.entries.filterIsInstance<HomeEntry.Folder>() }
+    BackHandler(enabled = screen != Screen.HOME || editing) {
+        if (editing) editing = false else { screen = Screen.HOME; query = "" }
+    }
 
-    MaterialTheme(
-        colorScheme = darkColorScheme(
-            background = Background, surface = Background,
-            primary = MainText, onPrimary = Background, onSurface = MainText
-        )
-    ) {
+    MaterialTheme(colorScheme = darkColorScheme(
+        background = Background, surface = Background,
+        primary = MainText, onPrimary = Background, onSurface = MainText
+    )) {
         Surface(modifier = Modifier.fillMaxSize(), color = Background) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = Modifier.fillMaxSize()
                     .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .padding(horizontal = 20.dp, vertical = 16.dp)
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
             ) {
-                Header(screen, onSettings = { screen = Screen.SETTINGS }, onHome = { screen = Screen.HOME })
-                Spacer(Modifier.height(25.dp))
+                Header(screen, onSettings = { editing = false; screen = Screen.SETTINGS },
+                    onHome = { screen = Screen.HOME; editing = false })
+                Spacer(Modifier.height(14.dp))
                 when (screen) {
                     Screen.HOME -> {
                         Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .pointerInput(Unit) {
-                                    var drag = 0f
-                                    detectVerticalDragGestures(
-                                        onDragStart = { drag = 0f },
-                                        onVerticalDrag = { change, amount ->
-                                            drag += amount
-                                            change.consume()
-                                        },
-                                        onDragEnd = { if (drag < -100f) screen = Screen.ALL_APPS }
-                                    )
-                                }
+                            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                         ) {
                             Clock()
-                            Spacer(Modifier.height(34.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(stringResource(R.string.pinned_apps), color = Muted, letterSpacing = 2.sp, fontSize = 12.sp)
-                                Text("${pinned.size}", color = Muted, fontSize = 12.sp)
-                            }
                             Spacer(Modifier.height(14.dp))
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically) {
+                                Text(stringResource(R.string.pinned_apps), color = Muted, letterSpacing = 2.sp, fontSize = 12.sp)
+                                TextButton(onClick = { editing = !editing }) {
+                                    Text(stringResource(if (editing) R.string.finish_edit else R.string.edit_home))
+                                }
+                            }
+                            if (editing) {
+                                Text(stringResource(R.string.drag_hint), color = Muted, fontSize = 12.sp)
+                            }
+                            Spacer(Modifier.height(10.dp))
                             when {
                                 loadError -> ErrorState(onRetry)
                                 loading && apps.isEmpty() -> Text(stringResource(R.string.loading), color = Muted)
-                                pinned.isEmpty() -> {
-                                    Box(
-                                        Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(18.dp)).padding(22.dp)
-                                    ) { Text(stringResource(R.string.empty_pinned), color = Muted, fontSize = 14.sp) }
+                                layout.entries.isEmpty() -> {
+                                    Box(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(18.dp)).padding(22.dp)) {
+                                        Text(stringResource(R.string.empty_pinned), color = Muted, fontSize = 14.sp)
+                                    }
                                 }
-                                else -> AppGrid(
-                                    pinned, pinnedIds, preferences, onLaunch,
-                                    { selectedApp = it }, Modifier.weight(1f)
+                                else -> HomeGrid(
+                                    entries = layout.entries, byId = byId, columns = preferences.columns,
+                                    labels = preferences.showLabels, editing = editing,
+                                    onLaunch = onLaunch, onAppActions = { selectedApp = it },
+                                    onFolder = { selectedFolderId = it },
+                                    onMove = onReorder
                                 )
                             }
-                            if (pinned.isEmpty() || loadError || (loading && apps.isEmpty())) Spacer(Modifier.weight(1f))
-                            if (!isDefaultHome) {
-                                OutlinedButton(
-                                    onClick = onMakeDefaultHome, modifier = Modifier.fillMaxWidth()
-                                ) { Text(stringResource(R.string.make_default)) }
-                                Spacer(Modifier.height(8.dp))
+                            Spacer(Modifier.height(20.dp))
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                OutlinedButton(onClick = { onShowWidgets(); screen = Screen.WIDGETS }, modifier = Modifier.weight(1f)) {
+                                    Text(stringResource(R.string.add_widget), maxLines = 1)
+                                }
+                                OutlinedButton(onClick = { editing = false; screen = Screen.ALL_APPS }, modifier = Modifier.weight(1f)) {
+                                    Text(stringResource(R.string.all_apps), maxLines = 1)
+                                }
                             }
-                            MonolithButton(stringResource(R.string.all_apps)) { screen = Screen.ALL_APPS }
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                stringResource(R.string.swipe_hint),
-                                modifier = Modifier.fillMaxWidth(),
-                                color = Muted, fontSize = 11.sp, textAlign = TextAlign.Center
-                            )
+                            if (widgetIds.isNotEmpty()) {
+                                Spacer(Modifier.height(24.dp))
+                                Text(stringResource(R.string.widgets_section), color = Muted, letterSpacing = 2.sp, fontSize = 12.sp)
+                                Spacer(Modifier.height(12.dp))
+                                WidgetSection(widgetIds, widgetHost, widgetManager, onRemoveWidget)
+                            }
+                            if (!isDefaultHome) {
+                                Spacer(Modifier.height(12.dp))
+                                OutlinedButton(onClick = onMakeDefaultHome, modifier = Modifier.fillMaxWidth()) {
+                                    Text(stringResource(R.string.make_default))
+                                }
+                            }
+                            Spacer(Modifier.height(24.dp))
                         }
                     }
                     Screen.ALL_APPS -> {
                         Text(stringResource(R.string.all_apps), fontSize = 27.sp, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(12.dp))
                         OutlinedTextField(
-                            value = query,
-                            onValueChange = { query = it },
+                            value = query, onValueChange = { query = it },
                             label = { Text(stringResource(R.string.search_apps)) },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
+                            singleLine = true, modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(Modifier.height(12.dp))
-                        Text(
-                            stringResource(R.string.apps_count, visibleApps.size),
-                            color = Muted, fontSize = 12.sp
-                        )
+                        Text(stringResource(R.string.apps_count, visibleApps.size), color = Muted, fontSize = 12.sp)
                         Spacer(Modifier.height(12.dp))
                         when {
-                            loadError -> {
-                                ErrorState(onRetry)
-                                Spacer(Modifier.weight(1f))
-                            }
+                            loadError -> { ErrorState(onRetry); Spacer(Modifier.weight(1f)) }
                             loading && apps.isEmpty() -> {
                                 Text(stringResource(R.string.loading), color = Muted)
                                 Spacer(Modifier.weight(1f))
@@ -203,40 +232,69 @@ fun MonolithScreen(
                                 Text(stringResource(R.string.no_results), color = Muted)
                                 Spacer(Modifier.weight(1f))
                             }
-                            else -> AppGrid(
-                                visibleApps, pinnedIds, preferences, onLaunch,
-                                { selectedApp = it }, Modifier.weight(1f)
-                            )
+                            else -> AppGrid(visibleApps, pinnedIds, preferences, onLaunch,
+                                { selectedApp = it }, Modifier.weight(1f))
                         }
                         Spacer(Modifier.height(10.dp))
-                        MonolithButton(stringResource(R.string.back_home)) {
-                            screen = Screen.HOME
-                            query = ""
-                        }
+                        MonolithButton(stringResource(R.string.back_home)) { screen = Screen.HOME; query = "" }
                     }
                     Screen.SETTINGS -> SettingsPage(
-                        preferences = preferences,
-                        isDefaultHome = isDefaultHome,
-                        onPreferencesChange = onPreferencesChange,
-                        onMakeDefaultHome = onMakeDefaultHome,
+                        preferences, isDefaultHome, onPreferencesChange, onMakeDefaultHome,
                         onBack = { screen = Screen.HOME }
                     )
+                    Screen.WIDGETS -> {
+                        Text(stringResource(R.string.choose_widget), fontSize = 27.sp, fontWeight = FontWeight.SemiBold)
+                        Spacer(Modifier.height(12.dp))
+                        if (widgetError) Text(stringResource(R.string.widget_failed), color = Muted)
+                        if (widgetProviders.isEmpty()) {
+                            Text(stringResource(R.string.no_widgets), color = Muted)
+                            Spacer(Modifier.weight(1f))
+                        } else {
+                            val pm = LocalContext.current.packageManager
+                            LazyColumn(modifier = Modifier.weight(1f)) {
+                                items(widgetProviders, key = { it.provider.flattenToString() }) { provider ->
+                                    TextButton(
+                                        onClick = { onChooseWidget(provider); screen = Screen.HOME },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(provider.loadLabel(pm), modifier = Modifier.fillMaxWidth(),
+                                            textAlign = TextAlign.Start, color = MainText)
+                                    }
+                                }
+                            }
+                        }
+                        MonolithButton(stringResource(R.string.back_home)) { screen = Screen.HOME }
+                    }
                 }
             }
         }
+
         selectedApp?.let { app ->
             AppActionSheet(
-                app = app,
-                pinnedIndex = pinnedIds.indexOf(app.id),
-                pinnedCount = pinnedIds.size,
+                app = app, pinnedIndex = pinnedIds.indexOf(app.id),
+                isTopLevel = layout.entries.any { it is HomeEntry.App && it.appId == app.id },
+                folders = folders,
                 onDismiss = { selectedApp = null },
-                onTogglePin = { selectedApp = null; onTogglePin(app) },
-                onMove = { delta -> selectedApp = null; onMovePinned(app, delta) },
+                onTogglePin = { selectedApp = null; if (app.id in pinnedIds) onUnpin(app) else onPin(app) },
+                onNewFolder = { selectedApp = null; onNewFolder(app) },
+                onAddToFolder = { folderId -> selectedApp = null; onAddToFolder(app, folderId) },
                 onAppInfo = { selectedApp = null; onAppInfo(app) }
+            )
+        }
+        selectedFolderId?.let { id ->
+            val folder = folders.firstOrNull { it.id == id }
+            if (folder == null) selectedFolderId = null else FolderSheet(
+                folder = folder, byId = byId,
+                onDismiss = { selectedFolderId = null },
+                onLaunch = { selectedFolderId = null; onLaunch(it) },
+                onRename = { name -> onRenameFolder(id, name) },
+                onDelete = { selectedFolderId = null; onDeleteFolder(id) },
+                onRemoveApp = { selectedFolderId = null; onMoveOutOfFolder(it, id) }
             )
         }
     }
 }
+
 
 @Composable
 private fun Header(screen: Screen, onSettings: () -> Unit, onHome: () -> Unit) {
@@ -338,14 +396,20 @@ private fun SettingsPage(
 private fun AppActionSheet(
     app: LaunchableApp,
     pinnedIndex: Int,
-    pinnedCount: Int,
+    isTopLevel: Boolean,
+    folders: List<HomeEntry.Folder>,
     onDismiss: () -> Unit,
     onTogglePin: () -> Unit,
-    onMove: (Int) -> Unit,
+    onNewFolder: () -> Unit,
+    onAddToFolder: (String) -> Unit,
     onAppInfo: () -> Unit
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Panel) {
-        Column(modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 26.dp)) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 24.dp, end = 24.dp, bottom = 26.dp)
+        ) {
             Text(app.label, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
             Text(app.packageName, color = Muted, fontSize = 12.sp)
             Spacer(Modifier.height(12.dp))
@@ -353,12 +417,93 @@ private fun AppActionSheet(
                 if (pinnedIndex >= 0) stringResource(R.string.unpin_app) else stringResource(R.string.pin_app),
                 onTogglePin
             )
-            if (pinnedIndex > 0) SheetAction(stringResource(R.string.move_left), { onMove(-1) })
-            if (pinnedIndex >= 0 && pinnedIndex < pinnedCount - 1) {
-                SheetAction(stringResource(R.string.move_right), { onMove(1) })
+            if (isTopLevel) SheetAction(stringResource(R.string.create_folder), onNewFolder)
+            folders.forEach { folder ->
+                if (app.id !in folder.appIds) {
+                    SheetAction(stringResource(R.string.move_to_folder, folder.name)) { onAddToFolder(folder.id) }
+                }
             }
             SheetAction(stringResource(R.string.app_info), onAppInfo)
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FolderSheet(
+    folder: HomeEntry.Folder,
+    byId: Map<String, LaunchableApp>,
+    onDismiss: () -> Unit,
+    onLaunch: (LaunchableApp) -> Unit,
+    onRename: (String) -> Unit,
+    onDelete: () -> Unit,
+    onRemoveApp: (LaunchableApp) -> Unit
+) {
+    var folderName by remember(folder.id) { mutableStateOf(folder.name) }
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Panel) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
+            OutlinedTextField(
+                value = folderName, onValueChange = { folderName = it.take(40) },
+                label = { Text(stringResource(R.string.folder_name)) }, singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            TextButton(onClick = { onRename(folderName) }) { Text(stringResource(R.string.save_name)) }
+            Column(modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp).verticalScroll(rememberScrollState())) {
+                folder.appIds.mapNotNull(byId::get).forEach { app ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(onClick = { onLaunch(app) }) {
+                            Text(app.label, color = MainText, maxLines = 1)
+                        }
+                        TextButton(onClick = { onRemoveApp(app) }) {
+                            Text(stringResource(R.string.move_out), color = Muted)
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            TextButton(onClick = onDelete) {
+                Text(stringResource(R.string.dissolve_folder), color = MainText)
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun WidgetSection(
+    ids: List<Int>, host: AppWidgetHost, manager: AppWidgetManager,
+    onRemove: (Int) -> Unit
+) {
+    ids.forEach { id ->
+        val info = remember(id) { manager.getAppWidgetInfo(id) }
+        Column(
+            modifier = Modifier.fillMaxWidth()
+                .background(Panel, RoundedCornerShape(18.dp))
+                .padding(12.dp)
+        ) {
+            if (info == null) {
+                Text(stringResource(R.string.widget_unavailable), color = Muted)
+            } else {
+                val context = LocalContext.current
+                AndroidView(
+                    factory = {
+                        runCatching { host.createView(context, id, info) }
+                            .getOrElse {
+                                TextView(context).apply { text = context.getString(R.string.widget_unavailable) }
+                            }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(194.dp)
+                )
+            }
+            TextButton(onClick = { onRemove(id) }) {
+                Text(stringResource(R.string.remove_widget), color = Muted)
+            }
+        }
+        Spacer(Modifier.height(12.dp))
     }
 }
 
@@ -450,5 +595,128 @@ private fun AppTile(
             )
         }
         if (pinned) Text("•", color = Muted, fontSize = 12.sp)
+    }
+}
+
+@Composable
+private fun HomeGrid(
+    entries: List<HomeEntry>,
+    byId: Map<String, LaunchableApp>,
+    columns: Int,
+    labels: Boolean,
+    editing: Boolean,
+    onLaunch: (LaunchableApp) -> Unit,
+    onAppActions: (LaunchableApp) -> Unit,
+    onFolder: (String) -> Unit,
+    onMove: (Int, Int) -> Unit
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val gap = 8.dp
+        val cellWidth = (maxWidth - gap * (columns - 1)) / columns
+        val density = LocalDensity.current
+        val stepX = with(density) { (cellWidth + gap).toPx() }
+        val stepY = with(density) { 112.dp.toPx() }
+        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            entries.chunked(columns).forEachIndexed { row, elements ->
+                Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
+                    elements.forEachIndexed { column, entry ->
+                        val index = row * columns + column
+                        HomeTile(
+                            entry = entry, app = (entry as? HomeEntry.App)?.let { byId[it.appId] },
+                            cellWidth = cellWidth, labels = labels, editing = editing,
+                            onClick = {
+                                when (entry) {
+                                    is HomeEntry.App -> byId[entry.appId]?.let(onLaunch)
+                                    is HomeEntry.Folder -> onFolder(entry.id)
+                                }
+                            },
+                            onLongClick = {
+                                when (entry) {
+                                    is HomeEntry.App -> byId[entry.appId]?.let(onAppActions)
+                                    is HomeEntry.Folder -> onFolder(entry.id)
+                                }
+                            },
+                            onDrop = { delta ->
+                                val shiftX = (delta.x / stepX).roundToInt()
+                                val shiftY = (delta.y / stepY).roundToInt()
+                                val target = (index + shiftX + shiftY * columns).coerceIn(0, entries.lastIndex)
+                                if (index != target) onMove(index, target)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HomeTile(
+    entry: HomeEntry,
+    app: LaunchableApp?,
+    cellWidth: Dp,
+    labels: Boolean,
+    editing: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    onDrop: (Offset) -> Unit
+) {
+    var drag by remember(entry.key, editing) { mutableStateOf(Offset.Zero) }
+    val density = LocalDensity.current
+    val ctx = LocalContext.current
+    val painter = remember(app?.id) {
+        if (app == null) null
+        else runCatching {
+            BitmapPainter(
+                ctx.packageManager.getActivityIcon(ComponentName(app.packageName, app.activityName))
+                    .toBitmap(width = 96, height = 96).asImageBitmap()
+            )
+        }.getOrNull()
+    }
+    val gesture = if (editing) {
+        Modifier.pointerInput(entry.key) {
+            detectDragGesturesAfterLongPress(
+                onDragStart = { drag = Offset.Zero },
+                onDrag = { change, amount -> change.consume(); drag += amount },
+                onDragEnd = { val end = drag; drag = Offset.Zero; onDrop(end) },
+                onDragCancel = { drag = Offset.Zero }
+            )
+        }
+    } else {
+        Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick)
+    }
+    Column(
+        modifier = Modifier.width(cellWidth).height(108.dp)
+            .zIndex(if (drag != Offset.Zero) 3f else 0f)
+            .offset {
+                IntOffset(drag.x.roundToInt(), drag.y.roundToInt())
+            }
+            .then(gesture)
+            .background(if (editing) Outline else Panel, RoundedCornerShape(16.dp))
+            .padding(horizontal = 3.dp, vertical = 9.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(Modifier.size(49.dp), contentAlignment = Alignment.Center) {
+            if (entry is HomeEntry.Folder) {
+                Text("▦", fontSize = 34.sp, color = MainText)
+            } else if (painter != null) {
+                Image(painter, contentDescription = app?.label, modifier = Modifier.size(45.dp))
+            } else {
+                Text(app?.label?.take(1).orEmpty(), fontSize = 25.sp)
+            }
+        }
+        if (labels) {
+            Spacer(Modifier.height(7.dp))
+            Text(
+                when (entry) {
+                    is HomeEntry.App -> app?.label ?: stringResource(R.string.missing_app)
+                    is HomeEntry.Folder -> entry.name
+                },
+                fontSize = 11.sp, color = MainText, maxLines = 1,
+                overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center
+            )
+        }
     }
 }
