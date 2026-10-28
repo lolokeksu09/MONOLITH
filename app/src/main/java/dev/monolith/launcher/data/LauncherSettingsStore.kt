@@ -9,7 +9,8 @@ data class LauncherPreferences(
     val showDrawerLabels: Boolean = true,
     val appSort: AppSort = AppSort.A_Z,
     val drawerIconSize: Int = 48,
-    val showPinDots: Boolean = true
+    val showPinDots: Boolean = true,
+    val showWallpaper: Boolean = false
 )
 
 fun normalizeColumns(value: Int): Int = value.coerceIn(3, 6)
@@ -25,7 +26,8 @@ class LauncherSettingsStore(context: Context) {
         showDrawerLabels = preferences.getBoolean("drawer_labels", true),
         appSort = parseAppSort(preferences.getString("app_sort", AppSort.A_Z.name)),
         drawerIconSize = normalizeDrawerIconSize(preferences.getInt("drawer_icon_size", 48)),
-        showPinDots = preferences.getBoolean("pin_dots", true)
+        showPinDots = preferences.getBoolean("pin_dots", true),
+        showWallpaper = preferences.getBoolean("show_wallpaper", false)
     )
 
     fun write(value: LauncherPreferences) {
@@ -37,6 +39,7 @@ class LauncherSettingsStore(context: Context) {
             .putString("app_sort", value.appSort.name)
             .putInt("drawer_icon_size", normalizeDrawerIconSize(value.drawerIconSize))
             .putBoolean("pin_dots", value.showPinDots)
+            .putBoolean("show_wallpaper", value.showWallpaper)
             .apply()
     }
 }
