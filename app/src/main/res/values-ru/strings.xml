@@ -75,4 +75,9 @@
     <string name="hide_app">Скрыть из меню приложений</string>
     <string name="unhide_app">Показать</string>
     <string name="catalog_stale_retry">Не удалось обновить список. Показаны ранее загруженные приложения. Повторить.</string>
+    <string name="add_to_dock">Добавить в Dock</string>
+    <string name="remove_from_dock">Убрать из Dock</string>
+    <string name="empty_dock">Добавьте приложения в Dock из общего списка</string>
+    <string name="show_wallpaper">Показывать системные обои</string>
+    <string name="show_wallpaper_hint">Обои Android будут видны на рабочем столе. Отключите для чистого чёрного AMOLED.</string>
 </resources>
