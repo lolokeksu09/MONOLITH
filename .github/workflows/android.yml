@@ -27,6 +27,8 @@ jobs:
           SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -n 1)
           test -n "$SDKMANAGER"
           "$SDKMANAGER" --install "platforms;android-36" "build-tools;35.0.0"
+      - name: Validate Termux signing script syntax
+        run: bash -n scripts/setup-signing-termux.sh
       - name: Unit tests, Android Lint, debug APK
         run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
       - name: Verify release signing using a disposable CI-only key
