@@ -75,4 +75,9 @@
     <string name="hide_app">Hide from app drawer</string>
     <string name="unhide_app">Unhide</string>
     <string name="catalog_stale_retry">App list could not refresh. Using the last loaded list. Tap to retry.</string>
+    <string name="add_to_dock">Add to Dock</string>
+    <string name="remove_from_dock">Remove from Dock</string>
+    <string name="empty_dock">Add favorite apps to Dock from All apps</string>
+    <string name="show_wallpaper">Show system wallpaper</string>
+    <string name="show_wallpaper_hint">Display the current Android wallpaper behind your home screen. Disable for pure AMOLED black.</string>
 </resources>
