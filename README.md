@@ -1,8 +1,11 @@
 # MONOLITH
 
-A native, AMOLED-first Android HOME launcher, Kotlin + Jetpack Compose. Latest candidate **0.7.0-beta**.
+A native, AMOLED-first Android HOME launcher, Kotlin + Jetpack Compose. Latest candidate **0.10.0-beta**.
 
 ## Features
+
+- Opening apps from HOME, Dock, folders or All Apps returns the launcher to the desktop
+- Widget order can be changed with Up/Down buttons and persists across restarts; removal requires confirmation
 
 - Home screen with clock, pinned apps, folders, edit-mode drag reorder
 - A persistent five-app Dock; add apps from their long-press actions, long-press Dock items to remove/move

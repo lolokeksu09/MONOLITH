@@ -41,6 +41,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -60,6 +61,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableFloatStateOf
@@ -152,6 +154,7 @@ fun MonolithScreen(
     onChooseWidget: (AppWidgetProviderInfo) -> Unit,
     onRemoveWidget: (Int) -> Unit,
     onResizeWidget: (Int, Int) -> Unit,
+    onMoveWidget: (Int, Int) -> Unit,
     onExportHome: () -> Unit,
     onImportHome: () -> Unit,
     onClearLaunchHistory: () -> Unit,
@@ -182,6 +185,15 @@ fun MonolithScreen(
     }
     val byId = remember(apps) { apps.associateBy { it.id } }
     val folders = remember(layout) { layout.entries.filterIsInstance<HomeEntry.Folder>() }
+    // A launched app should return to the desktop when the user navigates back.
+    val launchAndReturnHome: (LaunchableApp) -> Unit = { app ->
+        screen = Screen.HOME
+        query = ""
+        editing = false
+        selectedApp = null
+        selectedFolderId = null
+        onLaunch(app)
+    }
     BackHandler(enabled = screen != Screen.HOME || editing) {
         if (editing) editing = false else { screen = Screen.HOME; query = "" }
     }
@@ -265,7 +277,7 @@ fun MonolithScreen(
                                 else -> HomeGrid(
                                     entries = layout.entries, byId = byId, columns = preferences.columns,
                                     labels = preferences.showLabels, editing = editing,
-                                    onLaunch = onLaunch, onAppActions = { selectedApp = it },
+                                    onLaunch = launchAndReturnHome, onAppActions = { selectedApp = it },
                                     onFolder = { selectedFolderId = it },
                                     onMove = onReorder
                                 )
@@ -288,7 +300,7 @@ fun MonolithScreen(
                                 Spacer(Modifier.height(24.dp))
                                 Text(stringResource(R.string.widgets_section), color = Muted, letterSpacing = 2.sp, fontSize = 12.sp)
                                 Spacer(Modifier.height(12.dp))
-                                WidgetSection(widgetIds, widgetHeights, widgetHost, widgetManager, onResizeWidget, onRemoveWidget)
+                                WidgetSection(widgetIds, widgetHeights, widgetHost, widgetManager, onResizeWidget, onMoveWidget, onRemoveWidget)
                             }
                             if (!isDefaultHome) {
                                 Spacer(Modifier.height(12.dp))
@@ -331,7 +343,7 @@ fun MonolithScreen(
                             DockBar(
                                 dockIds = dockApps,
                                 byId = byId,
-                                onLaunch = onLaunch,
+                                onLaunch = launchAndReturnHome,
                                 onManage = { editing = false; screen = Screen.ALL_APPS },
                                 onActions = { selectedDockId = it }
                             )
@@ -403,7 +415,7 @@ fun MonolithScreen(
                                 Spacer(Modifier.weight(1f))
                             }
                             else -> AppGrid(
-                                visibleApps, pinnedIds, preferences, query, onLaunch,
+                                visibleApps, pinnedIds, preferences, query, launchAndReturnHome,
                                 { selectedApp = it }, Modifier.weight(1f)
                             )
                         }
@@ -557,7 +569,7 @@ fun MonolithScreen(
             if (folder == null) selectedFolderId = null else FolderSheet(
                 folder = folder, byId = byId,
                 onDismiss = { selectedFolderId = null },
-                onLaunch = { selectedFolderId = null; onLaunch(it) },
+                onLaunch = { selectedFolderId = null; launchAndReturnHome(it) },
                 onRename = { name -> onRenameFolder(id, name) },
                 onDelete = { selectedFolderId = null; onDeleteFolder(id) },
                 onRemoveApp = { selectedFolderId = null; onMoveOutOfFolder(it, id) }
@@ -894,56 +906,57 @@ private fun WidgetSection(
     host: AppWidgetHost,
     manager: AppWidgetManager,
     onResize: (Int, Int) -> Unit,
+    onMove: (Int, Int) -> Unit,
     onRemove: (Int) -> Unit
 ) {
     val availableWidth = (LocalConfiguration.current.screenWidthDp - 64).coerceAtLeast(180)
-    ids.forEach { id ->
-        val info = remember(id) { manager.getAppWidgetInfo(id) }
-        val heightDp = (heights[id] ?: DEFAULT_WIDGET_HEIGHT_DP)
-            .coerceIn(MIN_WIDGET_HEIGHT_DP, MAX_WIDGET_HEIGHT_DP)
-        // Do not repeatedly send identical host size updates during recomposition.
-        val notifiedSize = remember(id) { intArrayOf(-1, -1) }
-        Column(
-            modifier = Modifier.fillMaxWidth()
-                .background(Panel, RoundedCornerShape(18.dp))
-                .padding(12.dp)
-        ) {
-            if (info == null) {
-                Text(stringResource(R.string.widget_unavailable), color = Muted)
-            } else {
-                val context = LocalContext.current
-                AndroidView(
-                    factory = {
-                        runCatching { host.createView(context, id, info) }
-                            .getOrElse {
-                                TextView(context).apply {
-                                    text = context.getString(R.string.widget_unavailable)
-                                }
-                            }
-                    },
-                    update = { view ->
-                        if (view is AppWidgetHostView &&
-                            (notifiedSize[0] != availableWidth || notifiedSize[1] != heightDp)
-                        ) {
-                            runCatching {
-                                view.updateAppWidgetSize(
-                                    Bundle.EMPTY, availableWidth, heightDp, availableWidth, heightDp
-                                )
-                            }
-                            notifiedSize[0] = availableWidth
-                            notifiedSize[1] = heightDp
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().height(heightDp.dp)
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+    ids.forEachIndexed { index, id ->
+        key(id) {
+            val info = remember(id) { manager.getAppWidgetInfo(id) }
+            val heightDp = (heights[id] ?: DEFAULT_WIDGET_HEIGHT_DP)
+                .coerceIn(MIN_WIDGET_HEIGHT_DP, MAX_WIDGET_HEIGHT_DP)
+            var confirmRemoval by remember { mutableStateOf(false) }
+            val notifiedSize = remember(id) { intArrayOf(-1, -1) }
+            Column(
+                modifier = Modifier.fillMaxWidth()
+                    .background(Panel, RoundedCornerShape(18.dp))
+                    .padding(12.dp)
             ) {
+                if (info == null) {
+                    Text(stringResource(R.string.widget_unavailable), color = Muted)
+                } else {
+                    val context = LocalContext.current
+                    AndroidView(
+                        factory = {
+                            runCatching { host.createView(context, id, info) }
+                                .getOrElse {
+                                    TextView(context).apply {
+                                        text = context.getString(R.string.widget_unavailable)
+                                    }
+                                }
+                        },
+                        update = { view ->
+                            if (view is AppWidgetHostView &&
+                                (notifiedSize[0] != availableWidth || notifiedSize[1] != heightDp)
+                            ) {
+                                runCatching {
+                                    view.updateAppWidgetSize(
+                                        Bundle.EMPTY, availableWidth, heightDp,
+                                        availableWidth, heightDp
+                                    )
+                                }
+                                notifiedSize[0] = availableWidth
+                                notifiedSize[1] = heightDp
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(heightDp.dp)
+                    )
+                }
                 if (info != null) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         TextButton(
                             onClick = { onResize(id, -1) },
                             enabled = heightDp > MIN_WIDGET_HEIGHT_DP
@@ -959,12 +972,55 @@ private fun WidgetSection(
                         }
                     }
                 }
-                TextButton(onClick = { onRemove(id) }) {
-                    Text(stringResource(R.string.remove_widget), color = Muted, fontSize = 12.sp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (ids.size > 1) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            TextButton(
+                                onClick = { onMove(id, -1) },
+                                enabled = index > 0
+                            ) {
+                                Text(stringResource(R.string.widget_move_up))
+                            }
+                            TextButton(
+                                onClick = { onMove(id, 1) },
+                                enabled = index < ids.lastIndex
+                            ) {
+                                Text(stringResource(R.string.widget_move_down))
+                            }
+                        }
+                    } else {
+                        Spacer(Modifier.weight(1f))
+                    }
+                    TextButton(onClick = { confirmRemoval = true }) {
+                        Text(stringResource(R.string.remove_widget),
+                            color = Muted, fontSize = 12.sp)
+                    }
                 }
             }
+            if (confirmRemoval) {
+                AlertDialog(
+                    onDismissRequest = { confirmRemoval = false },
+                    title = { Text(stringResource(R.string.widget_remove_title)) },
+                    text = { Text(stringResource(R.string.widget_remove_message)) },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            confirmRemoval = false
+                            onRemove(id)
+                        }) { Text(stringResource(R.string.remove_widget)) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { confirmRemoval = false }) {
+                            Text(stringResource(R.string.widget_remove_cancel))
+                        }
+                    }
+                )
+            }
+            Spacer(Modifier.height(12.dp))
         }
-        Spacer(Modifier.height(12.dp))
     }
 }
 

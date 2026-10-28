@@ -91,4 +91,9 @@
     <string name="widget_smaller">−</string>
     <string name="widget_larger">+</string>
     <string name="widget_resize_note">Resize widgets with − and + below each widget. Sizes are saved on this device.</string>
+    <string name="widget_move_up">↑ Up</string>
+    <string name="widget_move_down">↓ Down</string>
+    <string name="widget_remove_title">Remove widget?</string>
+    <string name="widget_remove_message">The widget will be removed from this home screen. The app stays installed.</string>
+    <string name="widget_remove_cancel">Cancel</string>
 </resources>

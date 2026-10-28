@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.0-beta
+- Launching an app from the drawer, folder, home tile or Dock now returns MONOLITH to HOME, clearing stale drawer search and edit state
+- Widget cards can be moved up or down; the ordered AppWidgetHost ID list is persisted without reallocating widgets
+- Removing a widget now requires confirmation, preventing accidental loss of configured widgets
+- Added regression tests for widget reordering, unchanged IDs, boundaries and persistent order
+- Existing home layout, hidden apps, settings, backup format, per-widget height and permanent signing certificate stay unchanged
+- Physical Android 16 HOME, gestures, widgets and OEM recovery remain a separate acceptance gate
+
 ## 0.9.0-beta
 - Widget resizing controls: 128–512 dp heights in 64 dp increments, persisted per widget and restored after launcher restart
 - Android AppWidgetHostView receives updated size options so responsive providers can render layouts appropriately
