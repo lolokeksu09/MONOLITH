@@ -4,6 +4,13 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// Keystore and password are supplied via CI secrets or a developer's local environment.
+// Never commit a private key, a password or a password-bearing gradle.properties file.
+val monolithKeystore = providers.environmentVariable("MONOLITH_KEYSTORE_FILE").orNull
+    ?.takeIf { it.isNotBlank() }
+val monolithSigningPassword = providers.environmentVariable("MONOLITH_KEY_PASSWORD").orNull
+    ?.takeIf { it.isNotBlank() }
+
 android {
     namespace = "dev.monolith.launcher"
     compileSdk = 36
@@ -12,14 +19,30 @@ android {
         applicationId = "dev.monolith.launcher"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.3.0-alpha"
+        versionCode = providers.environmentVariable("MONOLITH_VERSION_CODE").orNull
+            ?.toIntOrNull()?.takeIf { it >= 4 } ?: 4
+        versionName = providers.environmentVariable("MONOLITH_VERSION_NAME").orNull
+            ?.takeIf { it.isNotBlank() } ?: "0.3.1-alpha"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    if (monolithKeystore != null && monolithSigningPassword != null) {
+        signingConfigs {
+            create("monolithRelease") {
+                storeFile = file(monolithKeystore)
+                storePassword = monolithSigningPassword
+                keyAlias = "monolith"
+                keyPassword = monolithSigningPassword
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (monolithKeystore != null && monolithSigningPassword != null) {
+                signingConfig = signingConfigs.getByName("monolithRelease")
+            }
         }
     }
 
