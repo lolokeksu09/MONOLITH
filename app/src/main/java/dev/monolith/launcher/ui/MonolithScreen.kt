@@ -122,7 +122,7 @@ fun MonolithScreen(
     onPin: (LaunchableApp) -> Unit,
     onUnpin: (LaunchableApp) -> Unit,
     onDockAdd: (LaunchableApp) -> Unit,
-    onDockRemove: (LaunchableApp) -> Unit,
+    onDockRemove: (String) -> Unit,
     onDockMove: (Int, Int) -> Unit,
     onNewFolder: (LaunchableApp) -> Unit,
     onAddToFolder: (LaunchableApp, String) -> Unit,
@@ -395,7 +395,7 @@ fun MonolithScreen(
                 canAddToDock = dockApps.size < 5,
                 onToggleDock = {
                     selectedApp = null
-                    if (app.id in dockApps) onDockRemove(app) else onDockAdd(app)
+                    if (app.id in dockApps) onDockRemove(app.id) else onDockAdd(app)
                 }
             )
         }
@@ -425,7 +425,7 @@ fun MonolithScreen(
                         }
                         SheetAction(stringResource(R.string.remove_from_dock)) {
                             selectedDockId = null
-                            byId[id]?.let(onDockRemove)
+                            onDockRemove(id)
                         }
                     }
                 }
@@ -972,6 +972,69 @@ private fun HomeTile(
                 fontSize = 11.sp, color = MainText, maxLines = 1,
                 overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center
             )
+        }
+    }
+}
+
+
+/**
+ * Fixed launch targets remain available when the desktop scrolls.
+ * The app drawer stays reachable when the dock is empty.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DockBar(
+    dockIds: List<String>,
+    byId: Map<String, LaunchableApp>,
+    onLaunch: (LaunchableApp) -> Unit,
+    onManage: () -> Unit,
+    onActions: (String) -> Unit
+) {
+    Column {
+        Spacer(Modifier.height(7.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth()
+                .background(Panel, RoundedCornerShape(20.dp))
+                .padding(horizontal = 8.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            if (dockIds.isEmpty()) {
+                TextButton(onClick = onManage, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.empty_dock), fontSize = 13.sp, color = Muted)
+                }
+            } else {
+                dockIds.forEach { id ->
+                    val app = byId[id]
+                    val bitmap = rememberAppIcon(app)
+                    Column(
+                        modifier = Modifier.weight(1f)
+                            .height(62.dp)
+                            .combinedClickable(
+                                onClick = { if (app != null) onLaunch(app) else onActions(id) },
+                                onLongClick = { onActions(id) },
+                                onClickLabel = stringResource(R.string.open_app),
+                                onLongClickLabel = stringResource(R.string.app_actions)
+                            ),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        if (bitmap != null) {
+                            Image(
+                                bitmap.asImageBitmap(),
+                                contentDescription = app?.label,
+                                modifier = Modifier.size(45.dp)
+                            )
+                        } else {
+                            Text(
+                                app?.label?.take(1) ?: "?",
+                                fontSize = 22.sp,
+                                color = MainText
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
