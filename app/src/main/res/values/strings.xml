@@ -74,4 +74,5 @@
     <string name="manage_hidden_apps">Manage hidden apps (%1$d)</string>
     <string name="hide_app">Hide from app drawer</string>
     <string name="unhide_app">Unhide</string>
+    <string name="catalog_stale_retry">App list could not refresh. Using the last loaded list. Tap to retry.</string>
 </resources>
