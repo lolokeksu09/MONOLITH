@@ -44,4 +44,13 @@
     <string name="widget_failed">Не удалось добавить виджет. Попробуйте другой.</string>
     <string name="widget_unavailable">Виджет недоступен.</string>
     <string name="missing_app">Приложение недоступно</string>
+    <string name="backup_title">Резервная копия рабочего стола</string>
+    <string name="backup_description">Сохраняет расположение приложений, папки и настройки сетки. Виджеты привязаны к устройству и не переносятся. Импорт заменит текущий рабочий стол.</string>
+    <string name="export_home">Сохранить</string>
+    <string name="import_home">Восстановить</string>
+    <string name="backup_exported">Копия рабочего стола сохранена</string>
+    <string name="backup_imported">Рабочий стол восстановлен</string>
+    <string name="backup_failed">Не удалось сохранить копию</string>
+    <string name="backup_invalid">Неверный файл. Рабочий стол не изменён.</string>
+    <string name="swipe_clock_hint">Свайп вверх отсюда — все приложения</string>
 </resources>
