@@ -15,6 +15,8 @@ A native, AMOLED-first Android HOME launcher, Kotlin + Jetpack Compose. Latest c
 - All Apps sorting: A–Z, Z–A, most frequently launched, recently opened, newest/oldest installation
 - Independent drawer icon size (40, 48, 56 dp), label and pinned-indicator settings; saved locally
 - Launch frequency counts only successful launches via MONOLITH; no Android usage permission required
+- Android AppWidgetHost integration with persistent on-device widget height controls (128–512dp; portable backups exclude widget IDs)
+- App drawer fixes: clear button in bottom search, pull-down-close header gesture, and sorting/filtering returns to top
 - Android AppWidgetHost integration with provider selection/binding/removal
 - **New:** Save your app shortcuts, folders and layout settings to a portable JSON file; import it using Android's system document picker
 - Opt-in Android HOME role selection with a route back to the stock launcher
