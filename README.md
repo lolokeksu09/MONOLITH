@@ -1,12 +1,15 @@
 # MONOLITH
 
-A native, AMOLED-first Android HOME launcher, Kotlin + Jetpack Compose. Latest candidate **0.5.0-alpha**.
+A native, AMOLED-first Android HOME launcher, Kotlin + Jetpack Compose. Latest candidate **0.6.0-alpha**.
 
 ## Features
 
 - Home screen with clock, pinned apps, folders, edit-mode drag reorder
 - Swipe up on clock area or use All Apps button to open app drawer
 - App search and contextual actions, adjustable home and drawer grids (3–6 columns each)
+- Hide applications from All Apps using an app's long-press menu, and restore them in Settings (desktop shortcuts still work)
+- App icons render on a background dispatcher using a bounded memory cache; package changes invalidate cached icons
+- Temporary PackageManager failures keep the last loaded app list and offer a retry
 - All Apps sorting: A–Z, Z–A, most frequently launched, recently opened, newest/oldest installation
 - Independent drawer icon size (40, 48, 56 dp), label and pinned-indicator settings; saved locally
 - Launch frequency counts only successful launches via MONOLITH; no Android usage permission required
@@ -17,7 +20,7 @@ A native, AMOLED-first Android HOME launcher, Kotlin + Jetpack Compose. Latest c
 
 ## Portable backups
 
-From **Settings > Home screen backup**, tap Export or Import. Export includes folder memberships, their order, the grid column count and app-label preference. **Android widget IDs are not portable and are not backed up.** Import replaces the current home layout and preferences; invalid or oversized files are rejected before changes are applied.
+From **Settings > Home screen backup**, tap Export or Import. Export includes folder memberships, their order, grid preferences and hidden applications. **Android widget IDs are not portable and are not backed up.** Import replaces the current home layout and preferences; invalid or oversized files are rejected before changes are applied.
 
 Make a backup before any reinstall or signing-certificate migration. An Android uninstall deletes app-local data, but a previously exported JSON file can be imported on the same or another phone (apps not installed on the destination remain unavailable).
 
