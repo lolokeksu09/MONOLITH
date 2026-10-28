@@ -89,6 +89,41 @@ class HomeBackupTest {
         assertThrows(IllegalArgumentException::class.java) { decodeHomeBackup(raw) }
     }
 
+    @Test fun wallpaperAndDockSurviveExportImport() {
+        val preferences = LauncherPreferences(showWallpaper = true)
+        val dock = listOf("one/.Main", "two/.Main", "three/.Main")
+        val backup = decodeHomeBackup(
+            encodeHomeBackup(layout, preferences, hiddenApps = emptySet(), dockApps = dock)
+        )
+        assertEquals(dock, backup.dockApps)
+        assertEquals(preferences, backup.preferences)
+    }
+
+    @Test fun oldBackupWithoutDockAndWallpaperRestoresDefaults() {
+        val json = org.json.JSONObject(encodeHomeBackup(layout, LauncherPreferences()))
+            .apply {
+                remove("dockApps")
+                remove("showWallpaper")
+            }
+        val backup = decodeHomeBackup(json.toString())
+        assertEquals(emptyList<String>(), backup.dockApps)
+        assertEquals(false, backup.preferences.showWallpaper)
+    }
+
+    @Test fun duplicateOrOverCapacityDockInBackupIsRejected() {
+        val original = org.json.JSONObject(encodeHomeBackup(layout, LauncherPreferences()))
+        val duplicates = org.json.JSONArray().put("a/.Main").put("a/.Main")
+        val tooMany = org.json.JSONArray().apply {
+            (1..6).forEach { put("app$it/.Main") }
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            decodeHomeBackup(original.put("dockApps", duplicates).toString())
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            decodeHomeBackup(original.put("dockApps", tooMany).toString())
+        }
+    }
+
     @Test fun acceptsEmptyDesktopAsValidBackup() {
         val decoded = decodeHomeBackup(encodeHomeBackup(HomeLayout(), LauncherPreferences()))
         assertTrue(decoded.layout.entries.isEmpty())
