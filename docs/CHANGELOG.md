@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0-alpha
+- All Apps menu: A–Z, Z–A, most frequently launched, recently opened, newest and oldest installation order
+- Local-only launch counting for the frequent/recent modes (no Android Usage Access permission)
+- Independent app drawer density (3–6 columns), labels, pin markers, and 40/48/56dp icon sizing
+- Sort preference and drawer settings persist through app updates and home backup export/import
+- Backwards-compatible import of existing 0.4 home backups
+- New sorting and backup regression tests
+- Signed GitHub Releases use the same pinned signing certificate
+
 ## 0.4.0-alpha
 - Added validated home backup export/import through Android's system file picker.
 - Portable backups preserve pinned app order, folder contents and grid preferences.

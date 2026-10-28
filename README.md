@@ -1,12 +1,15 @@
 # MONOLITH
 
-A native, AMOLED-first Android HOME launcher, Kotlin + Jetpack Compose. Latest candidate **0.4.0-alpha**.
+A native, AMOLED-first Android HOME launcher, Kotlin + Jetpack Compose. Latest candidate **0.5.0-alpha**.
 
 ## Features
 
 - Home screen with clock, pinned apps, folders, edit-mode drag reorder
 - Swipe up on clock area or use All Apps button to open app drawer
-- App search, context menus, app information, adjustable 3–6-column grid
+- App search and contextual actions, adjustable home and drawer grids (3–6 columns each)
+- All Apps sorting: A–Z, Z–A, most frequently launched, recently opened, newest/oldest installation
+- Independent drawer icon size (40, 48, 56 dp), label and pinned-indicator settings; saved locally
+- Launch frequency counts only successful launches via MONOLITH; no Android usage permission required
 - Android AppWidgetHost integration with provider selection/binding/removal
 - **New:** Save your app shortcuts, folders and layout settings to a portable JSON file; import it using Android's system document picker
 - Opt-in Android HOME role selection with a route back to the stock launcher

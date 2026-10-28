@@ -51,6 +51,24 @@ class HomeBackupTest {
         assertThrows(Exception::class.java) { decodeHomeBackup("not json") }
     }
 
+    @Test fun roundTripPersistsNewAppDrawerPreferences() {
+        val options = LauncherPreferences(
+            columns = 3, showLabels = false, drawerColumns = 5,
+            showDrawerLabels = false, appSort = AppSort.FREQUENT,
+            drawerIconSize = 56, showPinDots = false
+        )
+        val result = decodeHomeBackup(encodeHomeBackup(layout, options))
+        assertEquals(options, result.preferences)
+    }
+
+    @Test fun legacyBackupsStillRestoreWithSafeDefaults() {
+        val original = encodeHomeBackup(layout, LauncherPreferences())
+        val json = org.json.JSONObject(original)
+        listOf("drawerColumns", "drawerLabels", "appSort", "drawerIconSize", "pinDots")
+            .forEach(json::remove)
+        assertEquals(LauncherPreferences(), decodeHomeBackup(json.toString()).preferences)
+    }
+
     @Test fun acceptsEmptyDesktopAsValidBackup() {
         val decoded = decodeHomeBackup(encodeHomeBackup(HomeLayout(), LauncherPreferences()))
         assertTrue(decoded.layout.entries.isEmpty())

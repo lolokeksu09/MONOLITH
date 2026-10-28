@@ -22,7 +22,7 @@ android {
         versionCode = providers.environmentVariable("MONOLITH_VERSION_CODE").orNull
             ?.toIntOrNull()?.takeIf { it >= 4 } ?: 4
         versionName = providers.environmentVariable("MONOLITH_VERSION_NAME").orNull
-            ?.takeIf { it.isNotBlank() } ?: "0.4.0-alpha"
+            ?.takeIf { it.isNotBlank() } ?: "0.5.0-alpha"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

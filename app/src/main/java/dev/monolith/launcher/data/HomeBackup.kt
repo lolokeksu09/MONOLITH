@@ -40,6 +40,11 @@ fun encodeHomeBackup(layout: HomeLayout, preferences: LauncherPreferences): Stri
         .put("version", VERSION)
         .put("columns", normalizeColumns(preferences.columns))
         .put("showLabels", preferences.showLabels)
+        .put("drawerColumns", normalizeColumns(preferences.drawerColumns))
+        .put("drawerLabels", preferences.showDrawerLabels)
+        .put("appSort", preferences.appSort.name)
+        .put("drawerIconSize", normalizeDrawerIconSize(preferences.drawerIconSize))
+        .put("pinDots", preferences.showPinDots)
         .put("entries", entries)
         .toString(2)
 }
@@ -91,5 +96,13 @@ fun decodeHomeBackup(raw: String): HomeBackup {
     val columns = root.getInt("columns")
     require(columns in 3..6) { "Invalid grid columns" }
     val labels = root.getBoolean("showLabels")
-    return HomeBackup(HomeLayout(entries), LauncherPreferences(columns, labels))
+    return HomeBackup(HomeLayout(entries), LauncherPreferences(
+        columns = columns,
+        showLabels = labels,
+        drawerColumns = normalizeColumns(root.optInt("drawerColumns", 4)),
+        showDrawerLabels = root.optBoolean("drawerLabels", true),
+        appSort = parseAppSort(root.optString("appSort", AppSort.A_Z.name)),
+        drawerIconSize = normalizeDrawerIconSize(root.optInt("drawerIconSize", 48)),
+        showPinDots = root.optBoolean("pinDots", true)
+    ))
 }

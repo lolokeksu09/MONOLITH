@@ -39,6 +39,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -82,6 +84,9 @@ import dev.monolith.launcher.R
 import dev.monolith.launcher.data.HomeLayout
 import dev.monolith.launcher.data.HomeEntry
 import dev.monolith.launcher.data.LaunchableApp
+import dev.monolith.launcher.data.LaunchStats
+import dev.monolith.launcher.data.AppSort
+import dev.monolith.launcher.data.sortApps
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.filterApps
 import java.time.LocalDateTime
@@ -101,6 +106,7 @@ fun MonolithScreen(
     apps: List<LaunchableApp>,
     layout: HomeLayout,
     preferences: LauncherPreferences,
+    launchStats: Map<String, LaunchStats>,
     loading: Boolean,
     loadError: Boolean,
     widgetIds: List<Int>,
@@ -126,7 +132,8 @@ fun MonolithScreen(
     onChooseWidget: (AppWidgetProviderInfo) -> Unit,
     onRemoveWidget: (Int) -> Unit,
     onExportHome: () -> Unit,
-    onImportHome: () -> Unit
+    onImportHome: () -> Unit,
+    onClearLaunchHistory: () -> Unit
 ) {
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
     var query by rememberSaveable { mutableStateOf("") }
@@ -134,7 +141,9 @@ fun MonolithScreen(
     var selectedApp by remember { mutableStateOf<LaunchableApp?>(null) }
     var selectedFolderId by remember { mutableStateOf<String?>(null) }
     val pinnedIds = remember(layout) { layout.appIds }
-    val visibleApps = remember(apps, query) { filterApps(apps, query) }
+    val visibleApps = remember(apps, query, preferences.appSort, launchStats) {
+        sortApps(filterApps(apps, query), preferences.appSort, launchStats)
+    }
     val byId = remember(apps) { apps.associateBy { it.id } }
     val folders = remember(layout) { layout.entries.filterIsInstance<HomeEntry.Folder>() }
     BackHandler(enabled = screen != Screen.HOME || editing) {
@@ -250,7 +259,20 @@ fun MonolithScreen(
                             singleLine = true, modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(Modifier.height(12.dp))
-                        Text(stringResource(R.string.apps_count, visibleApps.size), color = Muted, fontSize = 12.sp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(stringResource(R.string.apps_count, visibleApps.size), color = Muted, fontSize = 12.sp)
+                            SortPicker(
+                                selected = preferences.appSort,
+                                onChange = { onPreferencesChange(preferences.copy(appSort = it)) }
+                            )
+                        }
+                        if (preferences.appSort == AppSort.FREQUENT || preferences.appSort == AppSort.LAST_OPENED) {
+                            Text(stringResource(R.string.tracked_launches_only), color = Muted, fontSize = 11.sp)
+                        }
                         Spacer(Modifier.height(12.dp))
                         when {
                             loadError -> { ErrorState(onRetry); Spacer(Modifier.weight(1f)) }
@@ -271,7 +293,8 @@ fun MonolithScreen(
                     Screen.SETTINGS -> SettingsPage(
                         preferences, isDefaultHome, onPreferencesChange, onMakeDefaultHome,
                         onBack = { screen = Screen.HOME },
-                        onExportHome = onExportHome, onImportHome = onImportHome
+                        onExportHome = onExportHome, onImportHome = onImportHome,
+                        onClearLaunchHistory = onClearLaunchHistory
                     )
                     Screen.WIDGETS -> {
                         Text(stringResource(R.string.choose_widget), fontSize = 27.sp, fontWeight = FontWeight.SemiBold)
@@ -377,7 +400,8 @@ private fun SettingsPage(
     onMakeDefaultHome: () -> Unit,
     onBack: () -> Unit,
     onExportHome: () -> Unit,
-    onImportHome: () -> Unit
+    onImportHome: () -> Unit,
+    onClearLaunchHistory: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
     Text(stringResource(R.string.settings), fontSize = 29.sp, fontWeight = FontWeight.SemiBold)
@@ -410,7 +434,76 @@ private fun SettingsPage(
             onCheckedChange = { onPreferencesChange(preferences.copy(showLabels = it)) }
         )
     }
-    Spacer(Modifier.height(28.dp))
+    Spacer(Modifier.height(18.dp))
+    Text(stringResource(R.string.drawer_settings), fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+    Spacer(Modifier.height(12.dp))
+    Text(stringResource(R.string.drawer_columns), color = Muted, fontSize = 13.sp)
+    Spacer(Modifier.height(10.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        (3..6).forEach { count ->
+            if (count == preferences.drawerColumns) {
+                Button(onClick = { onPreferencesChange(preferences.copy(drawerColumns = count)) }) {
+                    Text("$count")
+                }
+            } else {
+                OutlinedButton(onClick = { onPreferencesChange(preferences.copy(drawerColumns = count)) }) {
+                    Text("$count")
+                }
+            }
+        }
+    }
+    Spacer(Modifier.height(15.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(stringResource(R.string.drawer_labels), modifier = Modifier.weight(1f))
+        Switch(checked = preferences.showDrawerLabels,
+            onCheckedChange = { onPreferencesChange(preferences.copy(showDrawerLabels = it)) })
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(stringResource(R.string.pin_dots), modifier = Modifier.weight(1f))
+        Switch(checked = preferences.showPinDots,
+            onCheckedChange = { onPreferencesChange(preferences.copy(showPinDots = it)) })
+    }
+    Spacer(Modifier.height(12.dp))
+    Text(stringResource(R.string.drawer_icon_size), color = Muted, fontSize = 13.sp)
+    Spacer(Modifier.height(9.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        listOf(40, 48, 56).forEach { size ->
+            if (size == preferences.drawerIconSize) {
+                Button(onClick = { onPreferencesChange(preferences.copy(drawerIconSize = size)) }) {
+                    Text("$size")
+                }
+            } else {
+                OutlinedButton(onClick = { onPreferencesChange(preferences.copy(drawerIconSize = size)) }) {
+                    Text("$size")
+                }
+            }
+        }
+    }
+    Spacer(Modifier.height(14.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(stringResource(R.string.default_sort), color = Muted)
+        SortPicker(selected = preferences.appSort,
+            onChange = { onPreferencesChange(preferences.copy(appSort = it)) })
+    }
+    Spacer(Modifier.height(8.dp))
+    Text(stringResource(R.string.tracked_launches_only), color = Muted, fontSize = 12.sp)
+    Spacer(Modifier.height(8.dp))
+    OutlinedButton(onClick = onClearLaunchHistory, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.clear_launches))
+    }
+    Spacer(Modifier.height(24.dp))
     Text(
         stringResource(R.string.settings_note),
         color = Muted, fontSize = 13.sp
@@ -586,7 +679,7 @@ private fun AppGrid(
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(preferences.columns),
+        columns = GridCells.Fixed(preferences.drawerColumns),
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
@@ -594,7 +687,8 @@ private fun AppGrid(
     ) {
         items(apps, key = { it.id }) { app ->
             AppTile(
-                app, app.id in pinnedIds, preferences.showLabels,
+                app, app.id in pinnedIds && preferences.showPinDots,
+                preferences.showDrawerLabels, preferences.drawerIconSize,
                 { onLaunch(app) }, { onLongClick(app) }
             )
         }
@@ -607,6 +701,7 @@ private fun AppTile(
     app: LaunchableApp,
     pinned: Boolean,
     showLabel: Boolean,
+    iconSize: Int,
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
@@ -630,9 +725,9 @@ private fun AppTile(
             .padding(3.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(Modifier.size(56.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.size((iconSize + 4).dp), contentAlignment = Alignment.Center) {
             if (painter != null) {
-                Image(painter, contentDescription = app.label, modifier = Modifier.size(52.dp))
+                Image(painter, contentDescription = app.label, modifier = Modifier.size(iconSize.dp))
             } else {
                 Text(app.label.take(1), fontSize = 25.sp)
             }
@@ -769,4 +864,38 @@ private fun HomeTile(
             )
         }
     }
+}
+
+@Composable
+private fun SortPicker(
+    selected: AppSort,
+    onChange: (AppSort) -> Unit
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    Box {
+        TextButton(onClick = { menuOpen = true }) {
+            Text(stringResource(sortLabel(selected)), maxLines = 1, fontSize = 12.sp)
+            Text("  ▾", color = Muted, fontSize = 12.sp)
+        }
+        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            AppSort.entries.forEach { choice ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(sortLabel(choice))) },
+                    onClick = {
+                        menuOpen = false
+                        if (choice != selected) onChange(choice)
+                    }
+                )
+            }
+        }
+    }
+}
+
+private fun sortLabel(value: AppSort): Int = when (value) {
+    AppSort.A_Z -> R.string.sort_az
+    AppSort.Z_A -> R.string.sort_za
+    AppSort.FREQUENT -> R.string.sort_frequent
+    AppSort.LAST_OPENED -> R.string.sort_last_opened
+    AppSort.INSTALLED_NEWEST -> R.string.sort_new_install
+    AppSort.INSTALLED_OLDEST -> R.string.sort_old_install
 }

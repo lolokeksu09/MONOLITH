@@ -10,7 +10,8 @@ data class LaunchableApp(
     val id: String,
     val label: String,
     val packageName: String,
-    val activityName: String
+    val activityName: String,
+    val installedAt: Long = 0L
 )
 
 fun filterApps(apps: List<LaunchableApp>, query: String): List<LaunchableApp> {
@@ -28,13 +29,19 @@ class AppCatalog(private val context: Context) {
         val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         @Suppress("DEPRECATION")
         val activities = pm.queryIntentActivities(launcherIntent, 0)
+        val installedDates = mutableMapOf<String, Long>()
         return activities.mapNotNull { info ->
             val activity = info.activityInfo ?: return@mapNotNull null
             LaunchableApp(
                 id = "${activity.packageName}/${activity.name}",
                 label = info.loadLabel(pm).toString(),
                 packageName = activity.packageName,
-                activityName = activity.name
+                activityName = activity.name,
+                installedAt = installedDates.getOrPut(activity.packageName) {
+                    @Suppress("DEPRECATION")
+                    runCatching { pm.getPackageInfo(activity.packageName, 0).firstInstallTime }
+                        .getOrDefault(0L)
+                }
             )
         }.distinctBy { it.id }.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.label })
     }
