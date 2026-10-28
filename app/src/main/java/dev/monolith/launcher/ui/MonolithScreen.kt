@@ -12,6 +12,7 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +47,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -55,6 +59,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -162,15 +167,22 @@ fun MonolithScreen(
         background = Background, surface = Background,
         primary = MainText, onPrimary = Background, onSurface = MainText
     )) {
-        Surface(modifier = Modifier.fillMaxSize(), color = if (preferences.showWallpaper && screen == Screen.HOME) Color(0xAA030303) else Background) {
+        val screenBackground = when (screen) {
+            Screen.ALL_APPS -> Color.Black.copy(alpha = preferences.drawerOpacity / 100f)
+            Screen.HOME -> if (preferences.showWallpaper) Color(0xAA030303) else Background
+            else -> Background
+        }
+        Surface(modifier = Modifier.fillMaxSize(), color = screenBackground) {
             Column(
                 modifier = Modifier.fillMaxSize()
                     .windowInsetsPadding(WindowInsets.safeDrawing)
                     .padding(horizontal = 20.dp, vertical = 12.dp)
             ) {
-                Header(screen, onSettings = { editing = false; screen = Screen.SETTINGS },
-                    onHome = { screen = Screen.HOME; editing = false })
-                Spacer(Modifier.height(14.dp))
+                if (screen != Screen.ALL_APPS) {
+                    Header(screen, onSettings = { editing = false; screen = Screen.SETTINGS },
+                        onHome = { screen = Screen.HOME; editing = false })
+                    Spacer(Modifier.height(14.dp))
+                }
                 when (screen) {
                     Screen.HOME -> {
                         Column(Modifier.fillMaxSize()) {
@@ -263,6 +275,36 @@ fun MonolithScreen(
                             }
                             Spacer(Modifier.height(24.dp))
                             }
+                            Box(
+                                modifier = Modifier.fillMaxWidth().height(38.dp)
+                                    .pointerInput(editing) {
+                                        if (!editing) {
+                                            var verticalTravel = 0f
+                                            detectVerticalDragGestures(
+                                                onDragStart = { verticalTravel = 0f },
+                                                onVerticalDrag = { change, distance ->
+                                                    verticalTravel += distance
+                                                    change.consume()
+                                                },
+                                                onDragEnd = {
+                                                    if (verticalTravel < -55f) {
+                                                        screen = Screen.ALL_APPS
+                                                        query = ""
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
+                                    .clickable {
+                                        editing = false
+                                        screen = Screen.ALL_APPS
+                                        query = ""
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("⌃  " + stringResource(R.string.drawer_open_gesture),
+                                    fontSize = 11.sp, color = Muted)
+                            }
                             DockBar(
                                 dockIds = dockApps,
                                 byId = byId,
@@ -273,36 +315,43 @@ fun MonolithScreen(
                         }
                     }
                     Screen.ALL_APPS -> {
-                        Text(stringResource(R.string.all_apps), fontSize = 27.sp, fontWeight = FontWeight.SemiBold)
-                        Spacer(Modifier.height(12.dp))
-                        OutlinedTextField(
-                            value = query, onValueChange = { query = it },
-                            label = { Text(stringResource(R.string.search_apps)) },
-                            singleLine = true, modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            TextButton(onClick = { screen = Screen.HOME; query = "" }) {
+                                Text("←", color = MainText, fontSize = 25.sp)
+                            }
+                            Text(stringResource(R.string.drawer_title), fontSize = 22.sp,
+                                fontWeight = FontWeight.SemiBold)
+                            TextButton(onClick = { screen = Screen.SETTINGS }) {
+                                Text("⚙", color = MainText, fontSize = 24.sp)
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(stringResource(R.string.apps_count, visibleApps.size), color = Muted, fontSize = 12.sp)
+                            Text(stringResource(R.string.apps_count, visibleApps.size),
+                                color = Muted, fontSize = 12.sp)
                             SortPicker(
                                 selected = preferences.appSort,
                                 onChange = { onPreferencesChange(preferences.copy(appSort = it)) }
                             )
                         }
-                        if (preferences.appSort == AppSort.FREQUENT || preferences.appSort == AppSort.LAST_OPENED) {
-                            Text(stringResource(R.string.tracked_launches_only), color = Muted, fontSize = 11.sp)
-                        }
-                        Spacer(Modifier.height(12.dp))
                         if (loadError && apps.isNotEmpty()) {
                             TextButton(onClick = onRetry) {
                                 Text(stringResource(R.string.catalog_stale_retry))
                             }
                         }
                         when {
-                            loadError && apps.isEmpty() -> { ErrorState(onRetry); Spacer(Modifier.weight(1f)) }
+                            loadError && apps.isEmpty() -> {
+                                ErrorState(onRetry)
+                                Spacer(Modifier.weight(1f))
+                            }
                             loading && apps.isEmpty() -> {
                                 Text(stringResource(R.string.loading), color = Muted)
                                 Spacer(Modifier.weight(1f))
@@ -311,11 +360,33 @@ fun MonolithScreen(
                                 Text(stringResource(R.string.no_results), color = Muted)
                                 Spacer(Modifier.weight(1f))
                             }
-                            else -> AppGrid(visibleApps, pinnedIds, preferences, onLaunch,
-                                { selectedApp = it }, Modifier.weight(1f))
+                            else -> AppGrid(
+                                visibleApps, pinnedIds, preferences, onLaunch,
+                                { selectedApp = it }, Modifier.weight(1f)
+                            )
                         }
-                        Spacer(Modifier.height(10.dp))
-                        MonolithButton(stringResource(R.string.back_home)) { screen = Screen.HOME; query = "" }
+                        if (preferences.showDrawerSearch) {
+                            Spacer(Modifier.height(8.dp))
+                            TextField(
+                                value = query, onValueChange = { query = it },
+                                placeholder = { Text(stringResource(R.string.drawer_search_placeholder),
+                                    color = Color(0xFFDDDDDD)) },
+                                leadingIcon = { Text("⌕", color = MainText, fontSize = 31.sp) },
+                                singleLine = true,
+                                shape = RoundedCornerShape(32.dp),
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp),
+                                colors = TextFieldDefaults.colors(
+                                    focusedTextColor = MainText,
+                                    unfocusedTextColor = MainText,
+                                    focusedContainerColor = Color(0xFF080D16),
+                                    unfocusedContainerColor = Color(0xFF080D16),
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    cursorColor = MainText
+                                )
+                            )
+                        }
+                        Spacer(Modifier.height(5.dp))
                     }
                     Screen.SETTINGS -> SettingsPage(
                         preferences, isDefaultHome, onPreferencesChange, onMakeDefaultHome,
@@ -551,6 +622,31 @@ private fun SettingsPage(
     Spacer(Modifier.height(18.dp))
     Text(stringResource(R.string.drawer_settings), fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
     Spacer(Modifier.height(12.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(stringResource(R.string.drawer_search_toggle), modifier = Modifier.weight(1f))
+        Switch(checked = preferences.showDrawerSearch,
+            onCheckedChange = { onPreferencesChange(preferences.copy(showDrawerSearch = it)) })
+    }
+    Spacer(Modifier.height(12.dp))
+    Text(stringResource(R.string.drawer_opacity), color = MainText, fontSize = 14.sp)
+    var opacityDraft by remember(preferences.drawerOpacity) {
+        mutableFloatStateOf(preferences.drawerOpacity.toFloat())
+    }
+    Text(stringResource(R.string.drawer_opacity_value, opacityDraft.roundToInt()),
+        color = Muted, fontSize = 12.sp)
+    Slider(
+        value = opacityDraft, onValueChange = { opacityDraft = it },
+        onValueChangeFinished = {
+            onPreferencesChange(preferences.copy(drawerOpacity = opacityDraft.roundToInt()))
+        },
+        valueRange = 25f..100f
+    )
+    Text(stringResource(R.string.drawer_style_note), color = Muted, fontSize = 12.sp)
+    Spacer(Modifier.height(14.dp))
     Text(stringResource(R.string.drawer_columns), color = Muted, fontSize = 13.sp)
     Spacer(Modifier.height(10.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
