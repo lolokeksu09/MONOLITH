@@ -57,7 +57,7 @@ object AppIconCache {
 fun rememberAppIcon(app: LaunchableApp?): Bitmap? {
     val context = LocalContext.current.applicationContext
     val generation = AppIconCache.revision
-    val icon by produceState<Bitmap?>(initialValue = null, app?.id, generation) {
+    val icon by produceState<Bitmap?>(null, app?.id, generation) {
         value = if (app == null) null
             else withContext(Dispatchers.IO) { AppIconCache.load(context, app) }
     }
