@@ -22,6 +22,12 @@ fun filterApps(apps: List<LaunchableApp>, query: String): List<LaunchableApp> {
     }
 }
 
+/** Keep the previous app list if PackageManager temporarily fails. */
+fun retainCatalogOnError(
+    previous: List<LaunchableApp>,
+    result: Result<List<LaunchableApp>>
+): List<LaunchableApp> = result.getOrNull() ?: previous
+
 class AppCatalog(private val context: Context) {
     private val pm: PackageManager get() = context.packageManager
 
