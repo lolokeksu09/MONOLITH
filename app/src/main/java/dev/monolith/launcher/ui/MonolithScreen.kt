@@ -213,7 +213,7 @@ fun MonolithScreen(
                             }
                             Spacer(Modifier.height(10.dp))
                             when {
-                                loadError -> ErrorState(onRetry)
+                                loadError && apps.isEmpty() -> ErrorState(onRetry)
                                 loading && apps.isEmpty() -> Text(stringResource(R.string.loading), color = Muted)
                                 layout.entries.isEmpty() -> {
                                     Box(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(18.dp)).padding(22.dp)) {
@@ -227,6 +227,11 @@ fun MonolithScreen(
                                     onFolder = { selectedFolderId = it },
                                     onMove = onReorder
                                 )
+                            }
+                            if (loadError && apps.isNotEmpty()) {
+                                TextButton(onClick = onRetry) {
+                                    Text(stringResource(R.string.catalog_stale_retry))
+                                }
                             }
                             Spacer(Modifier.height(20.dp))
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -276,8 +281,13 @@ fun MonolithScreen(
                             Text(stringResource(R.string.tracked_launches_only), color = Muted, fontSize = 11.sp)
                         }
                         Spacer(Modifier.height(12.dp))
+                        if (loadError && apps.isNotEmpty()) {
+                            TextButton(onClick = onRetry) {
+                                Text(stringResource(R.string.catalog_stale_retry))
+                            }
+                        }
                         when {
-                            loadError -> { ErrorState(onRetry); Spacer(Modifier.weight(1f)) }
+                            loadError && apps.isEmpty() -> { ErrorState(onRetry); Spacer(Modifier.weight(1f)) }
                             loading && apps.isEmpty() -> {
                                 Text(stringResource(R.string.loading), color = Muted)
                                 Spacer(Modifier.weight(1f))
