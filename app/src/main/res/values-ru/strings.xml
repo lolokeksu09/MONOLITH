@@ -68,4 +68,10 @@
     <string name="tracked_launches_only">Частота и недавние открытия учитывают только запуски из MONOLITH. Доступ к системной истории не нужен.</string>
     <string name="clear_launches">Очистить историю запусков</string>
     <string name="usage_cleared">История запусков очищена</string>
+    <string name="hidden_apps_title">Скрытые приложения</string>
+    <string name="hidden_apps_description">Скрытые приложения остаются на телефоне. Ярлыки на рабочем столе продолжают работать. Верните приложение в общий список кнопкой «Показать».</string>
+    <string name="no_hidden_apps">Нет установленных скрытых приложений</string>
+    <string name="manage_hidden_apps">Скрытые приложения (%1$d)</string>
+    <string name="hide_app">Скрыть из меню приложений</string>
+    <string name="unhide_app">Показать</string>
 </resources>
