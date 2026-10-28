@@ -88,4 +88,7 @@
     <string name="drawer_close">Back to home</string>
     <string name="drawer_title">Apps</string>
     <string name="drawer_style_note">Wallpaper shows behind the app drawer. Adjust the shade to keep text readable.</string>
+    <string name="widget_smaller">−</string>
+    <string name="widget_larger">+</string>
+    <string name="widget_resize_note">Resize widgets with − and + below each widget. Sizes are saved on this device.</string>
 </resources>
