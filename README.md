@@ -1,25 +1,31 @@
 # MONOLITH
 
-Native, local-first Android HOME launcher. Current candidate: **0.3.1-alpha**.
-
-See [Stable signing setup](docs/SIGNING.md) for permanent release signing, update compatibility, and one-time Termux setup.
+A native, AMOLED-first Android HOME launcher, Kotlin + Jetpack Compose. Latest candidate **0.4.0-alpha**.
 
 ## Features
 
-- AMOLED home, clock, launcher app drawer and search.
-- Pinned applications, persistent folders, drag-to-reorder edit mode.
-- Android AppWidgetHost picker/binding/configuration and widget removal.
-- Local settings; optional system Home role selection.
-- No account, advertising, root or Internet permission.
+- Home screen with clock, pinned apps, folders, edit-mode drag reorder
+- Swipe up on clock area or use All Apps button to open app drawer
+- App search, context menus, app information, adjustable 3–6-column grid
+- Android AppWidgetHost integration with provider selection/binding/removal
+- **New:** Save your app shortcuts, folders and layout settings to a portable JSON file; import it using Android's system document picker
+- Opt-in Android HOME role selection with a route back to the stock launcher
+- Offline and local-first; no root, internet or broad storage permission needed
 
-## Build
+## Portable backups
 
-CI runs unit tests, Android lint, debug assembly, and a **release-signing smoke test with a disposable key**. Disposable test APKs are not intended for installation or distribution.
+From **Settings > Home screen backup**, tap Export or Import. Export includes folder memberships, their order, the grid column count and app-label preference. **Android widget IDs are not portable and are not backed up.** Import replaces the current home layout and preferences; invalid or oversized files are rejected before changes are applied.
 
-After the repository owner configures the two signing secrets, every successful `main` build signs the release APK with the same private key and publishes it to GitHub Releases as a prerelease.
+Make a backup before any reinstall or signing-certificate migration. An Android uninstall deletes app-local data, but a previously exported JSON file can be imported on the same or another phone (apps not installed on the destination remain unavailable).
 
-## Installation safety
+## Build and release
 
-Keep the stock launcher installed. Select MONOLITH as the default Home app only after testing. You can revert in Android's **Default apps > Home app** settings.
+CI runs JVM tests, Android lint, debug assembly and a disposable-key signing smoke test on pull requests. A successful main-branch run uses a persistent private key from GitHub Actions Secrets to sign the release APK, verifies the signature **and its pinned public certificate SHA-256**, then publishes it to GitHub Releases.
 
-**Important:** 0.1–0.3 debug-signed APKs may require a one-time uninstall before installing permanently signed 0.3.1 because their signatures differ, and uninstall clears private MONOLITH data. After migration, future stable-signed updates can retain data.
+Read [Signing](docs/SIGNING.md) for how to back up the private key and why old debug-signed APKs are incompatible.
+
+## Safety
+
+MONOLITH does **not** silently set itself as the default launcher, remove the stock launcher or require root. The original launcher can be restored from Android **Settings > Apps > Default apps > Home app**. Device smoke tests on the Lenovo Legion Y70 / Motorola ported firmware remain necessary for gestures, widgets and OEM interactions.
+
+Android launcher widget configuration, auto-resizing, cross-page dragging and launcher shortcuts beyond main activities are still alpha limitations.

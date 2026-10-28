@@ -22,7 +22,7 @@ android {
         versionCode = providers.environmentVariable("MONOLITH_VERSION_CODE").orNull
             ?.toIntOrNull()?.takeIf { it >= 4 } ?: 4
         versionName = providers.environmentVariable("MONOLITH_VERSION_NAME").orNull
-            ?.takeIf { it.isNotBlank() } ?: "0.3.1-alpha"
+            ?.takeIf { it.isNotBlank() } ?: "0.4.0-alpha"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -68,4 +68,5 @@ dependencies {
     implementation("androidx.core:core-ktx:1.16.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.2")
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
 }

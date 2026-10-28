@@ -44,4 +44,13 @@
     <string name="widget_failed">Could not add this widget. Try another.</string>
     <string name="widget_unavailable">Widget is unavailable.</string>
     <string name="missing_app">Unavailable app</string>
+    <string name="backup_title">Home screen backup</string>
+    <string name="backup_description">Save or restore icons, folders and grid settings. Widgets are tied to this Android installation and are not included. Import replaces the current desktop.</string>
+    <string name="export_home">Export</string>
+    <string name="import_home">Import</string>
+    <string name="backup_exported">Home backup saved</string>
+    <string name="backup_imported">Home layout restored</string>
+    <string name="backup_failed">Could not save backup</string>
+    <string name="backup_invalid">Invalid backup. Home screen left unchanged.</string>
+    <string name="swipe_clock_hint">Swipe up here to open all apps</string>
 </resources>

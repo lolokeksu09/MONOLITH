@@ -24,6 +24,8 @@ import androidx.lifecycle.lifecycleScope
 import dev.monolith.launcher.data.AppCatalog
 import dev.monolith.launcher.data.HomeLayout
 import dev.monolith.launcher.data.HomeLayoutStore
+import dev.monolith.launcher.data.encodeHomeBackup
+import dev.monolith.launcher.data.decodeHomeBackup
 import dev.monolith.launcher.data.LaunchableApp
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.LauncherSettingsStore
@@ -75,6 +77,70 @@ class MainActivity : ComponentActivity() {
     private val homeRoleLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { isDefaultHome = checkDefaultHome() }
+
+    // System document picker, with no storage permission or external account required.
+    private val exportHomeLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri != null) exportHomeTo(uri)
+    }
+
+    private val importHomeLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) importHomeFrom(uri)
+    }
+
+    private fun exportHomeTo(uri: Uri) {
+        val snapshot = encodeHomeBackup(layout, preferences)
+        lifecycleScope.launch {
+            val saved = withContext(Dispatchers.IO) {
+                runCatching {
+                    val stream = contentResolver.openOutputStream(uri, "wt")
+                        ?: error("Unable to open export destination")
+                    stream.bufferedWriter(Charsets.UTF_8).use { it.write(snapshot) }
+                }.isSuccess
+            }
+            Toast.makeText(this@MainActivity,
+                if (saved) R.string.backup_exported else R.string.backup_failed,
+                Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun importHomeFrom(uri: Uri) {
+        lifecycleScope.launch {
+            val restored = withContext(Dispatchers.IO) {
+                runCatching {
+                    val stream = contentResolver.openInputStream(uri)
+                        ?: error("Unable to open backup")
+                    val data = stream.bufferedReader(Charsets.UTF_8).use { reader ->
+                        val buffer = CharArray(4096)
+                        val result = StringBuilder()
+                        while (true) {
+                            val length = reader.read(buffer)
+                            if (length < 0) break
+                            require(result.length + length <= 256 * 1024) { "Backup too large" }
+                            result.append(buffer, 0, length)
+                        }
+                        result.toString()
+                    }
+                    decodeHomeBackup(data)
+                }
+            }
+            restored.fold(
+                onSuccess = { backup ->
+                    layoutStore.write(backup.layout)
+                    settingsStore.write(backup.preferences)
+                    layout = backup.layout
+                    preferences = backup.preferences
+                    Toast.makeText(this@MainActivity, R.string.backup_imported, Toast.LENGTH_LONG).show()
+                },
+                onFailure = {
+                    Toast.makeText(this@MainActivity, R.string.backup_invalid, Toast.LENGTH_LONG).show()
+                }
+            )
+        }
+    }
 
     private val bindWidgetLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -129,7 +195,9 @@ class MainActivity : ComponentActivity() {
                 },
                 onShowWidgets = ::loadWidgetProviders,
                 onChooseWidget = ::selectWidget,
-                onRemoveWidget = ::removeWidget
+                onRemoveWidget = ::removeWidget,
+                onExportHome = { exportHomeLauncher.launch("MONOLITH-home-backup.json") },
+                onImportHome = { importHomeLauncher.launch(arrayOf("application/json", "text/plain")) }
             )
         }
     }

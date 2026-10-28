@@ -65,7 +65,6 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -125,7 +124,9 @@ fun MonolithScreen(
     onPreferencesChange: (LauncherPreferences) -> Unit,
     onShowWidgets: () -> Unit,
     onChooseWidget: (AppWidgetProviderInfo) -> Unit,
-    onRemoveWidget: (Int) -> Unit
+    onRemoveWidget: (Int) -> Unit,
+    onExportHome: () -> Unit,
+    onImportHome: () -> Unit
 ) {
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
     var query by rememberSaveable { mutableStateOf("") }
@@ -158,7 +159,36 @@ fun MonolithScreen(
                         Column(
                             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                         ) {
-                            Clock()
+                            // Swipe on the clock: leave home scrolling and widget touch targets intact.
+                            Box(
+                                modifier = Modifier.fillMaxWidth().pointerInput(editing) {
+                                    if (!editing) {
+                                        var total = 0f
+                                        detectVerticalDragGestures(
+                                            onDragStart = { total = 0f },
+                                            onVerticalDrag = { change, drag ->
+                                                total += drag
+                                                change.consume()
+                                            },
+                                            onDragEnd = {
+                                                if (total < -90f) {
+                                                    screen = Screen.ALL_APPS
+                                                    query = ""
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            ) {
+                                Column {
+                                    Clock()
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        stringResource(R.string.swipe_clock_hint),
+                                        color = Muted, fontSize = 11.sp
+                                    )
+                                }
+                            }
                             Spacer(Modifier.height(14.dp))
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically) {
@@ -240,7 +270,8 @@ fun MonolithScreen(
                     }
                     Screen.SETTINGS -> SettingsPage(
                         preferences, isDefaultHome, onPreferencesChange, onMakeDefaultHome,
-                        onBack = { screen = Screen.HOME }
+                        onBack = { screen = Screen.HOME },
+                        onExportHome = onExportHome, onImportHome = onImportHome
                     )
                     Screen.WIDGETS -> {
                         Text(stringResource(R.string.choose_widget), fontSize = 27.sp, fontWeight = FontWeight.SemiBold)
@@ -344,8 +375,11 @@ private fun SettingsPage(
     isDefaultHome: Boolean,
     onPreferencesChange: (LauncherPreferences) -> Unit,
     onMakeDefaultHome: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onExportHome: () -> Unit,
+    onImportHome: () -> Unit
 ) {
+    Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
     Text(stringResource(R.string.settings), fontSize = 29.sp, fontWeight = FontWeight.SemiBold)
     Spacer(Modifier.height(28.dp))
     Text(stringResource(R.string.grid_columns), color = Muted)
@@ -388,7 +422,23 @@ private fun SettingsPage(
         }
         Spacer(Modifier.height(12.dp))
     }
+    Spacer(Modifier.height(20.dp))
+    Text(stringResource(R.string.backup_title), fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+    Spacer(Modifier.height(10.dp))
+    Text(stringResource(R.string.backup_description), color = Muted, fontSize = 13.sp)
+    Spacer(Modifier.height(12.dp))
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        OutlinedButton(onClick = onExportHome, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.export_home))
+        }
+        OutlinedButton(onClick = onImportHome, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.import_home))
+        }
+    }
+    Spacer(Modifier.height(20.dp))
     MonolithButton(stringResource(R.string.back_home), onBack)
+    Spacer(Modifier.height(18.dp))
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
