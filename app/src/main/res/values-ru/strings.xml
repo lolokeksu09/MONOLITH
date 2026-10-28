@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MONOLITH</string>
+    <string name="all_apps">Все приложения</string>
+    <string name="search_apps">Поиск приложений</string>
+    <string name="back_home">На рабочий стол</string>
+    <string name="pinned_apps">ЗАКРЕПЛЕНЫ</string>
+    <string name="loading">Загрузка приложений…</string>
+    <string name="no_results">Приложения не найдены</string>
+    <string name="empty_pinned">Удерживайте значок приложения в общем списке, чтобы закрепить его здесь.</string>
+    <string name="launch_failed">Не удалось запустить приложение</string>
+    <string name="catalog_failed">Не удалось получить список приложений</string>
+</resources>

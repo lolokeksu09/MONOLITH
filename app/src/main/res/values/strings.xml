@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MONOLITH</string>
+    <string name="all_apps">All apps</string>
+    <string name="search_apps">Search apps</string>
+    <string name="back_home">Back home</string>
+    <string name="pinned_apps">PINNED</string>
+    <string name="loading">Loading applications…</string>
+    <string name="no_results">No applications found</string>
+    <string name="empty_pinned">Long-press any app in All apps to pin it here.</string>
+    <string name="launch_failed">Unable to launch this app</string>
+    <string name="catalog_failed">Unable to load installed apps</string>
+</resources>
