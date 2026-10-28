@@ -88,4 +88,7 @@
     <string name="drawer_close">На рабочий стол</string>
     <string name="drawer_title">Приложения</string>
     <string name="drawer_style_note">За меню видны системные обои. Подберите затемнение, чтобы названия оставались читаемыми.</string>
+    <string name="widget_smaller">−</string>
+    <string name="widget_larger">+</string>
+    <string name="widget_resize_note">Размер виджета меняется кнопками − и + под ним. Настройки сохраняются на телефоне.</string>
 </resources>
