@@ -53,4 +53,19 @@
     <string name="backup_failed">Could not save backup</string>
     <string name="backup_invalid">Invalid backup. Home screen left unchanged.</string>
     <string name="swipe_clock_hint">Swipe up here to open all apps</string>
+    <string name="drawer_settings">Application menu</string>
+    <string name="drawer_columns">Application menu columns</string>
+    <string name="drawer_labels">Show names in application menu</string>
+    <string name="pin_dots">Mark pinned applications</string>
+    <string name="drawer_icon_size">Icon size in application menu (dp)</string>
+    <string name="default_sort">Sort by default</string>
+    <string name="sort_az">A–Z</string>
+    <string name="sort_za">Z–A</string>
+    <string name="sort_frequent">Most frequently launched</string>
+    <string name="sort_last_opened">Recently opened</string>
+    <string name="sort_new_install">Recently installed</string>
+    <string name="sort_old_install">Installed longest ago</string>
+    <string name="tracked_launches_only">Frequency and recent opens count launches through MONOLITH only. No system usage permission is needed.</string>
+    <string name="clear_launches">Clear launch history</string>
+    <string name="usage_cleared">Local launch history cleared</string>
 </resources>

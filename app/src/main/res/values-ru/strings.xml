@@ -53,4 +53,19 @@
     <string name="backup_failed">Не удалось сохранить копию</string>
     <string name="backup_invalid">Неверный файл. Рабочий стол не изменён.</string>
     <string name="swipe_clock_hint">Свайп вверх отсюда — все приложения</string>
+    <string name="drawer_settings">Меню приложений</string>
+    <string name="drawer_columns">Столбцы в меню приложений</string>
+    <string name="drawer_labels">Показывать названия в меню</string>
+    <string name="pin_dots">Отмечать закреплённые приложения</string>
+    <string name="drawer_icon_size">Размер значков в меню (dp)</string>
+    <string name="default_sort">Сортировка по умолчанию</string>
+    <string name="sort_az">А–Я / A–Z</string>
+    <string name="sort_za">Я–А / Z–A</string>
+    <string name="sort_frequent">Часто запускаемые</string>
+    <string name="sort_last_opened">Недавно открытые</string>
+    <string name="sort_new_install">Недавно установленные</string>
+    <string name="sort_old_install">Давно установленные</string>
+    <string name="tracked_launches_only">Частота и недавние открытия учитывают только запуски из MONOLITH. Доступ к системной истории не нужен.</string>
+    <string name="clear_launches">Очистить историю запусков</string>
+    <string name="usage_cleared">История запусков очищена</string>
 </resources>

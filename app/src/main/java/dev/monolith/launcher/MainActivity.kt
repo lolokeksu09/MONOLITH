@@ -27,6 +27,8 @@ import dev.monolith.launcher.data.HomeLayoutStore
 import dev.monolith.launcher.data.encodeHomeBackup
 import dev.monolith.launcher.data.decodeHomeBackup
 import dev.monolith.launcher.data.LaunchableApp
+import dev.monolith.launcher.data.LaunchStats
+import dev.monolith.launcher.data.LaunchStatsStore
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.LauncherSettingsStore
 import dev.monolith.launcher.data.WidgetIdsStore
@@ -55,12 +57,14 @@ class MainActivity : ComponentActivity() {
     private lateinit var catalog: AppCatalog
     private lateinit var layoutStore: HomeLayoutStore
     private lateinit var settingsStore: LauncherSettingsStore
+    private lateinit var statsStore: LaunchStatsStore
     private lateinit var widgetIdsStore: WidgetIdsStore
     private val widgetHost by lazy { AppWidgetHost(this, WIDGET_HOST_ID) }
     private val widgetManager by lazy { AppWidgetManager.getInstance(this) }
     private var apps by mutableStateOf<List<LaunchableApp>>(emptyList())
     private var layout by mutableStateOf(HomeLayout())
     private var preferences by mutableStateOf(LauncherPreferences())
+    private var launchStats by mutableStateOf<Map<String, LaunchStats>>(emptyMap())
     private var widgetIds by mutableStateOf<List<Int>>(emptyList())
     private var widgetProviders by mutableStateOf<List<AppWidgetProviderInfo>>(emptyList())
     private var loading by mutableStateOf(true)
@@ -158,6 +162,7 @@ class MainActivity : ComponentActivity() {
         catalog = AppCatalog(applicationContext)
         layoutStore = HomeLayoutStore(applicationContext)
         settingsStore = LauncherSettingsStore(applicationContext)
+        statsStore = LaunchStatsStore(applicationContext)
         widgetIdsStore = WidgetIdsStore(applicationContext)
         layout = layoutStore.read()
         preferences = settingsStore.read()
@@ -166,6 +171,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MonolithScreen(
                 apps = apps, layout = layout, preferences = preferences,
+                launchStats = launchStats,
                 loading = loading, loadError = loadError,
                 widgetIds = widgetIds, widgetHost = widgetHost, widgetManager = widgetManager,
                 widgetProviders = widgetProviders, widgetError = widgetError,
@@ -173,7 +179,10 @@ class MainActivity : ComponentActivity() {
                 onMakeDefaultHome = ::requestDefaultHome,
                 onRetry = ::refreshApps,
                 onLaunch = { app ->
-                    if (!catalog.launch(app)) {
+                    if (catalog.launch(app)) {
+                        val next = statsStore.record(app.id)
+                        launchStats = launchStats + (app.id to next)
+                    } else {
                         Toast.makeText(this, R.string.launch_failed, Toast.LENGTH_SHORT).show()
                         refreshApps()
                     }
@@ -197,7 +206,12 @@ class MainActivity : ComponentActivity() {
                 onChooseWidget = ::selectWidget,
                 onRemoveWidget = ::removeWidget,
                 onExportHome = { exportHomeLauncher.launch("MONOLITH-home-backup.json") },
-                onImportHome = { importHomeLauncher.launch(arrayOf("application/json", "text/plain")) }
+                onImportHome = { importHomeLauncher.launch(arrayOf("application/json", "text/plain")) },
+                onClearLaunchHistory = {
+                    statsStore.clear()
+                    launchStats = emptyMap()
+                    Toast.makeText(this, R.string.usage_cleared, Toast.LENGTH_SHORT).show()
+                }
             )
         }
     }
@@ -380,6 +394,7 @@ class MainActivity : ComponentActivity() {
                 throw e
             }
             apps = result.getOrDefault(emptyList())
+            if (result.isSuccess) launchStats = statsStore.read(apps)
             loadError = result.isFailure
             loading = false
         }
