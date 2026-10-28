@@ -30,6 +30,13 @@ class LauncherBehaviorTest {
         assertEquals(6, normalizeColumns(100))
     }
 
+    @Test fun drawerOpacityNeverGoesBelowReadableMinimumOrAboveOpaque() {
+        assertEquals(25, normalizeDrawerOpacity(-500))
+        assertEquals(25, normalizeDrawerOpacity(0))
+        assertEquals(65, normalizeDrawerOpacity(65))
+        assertEquals(100, normalizeDrawerOpacity(999))
+    }
+
     @Test fun toggledPinsPreserveOrder() {
         assertEquals(listOf("a", "c"), togglePinned(listOf("a"), "c"))
         assertEquals(listOf("c"), togglePinned(listOf("a", "c"), "a"))

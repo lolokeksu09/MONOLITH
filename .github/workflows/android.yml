@@ -107,7 +107,7 @@ jobs:
           printf '%s' "$MONOLITH_KEYSTORE_BASE64" | base64 --decode > "$MONOLITH_KEYSTORE_FILE"
           test -s "$MONOLITH_KEYSTORE_FILE"
           export MONOLITH_VERSION_CODE="$((10000 + GITHUB_RUN_NUMBER))"
-          export MONOLITH_VERSION_NAME="0.7.0-beta.${GITHUB_RUN_NUMBER}"
+          export MONOLITH_VERSION_NAME="0.8.0-beta.${GITHUB_RUN_NUMBER}"
           gradle --no-daemon :app:assembleRelease
           # The certificate fingerprint is public. Fail closed on accidental key rotation.
           SIGNED_CERT="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk)"
@@ -125,10 +125,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release create "v0.7.0-beta.${GITHUB_RUN_NUMBER}" \
-            "app/build/outputs/apk/release/app-release.apk#MONOLITH-0.7.0-beta-signed.apk" \
-            --title "MONOLITH 0.7.0 beta (${GITHUB_RUN_NUMBER})" \
-            --notes "Permanently signed alpha APK, certificate pinned and checked against v0.3.1. New: persistent five-slot Dock and optional Android wallpaper support. Beta: device acceptance testing is still pending. Keep the original launcher installed." \
+          gh release create "v0.8.0-beta.${GITHUB_RUN_NUMBER}" \
+            "app/build/outputs/apk/release/app-release.apk#MONOLITH-0.8.0-beta-signed.apk" \
+            --title "MONOLITH 0.8.0 beta (${GITHUB_RUN_NUMBER})" \
+            --notes "Permanently signed alpha APK, certificate pinned and checked against v0.3.1. New: wallpaper-backed app drawer, optional bottom search, opacity slider, swipe-up handle and HOME intent reset. Beta: device acceptance testing is still pending. Keep the original launcher installed." \
             --prerelease --target "$GITHUB_SHA"
       - name: Destroy temporary keystore copy
         if: always()

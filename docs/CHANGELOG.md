@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.0-beta
+- Redesigned All Apps as a full-height, wallpaper-backed drawer with a 4-column default and a compact header
+- Search box moved to a bottom pill; Settings controls whether that search bar is displayed
+- Added 25–100% drawer background opacity setting, separate from the HOME wallpaper preference
+- Added an accessible swipe-up handle just above the Dock; the clock gesture and app button remain usable
+- Android HOME intents reliably return to the desktop rather than leaving settings or drawer visible
+- Saved drawer controls locally and in portable backups, with safe defaults for old backups
+- Declared adjustResize to keep the bottom search usable with the keyboard
+- Added backup and bounds regression tests; pinned signing certificate unchanged
+- Beta pending physical device gestures, IME and wallpaper acceptance
+
 ## 0.7.0-beta
 - Added a persistent 5-slot bottom Dock, independent from scrolling home content
 - Long-press an application in All Apps and choose Add to Dock; long-press Dock icon to remove or move it
