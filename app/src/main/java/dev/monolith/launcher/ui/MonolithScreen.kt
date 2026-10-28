@@ -338,8 +338,27 @@ fun MonolithScreen(
                         }
                     }
                     Screen.ALL_APPS -> {
+                        // The header accepts a pull-down-to-close gesture without
+                        // stealing scrolling from the application grid or search field.
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().pointerInput(Unit) {
+                                var downwardTravel = 0f
+                                detectVerticalDragGestures(
+                                    onDragStart = { downwardTravel = 0f },
+                                    onVerticalDrag = { change, distance ->
+                                        downwardTravel += distance
+                                        change.consume()
+                                    },
+                                    onDragEnd = {
+                                        if (downwardTravel > 80f) {
+                                            screen = Screen.HOME
+                                            query = ""
+                                        }
+                                        downwardTravel = 0f
+                                    },
+                                    onDragCancel = { downwardTravel = 0f }
+                                )
+                            },
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -395,6 +414,13 @@ fun MonolithScreen(
                                 placeholder = { Text(stringResource(R.string.drawer_search_placeholder),
                                     color = Color(0xFFDDDDDD)) },
                                 leadingIcon = { Text("⌕", color = MainText, fontSize = 31.sp) },
+                                trailingIcon = {
+                                    if (query.isNotEmpty()) {
+                                        TextButton(onClick = { query = "" }) {
+                                            Text("✕", color = MainText)
+                                        }
+                                    }
+                                },
                                 singleLine = true,
                                 shape = RoundedCornerShape(32.dp),
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp),
@@ -966,11 +992,18 @@ private fun AppGrid(
     apps: List<LaunchableApp>,
     pinnedIds: List<String>,
     preferences: LauncherPreferences,
+    query: String,
     onLaunch: (LaunchableApp) -> Unit,
     onLongClick: (LaunchableApp) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val gridState = rememberLazyGridState()
+    // Sorting/filtering must never leave users stranded far below the first result.
+    LaunchedEffect(query, preferences.appSort, preferences.drawerColumns) {
+        gridState.scrollToItem(0)
+    }
     LazyVerticalGrid(
+        state = gridState,
         columns = GridCells.Fixed(preferences.drawerColumns),
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
