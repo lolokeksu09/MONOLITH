@@ -7,7 +7,12 @@ import org.json.JSONObject
  * Portable home-screen backup. Android AppWidgetHost IDs are intentionally excluded:
  * those IDs belong to one installation and cannot be restored on another device.
  */
-data class HomeBackup(val layout: HomeLayout, val preferences: LauncherPreferences, val hiddenApps: Set<String> = emptySet())
+data class HomeBackup(
+    val layout: HomeLayout,
+    val preferences: LauncherPreferences,
+    val hiddenApps: Set<String> = emptySet(),
+    val dockApps: List<String> = emptyList()
+)
 
 private const val FORMAT = "monolith-home"
 private const val VERSION = 1
@@ -15,7 +20,12 @@ private const val MAX_BACKUP_CHARS = 256 * 1024
 private const val MAX_ENTRIES = 512
 private const val MAX_FOLDER_APPS = 512
 
-fun encodeHomeBackup(layout: HomeLayout, preferences: LauncherPreferences, hiddenApps: Set<String> = emptySet()): String {
+fun encodeHomeBackup(
+    layout: HomeLayout,
+    preferences: LauncherPreferences,
+    hiddenApps: Set<String> = emptySet(),
+    dockApps: List<String> = emptyList()
+): String {
     val entries = JSONArray()
     layout.entries.forEach { entry ->
         val item = JSONObject()
@@ -45,6 +55,8 @@ fun encodeHomeBackup(layout: HomeLayout, preferences: LauncherPreferences, hidde
         .put("appSort", preferences.appSort.name)
         .put("drawerIconSize", normalizeDrawerIconSize(preferences.drawerIconSize))
         .put("pinDots", preferences.showPinDots)
+        .put("showWallpaper", preferences.showWallpaper)
+        .put("dockApps", JSONArray().apply { normalizeDock(dockApps).forEach { put(it) } })
         .put("hiddenApps", JSONArray().apply { hiddenApps.sorted().forEach { put(it) } })
         .put("entries", entries)
         .toString(2)
@@ -104,8 +116,9 @@ fun decodeHomeBackup(raw: String): HomeBackup {
         showDrawerLabels = root.optBoolean("drawerLabels", true),
         appSort = parseAppSort(root.optString("appSort", AppSort.A_Z.name)),
         drawerIconSize = normalizeDrawerIconSize(root.optInt("drawerIconSize", 48)),
-        showPinDots = root.optBoolean("pinDots", true)
-    ), parseHiddenBackupIds(root.optJSONArray("hiddenApps")))
+        showPinDots = root.optBoolean("pinDots", true),
+        showWallpaper = root.optBoolean("showWallpaper", false)
+    ), parseHiddenBackupIds(root.optJSONArray("hiddenApps")), parseDockBackupIds(root.optJSONArray("dockApps")))
 }
 
 /** Old backups have no hidden-app field; invalid files must be rejected. */
@@ -120,4 +133,15 @@ private fun parseHiddenBackupIds(array: JSONArray?): Set<String> {
             }
         }
     }
+}
+
+/** Desktop backups created before 0.7 have no dock; these restore with an empty dock. */
+private fun parseDockBackupIds(array: JSONArray?): List<String> {
+    if (array == null) return emptyList()
+    require(array.length() <= DOCK_CAPACITY) { "Dock has too many items" }
+    val values = (0 until array.length()).map { array.getString(it) }
+    require(values.all { it.isNotBlank() && it.length <= 512 } && values.distinct().size == values.size) {
+        "Invalid dock app ID"
+    }
+    return values
 }

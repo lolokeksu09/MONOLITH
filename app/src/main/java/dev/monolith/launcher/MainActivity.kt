@@ -24,6 +24,10 @@ import androidx.lifecycle.lifecycleScope
 import dev.monolith.launcher.data.AppCatalog
 import dev.monolith.launcher.data.HomeLayout
 import dev.monolith.launcher.data.HomeLayoutStore
+import dev.monolith.launcher.data.DockStore
+import dev.monolith.launcher.data.addDockApp
+import dev.monolith.launcher.data.removeDockApp
+import dev.monolith.launcher.data.moveDockApp
 import dev.monolith.launcher.data.encodeHomeBackup
 import dev.monolith.launcher.data.decodeHomeBackup
 import dev.monolith.launcher.data.LaunchableApp
@@ -61,6 +65,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var catalog: AppCatalog
     private lateinit var layoutStore: HomeLayoutStore
+    private lateinit var dockStore: DockStore
     private lateinit var settingsStore: LauncherSettingsStore
     private lateinit var statsStore: LaunchStatsStore
     private lateinit var hiddenStore: HiddenAppsStore
@@ -69,6 +74,7 @@ class MainActivity : ComponentActivity() {
     private val widgetManager by lazy { AppWidgetManager.getInstance(this) }
     private var apps by mutableStateOf<List<LaunchableApp>>(emptyList())
     private var layout by mutableStateOf(HomeLayout())
+    private var dockApps by mutableStateOf<List<String>>(emptyList())
     private var preferences by mutableStateOf(LauncherPreferences())
     private var launchStats by mutableStateOf<Map<String, LaunchStats>>(emptyMap())
     private var hiddenApps by mutableStateOf<Set<String>>(emptySet())
@@ -106,7 +112,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun exportHomeTo(uri: Uri) {
-        val snapshot = encodeHomeBackup(layout, preferences, hiddenApps)
+        val snapshot = encodeHomeBackup(layout, preferences, hiddenApps, dockApps)
         lifecycleScope.launch {
             val saved = withContext(Dispatchers.IO) {
                 runCatching {
@@ -147,6 +153,8 @@ class MainActivity : ComponentActivity() {
                     settingsStore.write(backup.preferences)
                     hiddenStore.write(backup.hiddenApps)
                     hiddenApps = backup.hiddenApps
+                    dockStore.write(backup.dockApps)
+                    dockApps = backup.dockApps
                     layout = backup.layout
                     preferences = backup.preferences
                     Toast.makeText(this@MainActivity, R.string.backup_imported, Toast.LENGTH_LONG).show()
@@ -173,18 +181,20 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         catalog = AppCatalog(applicationContext)
         layoutStore = HomeLayoutStore(applicationContext)
+        dockStore = DockStore(applicationContext)
         settingsStore = LauncherSettingsStore(applicationContext)
         statsStore = LaunchStatsStore(applicationContext)
         hiddenStore = HiddenAppsStore(applicationContext)
         widgetIdsStore = WidgetIdsStore(applicationContext)
         layout = layoutStore.read()
+        dockApps = dockStore.read()
         preferences = settingsStore.read()
         hiddenApps = hiddenStore.read()
         widgetIds = widgetIdsStore.read()
         pendingWidgetId = savedInstanceState?.getInt("pendingWidgetId", -1)?.takeIf { it > 0 }
         setContent {
             MonolithScreen(
-                apps = apps, layout = layout, preferences = preferences,
+                apps = apps, layout = layout, dockApps = dockApps, preferences = preferences,
                 launchStats = launchStats,
                 hiddenApps = hiddenApps,
                 loading = loading, loadError = loadError,
@@ -204,6 +214,9 @@ class MainActivity : ComponentActivity() {
                 },
                 onPin = { app -> updateLayout(pinToHome(layout, app.id)) },
                 onUnpin = { app -> updateLayout(unpinFromHome(layout, app.id)) },
+                onDockAdd = { app -> updateDock(addDockApp(dockApps, app.id)) },
+                onDockRemove = { id -> updateDock(removeDockApp(dockApps, id)) },
+                onDockMove = { from, to -> updateDock(moveDockApp(dockApps, from, to)) },
                 onNewFolder = { app ->
                     updateLayout(createHomeFolder(layout, app.id, UUID.randomUUID().toString(), getString(R.string.new_folder)))
                 },
@@ -242,6 +255,13 @@ class MainActivity : ComponentActivity() {
                     Toast.makeText(this, R.string.usage_cleared, Toast.LENGTH_SHORT).show()
                 }
             )
+        }
+    }
+
+    private fun updateDock(next: List<String>) {
+        if (next != dockApps) {
+            dockApps = next
+            dockStore.write(next)
         }
     }
 

@@ -1,10 +1,12 @@
 # MONOLITH
 
-A native, AMOLED-first Android HOME launcher, Kotlin + Jetpack Compose. Latest candidate **0.6.0-alpha**.
+A native, AMOLED-first Android HOME launcher, Kotlin + Jetpack Compose. Latest candidate **0.7.0-beta**.
 
 ## Features
 
 - Home screen with clock, pinned apps, folders, edit-mode drag reorder
+- A persistent five-app Dock; add apps from their long-press actions, long-press Dock items to remove/move
+- Optional system wallpaper background (supports native static and live Android wallpapers); AMOLED-black default preserved
 - Swipe up on clock area or use All Apps button to open app drawer
 - App search and contextual actions, adjustable home and drawer grids (3–6 columns each)
 - Hide applications from All Apps using an app's long-press menu, and restore them in Settings (desktop shortcuts still work)
@@ -20,7 +22,7 @@ A native, AMOLED-first Android HOME launcher, Kotlin + Jetpack Compose. Latest c
 
 ## Portable backups
 
-From **Settings > Home screen backup**, tap Export or Import. Export includes folder memberships, their order, grid preferences and hidden applications. **Android widget IDs are not portable and are not backed up.** Import replaces the current home layout and preferences; invalid or oversized files are rejected before changes are applied.
+From **Settings > Home screen backup**, tap Export or Import. Export includes folder memberships, their order, grid preferences, hidden applications and Dock order. Existing 0.4–0.6 backups import with an empty Dock. **Android widget IDs are not portable and are not backed up.** Import replaces the current home layout and preferences; invalid or oversized files are rejected before changes are applied.
 
 Make a backup before any reinstall or signing-certificate migration. An Android uninstall deletes app-local data, but a previously exported JSON file can be imported on the same or another phone (apps not installed on the destination remain unavailable).
 
@@ -34,4 +36,4 @@ Read [Signing](docs/SIGNING.md) for how to back up the private key and why old d
 
 MONOLITH does **not** silently set itself as the default launcher, remove the stock launcher or require root. The original launcher can be restored from Android **Settings > Apps > Default apps > Home app**. Device smoke tests on the Lenovo Legion Y70 / Motorola ported firmware remain necessary for gestures, widgets and OEM interactions.
 
-Android launcher widget configuration, auto-resizing, cross-page dragging and launcher shortcuts beyond main activities are still alpha limitations.
+Release gate: the 0.7 beta must be smoke-tested on the target Lenovo Legion Y70 for system wallpaper/live wallpaper behavior, persistent Dock, widgets, wallpaper toggle, HOME role, OEM gestures, rotation and Settings backup/restore. Multi-page home, adjustable widget sizes and pinned app shortcuts beyond launcher activities are still unsupported; this is not yet a stable 1.0.

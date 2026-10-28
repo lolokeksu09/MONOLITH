@@ -100,10 +100,12 @@ private val MainText = Color(0xFFF5F5F5)
 private val Outline = Color(0xFF333333)
 private enum class Screen { HOME, ALL_APPS, SETTINGS, WIDGETS, HIDDEN_APPS }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MonolithScreen(
     apps: List<LaunchableApp>,
     layout: HomeLayout,
+    dockApps: List<String>,
     preferences: LauncherPreferences,
     launchStats: Map<String, LaunchStats>,
     hiddenApps: Set<String>,
@@ -120,6 +122,9 @@ fun MonolithScreen(
     onLaunch: (LaunchableApp) -> Unit,
     onPin: (LaunchableApp) -> Unit,
     onUnpin: (LaunchableApp) -> Unit,
+    onDockAdd: (LaunchableApp) -> Unit,
+    onDockRemove: (String) -> Unit,
+    onDockMove: (Int, Int) -> Unit,
     onNewFolder: (LaunchableApp) -> Unit,
     onAddToFolder: (LaunchableApp, String) -> Unit,
     onRenameFolder: (String, String) -> Unit,
@@ -142,6 +147,7 @@ fun MonolithScreen(
     var editing by rememberSaveable { mutableStateOf(false) }
     var selectedApp by remember { mutableStateOf<LaunchableApp?>(null) }
     var selectedFolderId by remember { mutableStateOf<String?>(null) }
+    var selectedDockId by remember { mutableStateOf<String?>(null) }
     val pinnedIds = remember(layout) { layout.appIds }
     val visibleApps = remember(apps, query, preferences.appSort, launchStats, hiddenApps) {
         sortApps(filterApps(filterHiddenApps(apps, hiddenApps), query), preferences.appSort, launchStats)
@@ -156,7 +162,7 @@ fun MonolithScreen(
         background = Background, surface = Background,
         primary = MainText, onPrimary = Background, onSurface = MainText
     )) {
-        Surface(modifier = Modifier.fillMaxSize(), color = Background) {
+        Surface(modifier = Modifier.fillMaxSize(), color = if (preferences.showWallpaper && screen == Screen.HOME) Color(0xAA030303) else Background) {
             Column(
                 modifier = Modifier.fillMaxSize()
                     .windowInsetsPadding(WindowInsets.safeDrawing)
@@ -167,9 +173,10 @@ fun MonolithScreen(
                 Spacer(Modifier.height(14.dp))
                 when (screen) {
                     Screen.HOME -> {
-                        Column(
-                            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                        ) {
+                        Column(Modifier.fillMaxSize()) {
+                            Column(
+                                modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
+                            ) {
                             // Swipe on the clock: leave home scrolling and widget touch targets intact.
                             Box(
                                 modifier = Modifier.fillMaxWidth().pointerInput(editing) {
@@ -255,6 +262,14 @@ fun MonolithScreen(
                                 }
                             }
                             Spacer(Modifier.height(24.dp))
+                            }
+                            DockBar(
+                                dockIds = dockApps,
+                                byId = byId,
+                                onLaunch = onLaunch,
+                                onManage = { editing = false; screen = Screen.ALL_APPS },
+                                onActions = { selectedDockId = it }
+                            )
                         }
                     }
                     Screen.ALL_APPS -> {
@@ -376,8 +391,46 @@ fun MonolithScreen(
                 onNewFolder = { selectedApp = null; onNewFolder(app) },
                 onAddToFolder = { folderId -> selectedApp = null; onAddToFolder(app, folderId) },
                 onAppInfo = { selectedApp = null; onAppInfo(app) },
-                onHide = { selectedApp = null; onHideApp(app) }
+                onHide = { selectedApp = null; onHideApp(app) },
+                isDocked = app.id in dockApps,
+                canAddToDock = dockApps.size < 5,
+                onToggleDock = {
+                    selectedApp = null
+                    if (app.id in dockApps) onDockRemove(app.id) else onDockAdd(app)
+                }
             )
+        }
+        selectedDockId?.let { id ->
+            val index = dockApps.indexOf(id)
+            if (index < 0) {
+                selectedDockId = null
+            } else {
+                ModalBottomSheet(
+                    onDismissRequest = { selectedDockId = null },
+                    containerColor = Panel
+                ) {
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)) {
+                        Text(byId[id]?.label ?: stringResource(R.string.missing_app), fontSize = 20.sp)
+                        Spacer(Modifier.height(12.dp))
+                        if (index > 0) {
+                            SheetAction(stringResource(R.string.move_left)) {
+                                selectedDockId = null
+                                onDockMove(index, index - 1)
+                            }
+                        }
+                        if (index < dockApps.lastIndex) {
+                            SheetAction(stringResource(R.string.move_right)) {
+                                selectedDockId = null
+                                onDockMove(index, index + 1)
+                            }
+                        }
+                        SheetAction(stringResource(R.string.remove_from_dock)) {
+                            selectedDockId = null
+                            onDockRemove(id)
+                        }
+                    }
+                }
+            }
         }
         selectedFolderId?.let { id ->
             val folder = folders.firstOrNull { it.id == id }
@@ -478,6 +531,21 @@ private fun SettingsPage(
         Switch(
             checked = preferences.showLabels,
             onCheckedChange = { onPreferencesChange(preferences.copy(showLabels = it)) }
+        )
+    }
+    Spacer(Modifier.height(12.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.show_wallpaper))
+            Text(stringResource(R.string.show_wallpaper_hint), fontSize = 12.sp, color = Muted)
+        }
+        Switch(
+            checked = preferences.showWallpaper,
+            onCheckedChange = { onPreferencesChange(preferences.copy(showWallpaper = it)) }
         )
     }
     Spacer(Modifier.height(18.dp))
@@ -596,7 +664,10 @@ private fun AppActionSheet(
     onNewFolder: () -> Unit,
     onAddToFolder: (String) -> Unit,
     onAppInfo: () -> Unit,
-    onHide: () -> Unit
+    onHide: () -> Unit,
+    isDocked: Boolean,
+    canAddToDock: Boolean,
+    onToggleDock: () -> Unit
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Panel) {
         Column(
@@ -618,6 +689,9 @@ private fun AppActionSheet(
                 }
             }
             SheetAction(stringResource(R.string.app_info), onAppInfo)
+            if (isDocked || canAddToDock) {
+                SheetAction(stringResource(if (isDocked) R.string.remove_from_dock else R.string.add_to_dock), onToggleDock)
+            }
             SheetAction(stringResource(R.string.hide_app), onHide)
         }
     }
@@ -899,6 +973,69 @@ private fun HomeTile(
                 fontSize = 11.sp, color = MainText, maxLines = 1,
                 overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center
             )
+        }
+    }
+}
+
+
+/**
+ * Fixed launch targets remain available when the desktop scrolls.
+ * The app drawer stays reachable when the dock is empty.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DockBar(
+    dockIds: List<String>,
+    byId: Map<String, LaunchableApp>,
+    onLaunch: (LaunchableApp) -> Unit,
+    onManage: () -> Unit,
+    onActions: (String) -> Unit
+) {
+    Column {
+        Spacer(Modifier.height(7.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth()
+                .background(Panel, RoundedCornerShape(20.dp))
+                .padding(horizontal = 8.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            if (dockIds.isEmpty()) {
+                TextButton(onClick = onManage, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.empty_dock), fontSize = 13.sp, color = Muted)
+                }
+            } else {
+                dockIds.forEach { id ->
+                    val app = byId[id]
+                    val bitmap = rememberAppIcon(app)
+                    Column(
+                        modifier = Modifier.weight(1f)
+                            .height(62.dp)
+                            .combinedClickable(
+                                onClick = { if (app != null) onLaunch(app) else onActions(id) },
+                                onLongClick = { onActions(id) },
+                                onClickLabel = stringResource(R.string.open_app),
+                                onLongClickLabel = stringResource(R.string.app_actions)
+                            ),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        if (bitmap != null) {
+                            Image(
+                                bitmap.asImageBitmap(),
+                                contentDescription = app?.label,
+                                modifier = Modifier.size(45.dp)
+                            )
+                        } else {
+                            Text(
+                                app?.label?.take(1) ?: "?",
+                                fontSize = 22.sp,
+                                color = MainText
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

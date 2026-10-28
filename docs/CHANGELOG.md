@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0-beta
+- Added a persistent 5-slot bottom Dock, independent from scrolling home content
+- Long-press an application in All Apps and choose Add to Dock; long-press Dock icon to remove or move it
+- Added opt-in Android system wallpaper rendering (static and live wallpaper), keeping AMOLED pure-black as the default
+- Saved Dock order and wallpaper preference locally and in portable backups
+- Existing backup versions 0.4–0.6 still import, with an empty Dock and wallpaper disabled by default
+- Added dock capacity, order and backup rejection tests
+- Existing signing certificate pinned to published 0.3.1–0.6 releases
+- Beta release only; physical Lenovo/Motorola OEM acceptance remains mandatory before 1.0 stable
+
 ## 0.6.0-alpha
 - Apps can be hidden from the drawer via long-press; the Hidden Apps screen in Settings restores installed apps
 - Hidden app IDs persist after restarts and round-trip through home backups (older backup formats still import)
