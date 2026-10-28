@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0-beta
+- Widget resizing controls: 128–512 dp heights in 64 dp increments, persisted per widget and restored after launcher restart
+- Android AppWidgetHostView receives updated size options so responsive providers can render layouts appropriately
+- Removed widgets also delete stored dimensions; widget IDs and sizes are never exported across installations
+- Fixed invisible app filtering when the bottom search bar is disabled
+- App drawer offers pull-down close gesture from its header, clear-search affordance and returns grid to the top after sorting/filtering
+- Added focused JVM tests for resize bounds, height stepping and hidden search invariants
+- Retained the existing Android HOME role, pinned apps, Dock, sorting, wallpaper and permanent signing certificate
+- Still Beta until Lenovo Legion Y70 / Motorola Android 16 touch, wallpaper, IME and widget acceptance tests are performed
+
 ## 0.8.0-beta
 - Redesigned All Apps as a full-height, wallpaper-backed drawer with a 4-column default and a compact header
 - Search box moved to a bottom pill; Settings controls whether that search bar is displayed

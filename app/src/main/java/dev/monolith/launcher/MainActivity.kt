@@ -42,6 +42,9 @@ import dev.monolith.launcher.ui.AppIconCache
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.LauncherSettingsStore
 import dev.monolith.launcher.data.WidgetIdsStore
+import dev.monolith.launcher.data.WidgetSizeStore
+import dev.monolith.launcher.data.DEFAULT_WIDGET_HEIGHT_DP
+import dev.monolith.launcher.data.stepWidgetHeight
 import dev.monolith.launcher.data.addAppToFolder
 import dev.monolith.launcher.data.createHomeFolder
 import dev.monolith.launcher.data.moveAppOutOfFolder
@@ -71,6 +74,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var statsStore: LaunchStatsStore
     private lateinit var hiddenStore: HiddenAppsStore
     private lateinit var widgetIdsStore: WidgetIdsStore
+    private lateinit var widgetSizeStore: WidgetSizeStore
     private val widgetHost by lazy { AppWidgetHost(this, WIDGET_HOST_ID) }
     private val widgetManager by lazy { AppWidgetManager.getInstance(this) }
     private var apps by mutableStateOf<List<LaunchableApp>>(emptyList())
@@ -80,6 +84,7 @@ class MainActivity : ComponentActivity() {
     private var launchStats by mutableStateOf<Map<String, LaunchStats>>(emptyMap())
     private var hiddenApps by mutableStateOf<Set<String>>(emptySet())
     private var widgetIds by mutableStateOf<List<Int>>(emptyList())
+    private var widgetHeights by mutableStateOf<Map<Int, Int>>(emptyMap())
     private var widgetProviders by mutableStateOf<List<AppWidgetProviderInfo>>(emptyList())
     private var loading by mutableStateOf(true)
     private var loadError by mutableStateOf(false)
@@ -188,11 +193,13 @@ class MainActivity : ComponentActivity() {
         statsStore = LaunchStatsStore(applicationContext)
         hiddenStore = HiddenAppsStore(applicationContext)
         widgetIdsStore = WidgetIdsStore(applicationContext)
+        widgetSizeStore = WidgetSizeStore(applicationContext)
         layout = layoutStore.read()
         dockApps = dockStore.read()
         preferences = settingsStore.read()
         hiddenApps = hiddenStore.read()
         widgetIds = widgetIdsStore.read()
+        widgetHeights = widgetIds.associateWith(widgetSizeStore::read)
         pendingWidgetId = savedInstanceState?.getInt("pendingWidgetId", -1)?.takeIf { it > 0 }
         setContent {
             MonolithScreen(
@@ -201,7 +208,8 @@ class MainActivity : ComponentActivity() {
                 launchStats = launchStats,
                 hiddenApps = hiddenApps,
                 loading = loading, loadError = loadError,
-                widgetIds = widgetIds, widgetHost = widgetHost, widgetManager = widgetManager,
+                widgetIds = widgetIds, widgetHeights = widgetHeights,
+                widgetHost = widgetHost, widgetManager = widgetManager,
                 widgetProviders = widgetProviders, widgetError = widgetError,
                 isDefaultHome = isDefaultHome,
                 onMakeDefaultHome = ::requestDefaultHome,
@@ -236,6 +244,7 @@ class MainActivity : ComponentActivity() {
                 onShowWidgets = ::loadWidgetProviders,
                 onChooseWidget = ::selectWidget,
                 onRemoveWidget = ::removeWidget,
+                onResizeWidget = ::resizeWidget,
                 onExportHome = { exportHomeLauncher.launch("MONOLITH-home-backup.json") },
                 onImportHome = { importHomeLauncher.launch(arrayOf("application/json", "text/plain")) },
                 onHideApp = { app ->
@@ -355,6 +364,7 @@ class MainActivity : ComponentActivity() {
         if (pendingWidgetId != id) return
         widgetIds = (widgetIds + id).distinct()
         widgetIdsStore.write(widgetIds)
+        widgetHeights = widgetHeights + (id to widgetSizeStore.read(id))
         pendingWidgetId = null
     }
 
@@ -367,7 +377,18 @@ class MainActivity : ComponentActivity() {
     private fun removeWidget(id: Int) {
         widgetIds = widgetIds.filterNot { it == id }
         widgetIdsStore.write(widgetIds)
+        widgetHeights = widgetHeights - id
+        widgetSizeStore.delete(id)
         runCatching { widgetHost.deleteAppWidgetId(id) }
+    }
+
+    private fun resizeWidget(id: Int, direction: Int) {
+        if (id !in widgetIds) return
+        val previous = widgetHeights[id] ?: DEFAULT_WIDGET_HEIGHT_DP
+        val next = stepWidgetHeight(previous, direction)
+        if (next == previous) return
+        widgetHeights = widgetHeights + (id to next)
+        widgetSizeStore.write(id, next)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
