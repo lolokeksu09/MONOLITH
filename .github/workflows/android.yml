@@ -39,4 +39,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "v0.2.0-alpha.${GITHUB_RUN_NUMBER}" "app/build/outputs/apk/debug/app-debug.apk#MONOLITH-0.2.0-alpha-debug.apk" --title "MONOLITH 0.2.0 alpha (${GITHUB_RUN_NUMBER})" --notes "Alpha debug APK. Build passed unit tests, lint and compilation. Keep your stock Android launcher installed." --prerelease --target "${GITHUB_SHA}"
+          gh release create "v0.3.0-alpha.${GITHUB_RUN_NUMBER}" "app/build/outputs/apk/debug/app-debug.apk#MONOLITH-0.3.0-alpha-debug.apk" --title "MONOLITH 0.3.0 alpha (${GITHUB_RUN_NUMBER})" --notes "Alpha debug APK. Build passed unit tests, lint and compilation. Keep your stock Android launcher installed." --prerelease --target "${GITHUB_SHA}"

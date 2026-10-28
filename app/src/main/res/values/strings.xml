@@ -26,4 +26,22 @@
     <string name="swipe_hint">Swipe up for all apps</string>
     <string name="apps_count">%1$d applications</string>
     <string name="app_info_unavailable">Application settings are unavailable</string>
+    <string name="new_folder">New folder</string>
+    <string name="create_folder">Create folder</string>
+    <string name="move_to_folder">Move to %1$s</string>
+    <string name="move_out">Move out</string>
+    <string name="folder_name">Folder name</string>
+    <string name="save_name">Save name</string>
+    <string name="dissolve_folder">Dissolve folder (keep apps)</string>
+    <string name="edit_home">Edit layout</string>
+    <string name="finish_edit">Done</string>
+    <string name="drag_hint">Long-press and drag a tile to reorder it.</string>
+    <string name="add_widget">Add widget</string>
+    <string name="choose_widget">Choose a widget</string>
+    <string name="widgets_section">WIDGETS</string>
+    <string name="remove_widget">Remove widget</string>
+    <string name="no_widgets">No compatible widgets installed.</string>
+    <string name="widget_failed">Could not add this widget. Try another.</string>
+    <string name="widget_unavailable">Widget is unavailable.</string>
+    <string name="missing_app">Unavailable app</string>
 </resources>

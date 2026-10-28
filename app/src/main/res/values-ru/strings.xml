@@ -26,4 +26,22 @@
     <string name="swipe_hint">Свайп вверх — все приложения</string>
     <string name="apps_count">Приложений: %1$d</string>
     <string name="app_info_unavailable">Настройки приложения недоступны</string>
+    <string name="new_folder">Новая папка</string>
+    <string name="create_folder">Создать папку</string>
+    <string name="move_to_folder">Переместить в %1$s</string>
+    <string name="move_out">На рабочий стол</string>
+    <string name="folder_name">Название папки</string>
+    <string name="save_name">Сохранить название</string>
+    <string name="dissolve_folder">Расформировать папку (сохранить приложения)</string>
+    <string name="edit_home">Изменить порядок</string>
+    <string name="finish_edit">Готово</string>
+    <string name="drag_hint">Удерживайте и перемещайте плитки для изменения порядка.</string>
+    <string name="add_widget">Добавить виджет</string>
+    <string name="choose_widget">Выберите виджет</string>
+    <string name="widgets_section">ВИДЖЕТЫ</string>
+    <string name="remove_widget">Удалить виджет</string>
+    <string name="no_widgets">На устройстве нет доступных виджетов.</string>
+    <string name="widget_failed">Не удалось добавить виджет. Попробуйте другой.</string>
+    <string name="widget_unavailable">Виджет недоступен.</string>
+    <string name="missing_app">Приложение недоступно</string>
 </resources>

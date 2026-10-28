@@ -1,42 +1,38 @@
-# MONOLITH
+# MONOLITH 0.3.0-alpha
 
-A native, local-first alternative Android home launcher.
+Native, local-first Android HOME launcher for Android 8–16, implemented with Kotlin and Jetpack Compose.
 
-**Current development version: 0.2.0-alpha.** Kotlin, Jetpack Compose, Android 8.0+ (API 26), target Android 16 (API 36). No root, internet or account required.
+## 0.3 Highlights
+- Persisted home folders, rename, add/move apps between home and folders, dissolve a folder without losing its apps
+- An explicit edit mode: long-press and drag home tiles to reorder within the home grid (currently no cross-page auto-scroll)
+- Android AppWidgetHost integration: provider picker, Android system binding consent, provider configuration, display and removal
+- 0.2 pinned app migration into the versioned layout model, preserving order and identifiers
+- New tests for reorder, folders, migration-related model operations and widget ID sanitization
 
-## Features
+## Building
+CI runs `gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` with Gradle 8.13 / JDK 17 / SDK 36. Successful main builds automatically publish a debug prerelease to GitHub Releases.
 
-- Home screen with clock, date and pinned applications
-- All-apps drawer, text search, and swipe-up home gesture
-- Long-press app menu: pin/unpin, reorder home icons, system app info
-- Settings: 3–6 grid columns, show or hide app labels
-- Local persistence of pinned applications and preferences
-- Opt-in Android system HOME selection with fallback to default-app settings
-- App-list refresh on returning home or Android package changes
-- AMOLED dark UI, Russian/English strings, retryable errors
+## How to use
+1. Install the debug APK; open it as a normal app before choosing it as a HOME app.
+2. Pin an app from All apps using long-press > Add to home.
+3. Long-press a pinned app > Create folder; then long-press another app > Move to folder.
+4. Tap a folder to rename, open apps or dissolve it. Dissolving returns all apps to the home grid.
+5. Tap Edit layout, then long-press and drag a home tile to rearrange it. Tap Done.
+6. Tap Add widget, select a compatible widget, authorize binding when Android asks and finish any provider configuration.
+7. Remove a widget with its Remove widget control.
 
-## Build and validation
+## Safety and compatibility
+- Does not require root, internet, accessibility, all-packages query or device admin privileges.
+- Does not automatically change the default HOME role.
+- Keeps the original launcher installed: Settings > Apps > Default apps > Home app can restore it.
+- DEBUG signing may vary across GitHub Actions runners. If Android refuses an in-place update due to certificate mismatch, installing may require uninstalling MONOLITH and losing its app-private settings; do not uninstall without that consideration.
+- Physical testing on Lenovo Legion Y70 / Motorola Android 16 is pending. Widget provider support and manufacturer behavior vary.
+- Real desktop editing is limited to visible tiles; no multi-page workspace, wallpaper engine, folders drag-to-merge or widget resize yet.
+- No production-ready claims until device smoke tests and user acceptance.
 
-CI executes `gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` with JDK 17, Android SDK 36 and Gradle 8.13. A successful push to main publishes a **prerelease** under GitHub Releases containing the **debug-signed APK**. This is an alpha testing APK, not production signed.
-
-## Installation and safety
-
-1. Install an APK from a successful Actions workflow or the alpha prerelease.
-2. Launch MONOLITH as an ordinary app and check the drawer/search and pinned apps.
-3. Only then optionally tap **Set as default home**, which opens Android's official system selection dialog.
-4. To return to the original launcher, open **Settings > Apps > Default apps > Home app** and select the stock launcher. Keep the stock launcher installed.
-
-MONOLITH does not replace SystemUI, recent-apps handling or vendor navigation animations. Widgets, drag/drop and advanced home layouts are future work. Do not use this alpha as your only available launcher.
-
-## Source layout
-
-- `MainActivity.kt`: HOME role, app refresh lifecycle, local state
-- `data/AppCatalog.kt`: discover and launch visible application activities
-- `data/PinnedAppsStore.kt`: ordered pinned activity IDs
-- `data/LauncherSettingsStore.kt`: durable local view preferences
-- `ui/MonolithScreen.kt`: Compose home, drawer, settings and app action sheet
-- `docs/ROADMAP.md`: planned next milestones
-
-## Privacy
-
-No analytics, remote services, internet permission, usage access or accessibility permission. Local preferences are stored in app-private SharedPreferences.
+## Components
+- `data/HomeLayoutStore.kt`: versioned home model and migration from 0.2 pinned IDs
+- `data/WidgetIdsStore.kt`: persisted widget host ID list
+- `MainActivity.kt`: widget binding/configuration and lifecycle, state ownership
+- `ui/MonolithScreen.kt`: home edit gestures, folders, app drawer and widgets
+- `docs/ROADMAP.md`: upcoming work
