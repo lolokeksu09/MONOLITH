@@ -80,4 +80,12 @@
     <string name="empty_dock">Add favorite apps to Dock from All apps</string>
     <string name="show_wallpaper">Show system wallpaper</string>
     <string name="show_wallpaper_hint">Display the current Android wallpaper behind your home screen. Disable for pure AMOLED black.</string>
+    <string name="drawer_search_toggle">Show search bar in app drawer</string>
+    <string name="drawer_opacity">App drawer background opacity</string>
+    <string name="drawer_opacity_value">Opacity: %1$d%%</string>
+    <string name="drawer_search_placeholder">Search apps</string>
+    <string name="drawer_open_gesture">Swipe up for all apps</string>
+    <string name="drawer_close">Back to home</string>
+    <string name="drawer_title">Apps</string>
+    <string name="drawer_style_note">Wallpaper shows behind the app drawer. Adjust the shade to keep text readable.</string>
 </resources>
