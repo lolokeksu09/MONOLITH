@@ -19,6 +19,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import dev.monolith.launcher.data.AppCatalog
@@ -84,6 +85,7 @@ class MainActivity : ComponentActivity() {
     private var loadError by mutableStateOf(false)
     private var widgetError by mutableStateOf(false)
     private var isDefaultHome by mutableStateOf(false)
+    private var homeRequestGeneration by mutableIntStateOf(0)
     private var pendingWidgetId: Int? = null
     private var refreshJob: Job? = null
     private var receiverRegistered = false
@@ -195,6 +197,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MonolithScreen(
                 apps = apps, layout = layout, dockApps = dockApps, preferences = preferences,
+                homeRequestGeneration = homeRequestGeneration,
                 launchStats = launchStats,
                 hiddenApps = hiddenApps,
                 loading = loading, loadError = loadError,
@@ -255,6 +258,15 @@ class MainActivity : ComponentActivity() {
                     Toast.makeText(this, R.string.usage_cleared, Toast.LENGTH_SHORT).show()
                 }
             )
+        }
+    }
+
+    // The system can deliver a new HOME intent to the existing singleTask activity.
+    // Return to the desktop instead of leaving the drawer or settings visible.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)) {
+            homeRequestGeneration++
         }
     }
 
