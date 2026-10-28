@@ -1,13 +1,22 @@
 # Changelog
 
+## 0.4.0-alpha
+- Added validated home backup export/import through Android's system file picker.
+- Portable backups preserve pinned app order, folder contents and grid preferences.
+- Invalid/oversized backups are rejected without replacing existing desktop.
+- Restored swipe-up navigation on the clock area without blocking widget touches.
+- Added more focused JVM tests for backup round-trips and invalid files.
+- Pinned stable release-signing certificate fingerprint in GitHub Actions; accidental key rotation fails CI.
+- Retained Android package ID, HOME role flow, folders, app widgets, and existing local layout storage.
+
+## 0.3.1-alpha
+- Enabled permanent APK release signing with owner-controlled GitHub Actions secrets.
+
 ## 0.3.0-alpha
-- Home folders with rename, add-to-folder, move-out and safe dissolve.
-- Explicit long-press drag-to-reorder mode for home tiles.
-- Native AppWidgetHost picker, bind consent, provider configuration, rendering and removal.
-- Migration from pinned apps in 0.2 into persistent home layout.
-- Focused model tests for folder operations, ordering and widget ID parsing.
+- Persisted home folders, rearrangeable icons and Android AppWidgetHost integration.
 
 ## 0.2.0-alpha
-- Refined AMOLED home layout, app list and contextual actions.
-- Home grid settings, pinned apps order, swipe gesture, package-change refresh.
-- Build/test/lint verification and debug APK prereleases.
+- Improved home layout, app actions, app grid settings and app list refresh.
+
+## 0.1.0-alpha
+- First native Compose HOME launcher.
