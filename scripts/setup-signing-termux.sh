@@ -40,7 +40,7 @@ if { "$has_key" || "$has_password"; } && { [[ ! -f "$KEYSTORE" ]] || [[ ! -f "$P
   exit 1
 fi
 
-if [[ -f "$KEYSTORE" ]] != [[ -f "$PASSWORD_FILE" ]]; then
+if [[ -f "$KEYSTORE" && ! -f "$PASSWORD_FILE" ]] || [[ ! -f "$KEYSTORE" && -f "$PASSWORD_FILE" ]]; then
   echo "Found only one of the local signing files. Stopping to protect the signing key." >&2
   exit 1
 fi
@@ -75,4 +75,7 @@ echo "Private key backup: $KEYSTORE"
 echo "Password backup: $PASSWORD_FILE"
 echo "Store BOTH files in a second secure location, OFF the phone."
 echo "Never upload them to a public repository, chat, or cloud folder without encryption."
-echo "Run a new main-branch GitHub Actions build to publish the first signed APK."
+echo "Requesting a new main-branch GitHub Actions build for the first signed APK..."
+if ! gh workflow run android.yml -R "$REPO" --ref main; then
+  echo "Could not dispatch workflow automatically. Open GitHub Actions > Android CI > Run workflow (main)." >&2
+fi
