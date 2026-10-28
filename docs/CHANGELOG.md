@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0-alpha
+- Apps can be hidden from the drawer via long-press; the Hidden Apps screen in Settings restores installed apps
+- Hidden app IDs persist after restarts and round-trip through home backups (older backup formats still import)
+- App icons are decoded off the main thread and cached in a size-limited in-memory LRU
+- Package changes invalidate cached icons to avoid stale app art
+- Transient package-catalog errors preserve the last successfully loaded app list and show a retry rather than blanking shortcuts
+- New unit tests for visibility, catalog refresh recovery and backup compatibility
+- Permanent release signing remains certificate-pinned to the 0.3.1–0.5 signer
+
 ## 0.5.0-alpha
 - All Apps menu: A–Z, Z–A, most frequently launched, recently opened, newest and oldest installation order
 - Local-only launch counting for the frequent/recent modes (no Android Usage Access permission)

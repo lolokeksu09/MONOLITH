@@ -69,6 +69,26 @@ class HomeBackupTest {
         assertEquals(LauncherPreferences(), decodeHomeBackup(json.toString()).preferences)
     }
 
+    @Test fun hiddenAppsRoundTripWithoutChangingFolderLayout() {
+        val original = setOf("one/.Main", "two/.Main")
+        val restored = decodeHomeBackup(encodeHomeBackup(layout, LauncherPreferences(), original))
+        assertEquals(original, restored.hiddenApps)
+        assertEquals(layout, restored.layout)
+    }
+
+    @Test fun legacyHomeBackupWithoutHiddenFieldIsStillCompatible() {
+        val old = org.json.JSONObject(encodeHomeBackup(layout, LauncherPreferences()))
+            .apply { remove("hiddenApps") }.toString()
+        assertEquals(emptySet<String>(), decodeHomeBackup(old).hiddenApps)
+    }
+
+    @Test fun duplicateHiddenIdsAreRejectedBeforeImport() {
+        val raw = org.json.JSONObject(encodeHomeBackup(layout, LauncherPreferences()))
+            .put("hiddenApps", org.json.JSONArray().put("a/.Main").put("a/.Main"))
+            .toString()
+        assertThrows(IllegalArgumentException::class.java) { decodeHomeBackup(raw) }
+    }
+
     @Test fun acceptsEmptyDesktopAsValidBackup() {
         val decoded = decodeHomeBackup(encodeHomeBackup(HomeLayout(), LauncherPreferences()))
         assertTrue(decoded.layout.entries.isEmpty())

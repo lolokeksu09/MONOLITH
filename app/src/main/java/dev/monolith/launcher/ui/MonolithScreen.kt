@@ -63,7 +63,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -76,7 +75,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.drawable.toBitmap
 import androidx.compose.ui.viewinterop.AndroidView
 import android.widget.TextView
 import kotlin.math.roundToInt
@@ -89,6 +87,7 @@ import dev.monolith.launcher.data.AppSort
 import dev.monolith.launcher.data.sortApps
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.filterApps
+import dev.monolith.launcher.data.filterHiddenApps
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -99,7 +98,7 @@ private val Panel = Color(0xFF171717)
 private val Muted = Color(0xFFACACAC)
 private val MainText = Color(0xFFF5F5F5)
 private val Outline = Color(0xFF333333)
-private enum class Screen { HOME, ALL_APPS, SETTINGS, WIDGETS }
+private enum class Screen { HOME, ALL_APPS, SETTINGS, WIDGETS, HIDDEN_APPS }
 
 @Composable
 fun MonolithScreen(
@@ -107,6 +106,7 @@ fun MonolithScreen(
     layout: HomeLayout,
     preferences: LauncherPreferences,
     launchStats: Map<String, LaunchStats>,
+    hiddenApps: Set<String>,
     loading: Boolean,
     loadError: Boolean,
     widgetIds: List<Int>,
@@ -133,7 +133,9 @@ fun MonolithScreen(
     onRemoveWidget: (Int) -> Unit,
     onExportHome: () -> Unit,
     onImportHome: () -> Unit,
-    onClearLaunchHistory: () -> Unit
+    onClearLaunchHistory: () -> Unit,
+    onHideApp: (LaunchableApp) -> Unit,
+    onUnhideApp: (LaunchableApp) -> Unit
 ) {
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
     var query by rememberSaveable { mutableStateOf("") }
@@ -141,8 +143,8 @@ fun MonolithScreen(
     var selectedApp by remember { mutableStateOf<LaunchableApp?>(null) }
     var selectedFolderId by remember { mutableStateOf<String?>(null) }
     val pinnedIds = remember(layout) { layout.appIds }
-    val visibleApps = remember(apps, query, preferences.appSort, launchStats) {
-        sortApps(filterApps(apps, query), preferences.appSort, launchStats)
+    val visibleApps = remember(apps, query, preferences.appSort, launchStats, hiddenApps) {
+        sortApps(filterApps(filterHiddenApps(apps, hiddenApps), query), preferences.appSort, launchStats)
     }
     val byId = remember(apps) { apps.associateBy { it.id } }
     val folders = remember(layout) { layout.entries.filterIsInstance<HomeEntry.Folder>() }
@@ -211,7 +213,7 @@ fun MonolithScreen(
                             }
                             Spacer(Modifier.height(10.dp))
                             when {
-                                loadError -> ErrorState(onRetry)
+                                loadError && apps.isEmpty() -> ErrorState(onRetry)
                                 loading && apps.isEmpty() -> Text(stringResource(R.string.loading), color = Muted)
                                 layout.entries.isEmpty() -> {
                                     Box(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(18.dp)).padding(22.dp)) {
@@ -225,6 +227,11 @@ fun MonolithScreen(
                                     onFolder = { selectedFolderId = it },
                                     onMove = onReorder
                                 )
+                            }
+                            if (loadError && apps.isNotEmpty()) {
+                                TextButton(onClick = onRetry) {
+                                    Text(stringResource(R.string.catalog_stale_retry))
+                                }
                             }
                             Spacer(Modifier.height(20.dp))
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -274,8 +281,13 @@ fun MonolithScreen(
                             Text(stringResource(R.string.tracked_launches_only), color = Muted, fontSize = 11.sp)
                         }
                         Spacer(Modifier.height(12.dp))
+                        if (loadError && apps.isNotEmpty()) {
+                            TextButton(onClick = onRetry) {
+                                Text(stringResource(R.string.catalog_stale_retry))
+                            }
+                        }
                         when {
-                            loadError -> { ErrorState(onRetry); Spacer(Modifier.weight(1f)) }
+                            loadError && apps.isEmpty() -> { ErrorState(onRetry); Spacer(Modifier.weight(1f)) }
                             loading && apps.isEmpty() -> {
                                 Text(stringResource(R.string.loading), color = Muted)
                                 Spacer(Modifier.weight(1f))
@@ -294,8 +306,39 @@ fun MonolithScreen(
                         preferences, isDefaultHome, onPreferencesChange, onMakeDefaultHome,
                         onBack = { screen = Screen.HOME },
                         onExportHome = onExportHome, onImportHome = onImportHome,
-                        onClearLaunchHistory = onClearLaunchHistory
+                        onClearLaunchHistory = onClearLaunchHistory,
+                        hiddenCount = hiddenApps.size,
+                        onManageHidden = { screen = Screen.HIDDEN_APPS }
                     )
+                    Screen.HIDDEN_APPS -> {
+                        Text(stringResource(R.string.hidden_apps_title), fontSize = 27.sp, fontWeight = FontWeight.SemiBold)
+                        Spacer(Modifier.height(8.dp))
+                        Text(stringResource(R.string.hidden_apps_description), color = Muted, fontSize = 13.sp)
+                        Spacer(Modifier.height(14.dp))
+                        val hiddenInstalled = remember(apps, hiddenApps) {
+                            apps.filter { it.id in hiddenApps }.sortedBy { it.label.lowercase() }
+                        }
+                        if (hiddenInstalled.isEmpty()) {
+                            Text(stringResource(R.string.no_hidden_apps), color = Muted)
+                            Spacer(Modifier.weight(1f))
+                        } else {
+                            LazyColumn(modifier = Modifier.weight(1f)) {
+                                items(hiddenInstalled, key = { it.id }) { app ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(app.label, modifier = Modifier.weight(1f), maxLines = 2)
+                                        TextButton(onClick = { onUnhideApp(app) }) {
+                                            Text(stringResource(R.string.unhide_app))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        MonolithButton(stringResource(R.string.settings)) { screen = Screen.SETTINGS }
+                    }
                     Screen.WIDGETS -> {
                         Text(stringResource(R.string.choose_widget), fontSize = 27.sp, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(12.dp))
@@ -332,7 +375,8 @@ fun MonolithScreen(
                 onTogglePin = { selectedApp = null; if (app.id in pinnedIds) onUnpin(app) else onPin(app) },
                 onNewFolder = { selectedApp = null; onNewFolder(app) },
                 onAddToFolder = { folderId -> selectedApp = null; onAddToFolder(app, folderId) },
-                onAppInfo = { selectedApp = null; onAppInfo(app) }
+                onAppInfo = { selectedApp = null; onAppInfo(app) },
+                onHide = { selectedApp = null; onHideApp(app) }
             )
         }
         selectedFolderId?.let { id ->
@@ -401,7 +445,9 @@ private fun SettingsPage(
     onBack: () -> Unit,
     onExportHome: () -> Unit,
     onImportHome: () -> Unit,
-    onClearLaunchHistory: () -> Unit
+    onClearLaunchHistory: () -> Unit,
+    hiddenCount: Int,
+    onManageHidden: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
     Text(stringResource(R.string.settings), fontSize = 29.sp, fontWeight = FontWeight.SemiBold)
@@ -500,6 +546,10 @@ private fun SettingsPage(
     Spacer(Modifier.height(8.dp))
     Text(stringResource(R.string.tracked_launches_only), color = Muted, fontSize = 12.sp)
     Spacer(Modifier.height(8.dp))
+    OutlinedButton(onClick = onManageHidden, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.manage_hidden_apps, hiddenCount))
+    }
+    Spacer(Modifier.height(10.dp))
     OutlinedButton(onClick = onClearLaunchHistory, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.clear_launches))
     }
@@ -545,7 +595,8 @@ private fun AppActionSheet(
     onTogglePin: () -> Unit,
     onNewFolder: () -> Unit,
     onAddToFolder: (String) -> Unit,
-    onAppInfo: () -> Unit
+    onAppInfo: () -> Unit,
+    onHide: () -> Unit
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Panel) {
         Column(
@@ -567,6 +618,7 @@ private fun AppActionSheet(
                 }
             }
             SheetAction(stringResource(R.string.app_info), onAppInfo)
+            SheetAction(stringResource(R.string.hide_app), onHide)
         }
     }
 }
@@ -705,15 +757,9 @@ private fun AppTile(
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
-    val pm = LocalContext.current.packageManager
+    val bitmap = rememberAppIcon(app)
     val openLabel = stringResource(R.string.open_app)
     val actionsLabel = stringResource(R.string.app_actions)
-    val painter = remember(app.id) {
-        runCatching {
-            val icon = pm.getActivityIcon(ComponentName(app.packageName, app.activityName))
-            BitmapPainter(icon.toBitmap(width = 96, height = 96).asImageBitmap())
-        }.getOrNull()
-    }
     Column(
         modifier = Modifier
             .combinedClickable(
@@ -726,8 +772,8 @@ private fun AppTile(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(Modifier.size((iconSize + 4).dp), contentAlignment = Alignment.Center) {
-            if (painter != null) {
-                Image(painter, contentDescription = app.label, modifier = Modifier.size(iconSize.dp))
+            if (bitmap != null) {
+                Image(bitmap.asImageBitmap(), contentDescription = app.label, modifier = Modifier.size(iconSize.dp))
             } else {
                 Text(app.label.take(1), fontSize = 25.sp)
             }
@@ -809,16 +855,7 @@ private fun HomeTile(
 ) {
     var drag by remember(entry.key, editing) { mutableStateOf(Offset.Zero) }
     val density = LocalDensity.current
-    val ctx = LocalContext.current
-    val painter = remember(app?.id) {
-        if (app == null) null
-        else runCatching {
-            BitmapPainter(
-                ctx.packageManager.getActivityIcon(ComponentName(app.packageName, app.activityName))
-                    .toBitmap(width = 96, height = 96).asImageBitmap()
-            )
-        }.getOrNull()
-    }
+    val bitmap = rememberAppIcon(app)
     val gesture = if (editing) {
         Modifier.pointerInput(entry.key) {
             detectDragGesturesAfterLongPress(
@@ -846,8 +883,8 @@ private fun HomeTile(
         Box(Modifier.size(49.dp), contentAlignment = Alignment.Center) {
             if (entry is HomeEntry.Folder) {
                 Text("▦", fontSize = 34.sp, color = MainText)
-            } else if (painter != null) {
-                Image(painter, contentDescription = app?.label, modifier = Modifier.size(45.dp))
+            } else if (bitmap != null) {
+                Image(bitmap.asImageBitmap(), contentDescription = app?.label, modifier = Modifier.size(45.dp))
             } else {
                 Text(app?.label?.take(1).orEmpty(), fontSize = 25.sp)
             }

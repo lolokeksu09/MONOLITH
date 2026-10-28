@@ -7,7 +7,7 @@ import org.json.JSONObject
  * Portable home-screen backup. Android AppWidgetHost IDs are intentionally excluded:
  * those IDs belong to one installation and cannot be restored on another device.
  */
-data class HomeBackup(val layout: HomeLayout, val preferences: LauncherPreferences)
+data class HomeBackup(val layout: HomeLayout, val preferences: LauncherPreferences, val hiddenApps: Set<String> = emptySet())
 
 private const val FORMAT = "monolith-home"
 private const val VERSION = 1
@@ -15,7 +15,7 @@ private const val MAX_BACKUP_CHARS = 256 * 1024
 private const val MAX_ENTRIES = 512
 private const val MAX_FOLDER_APPS = 512
 
-fun encodeHomeBackup(layout: HomeLayout, preferences: LauncherPreferences): String {
+fun encodeHomeBackup(layout: HomeLayout, preferences: LauncherPreferences, hiddenApps: Set<String> = emptySet()): String {
     val entries = JSONArray()
     layout.entries.forEach { entry ->
         val item = JSONObject()
@@ -45,6 +45,7 @@ fun encodeHomeBackup(layout: HomeLayout, preferences: LauncherPreferences): Stri
         .put("appSort", preferences.appSort.name)
         .put("drawerIconSize", normalizeDrawerIconSize(preferences.drawerIconSize))
         .put("pinDots", preferences.showPinDots)
+        .put("hiddenApps", JSONArray().apply { hiddenApps.sorted().forEach { put(it) } })
         .put("entries", entries)
         .toString(2)
 }
@@ -104,5 +105,19 @@ fun decodeHomeBackup(raw: String): HomeBackup {
         appSort = parseAppSort(root.optString("appSort", AppSort.A_Z.name)),
         drawerIconSize = normalizeDrawerIconSize(root.optInt("drawerIconSize", 48)),
         showPinDots = root.optBoolean("pinDots", true)
-    ))
+    ), parseHiddenBackupIds(root.optJSONArray("hiddenApps")))
+}
+
+/** Old backups have no hidden-app field; invalid files must be rejected. */
+private fun parseHiddenBackupIds(array: JSONArray?): Set<String> {
+    if (array == null) return emptySet()
+    require(array.length() <= MAX_ENTRIES) { "Too many hidden apps" }
+    return buildSet {
+        repeat(array.length()) { index ->
+            val id = array.getString(index)
+            require(id.isNotBlank() && id.length <= 512 && add(id)) {
+                "Invalid or duplicate hidden app ID"
+            }
+        }
+    }
 }
