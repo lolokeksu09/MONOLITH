@@ -1,5 +1,6 @@
 package dev.monolith.launcher.data
 
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
@@ -31,8 +32,9 @@ class HomeBackupTest {
         assertThrows(IllegalArgumentException::class.java) {
             decodeHomeBackup(original.replace("monolith-home", "another-app"))
         }
+        val unsupported = JSONObject(original).put("version", 999).toString()
         assertThrows(IllegalArgumentException::class.java) {
-            decodeHomeBackup(original.replace("\"version\": 1", "\"version\": 999"))
+            decodeHomeBackup(unsupported)
         }
     }
 
