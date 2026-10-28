@@ -215,7 +215,7 @@ class MainActivity : ComponentActivity() {
                 onPin = { app -> updateLayout(pinToHome(layout, app.id)) },
                 onUnpin = { app -> updateLayout(unpinFromHome(layout, app.id)) },
                 onDockAdd = { app -> updateDock(addDockApp(dockApps, app.id)) },
-                onDockRemove = { app -> updateDock(removeDockApp(dockApps, app.id)) },
+                onDockRemove = { id -> updateDock(removeDockApp(dockApps, id)) },
                 onDockMove = { from, to -> updateDock(moveDockApp(dockApps, from, to)) },
                 onNewFolder = { app ->
                     updateLayout(createHomeFolder(layout, app.id, UUID.randomUUID().toString(), getString(R.string.new_folder)))
