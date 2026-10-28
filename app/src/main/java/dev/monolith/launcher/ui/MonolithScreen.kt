@@ -100,6 +100,7 @@ private val MainText = Color(0xFFF5F5F5)
 private val Outline = Color(0xFF333333)
 private enum class Screen { HOME, ALL_APPS, SETTINGS, WIDGETS, HIDDEN_APPS }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MonolithScreen(
     apps: List<LaunchableApp>,
