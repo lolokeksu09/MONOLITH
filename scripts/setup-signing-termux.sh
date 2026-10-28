@@ -12,7 +12,7 @@ ALIAS="monolith"
 
 for command in gh keytool openssl base64 tr; do
   if ! command -v "$command" >/dev/null 2>&1; then
-    printf 'Missing %s. In Termux: pkg install gh openjdk-17 openssl coreutils\n' "$command" >&2
+    printf 'Missing %s. In Termux: pkg install gh openjdk-17 openssl openssl-tool coreutils\n' "$command" >&2
     exit 1
   fi
 done

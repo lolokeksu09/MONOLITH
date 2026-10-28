@@ -16,7 +16,7 @@ The first key is generated locally on the owner's trusted device with `scripts/s
 
 ## One-time setup (Termux)
 
-1. `pkg install gh openjdk-17 openssl coreutils -y`
+1. `pkg install gh openjdk-17 openssl openssl-tool coreutils -y`
 2. `gh auth login` and complete GitHub authentication in the browser.
 3. Get the current MONOLITH repository and run `bash scripts/setup-signing-termux.sh` locally.
 4. The script refuses to rotate an already configured key.
