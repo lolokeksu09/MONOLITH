@@ -80,4 +80,12 @@
     <string name="empty_dock">Добавьте приложения в Dock из общего списка</string>
     <string name="show_wallpaper">Показывать системные обои</string>
     <string name="show_wallpaper_hint">Обои Android будут видны на рабочем столе. Отключите для чистого чёрного AMOLED.</string>
+    <string name="drawer_search_toggle">Показывать строку поиска в меню</string>
+    <string name="drawer_opacity">Непрозрачность фона меню</string>
+    <string name="drawer_opacity_value">Непрозрачность: %1$d%%</string>
+    <string name="drawer_search_placeholder">Поиск</string>
+    <string name="drawer_open_gesture">Свайп вверх — все приложения</string>
+    <string name="drawer_close">На рабочий стол</string>
+    <string name="drawer_title">Приложения</string>
+    <string name="drawer_style_note">За меню видны системные обои. Подберите затемнение, чтобы названия оставались читаемыми.</string>
 </resources>
