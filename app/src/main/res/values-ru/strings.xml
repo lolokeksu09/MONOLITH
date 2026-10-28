@@ -74,4 +74,5 @@
     <string name="manage_hidden_apps">Скрытые приложения (%1$d)</string>
     <string name="hide_app">Скрыть из меню приложений</string>
     <string name="unhide_app">Показать</string>
+    <string name="catalog_stale_retry">Не удалось обновить список. Показаны ранее загруженные приложения. Повторить.</string>
 </resources>
