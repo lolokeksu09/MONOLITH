@@ -2,7 +2,11 @@ package dev.monolith.launcher
 
 import android.app.role.RoleManager
 import android.content.ActivityNotFoundException
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -16,9 +20,13 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import dev.monolith.launcher.data.AppCatalog
 import dev.monolith.launcher.data.LaunchableApp
+import dev.monolith.launcher.data.LauncherPreferences
+import dev.monolith.launcher.data.LauncherSettingsStore
 import dev.monolith.launcher.data.PinnedAppsStore
+import dev.monolith.launcher.data.movePinned
 import dev.monolith.launcher.data.togglePinned
 import dev.monolith.launcher.ui.MonolithScreen
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -27,29 +35,41 @@ import kotlinx.coroutines.withContext
 class MainActivity : ComponentActivity() {
     private lateinit var catalog: AppCatalog
     private lateinit var pinnedStore: PinnedAppsStore
+    private lateinit var settingsStore: LauncherSettingsStore
     private var apps by mutableStateOf<List<LaunchableApp>>(emptyList())
     private var pinnedIds by mutableStateOf<List<String>>(emptyList())
+    private var preferences by mutableStateOf(LauncherPreferences())
     private var loading by mutableStateOf(true)
+    private var loadError by mutableStateOf(false)
     private var isDefaultHome by mutableStateOf(false)
     private var refreshJob: Job? = null
+
+    private val packageReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) = refreshApps()
+    }
+    private var receiverRegistered = false
+
     private val homeRoleLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
-    ) {
-        isDefaultHome = checkDefaultHome()
-    }
+    ) { isDefaultHome = checkDefaultHome() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         catalog = AppCatalog(applicationContext)
         pinnedStore = PinnedAppsStore(applicationContext)
+        settingsStore = LauncherSettingsStore(applicationContext)
         pinnedIds = pinnedStore.read()
+        preferences = settingsStore.read()
         setContent {
             MonolithScreen(
                 apps = apps,
                 pinnedIds = pinnedIds,
+                preferences = preferences,
                 loading = loading,
+                loadError = loadError,
                 isDefaultHome = isDefaultHome,
                 onMakeDefaultHome = ::requestDefaultHome,
+                onRetry = ::refreshApps,
                 onLaunch = { app ->
                     if (!catalog.launch(app)) {
                         Toast.makeText(this, R.string.launch_failed, Toast.LENGTH_SHORT).show()
@@ -57,11 +77,56 @@ class MainActivity : ComponentActivity() {
                     }
                 },
                 onTogglePin = { app ->
-                    pinnedIds = togglePinned(pinnedIds, app.id)
-                    pinnedStore.write(pinnedIds)
+                    updatePins(togglePinned(pinnedIds, app.id))
+                },
+                onMovePinned = { app, delta ->
+                    updatePins(movePinned(pinnedIds, app.id, delta))
+                },
+                onAppInfo = ::openAppInfo,
+                onPreferencesChange = { next ->
+                    preferences = next
+                    settingsStore.write(next)
                 }
             )
         }
+    }
+
+    private fun updatePins(next: List<String>) {
+        if (next != pinnedIds) {
+            pinnedIds = next
+            pinnedStore.write(next)
+        }
+    }
+
+    private fun openAppInfo(app: LaunchableApp) {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            .setData(Uri.fromParts("package", app.packageName, null))
+        try {
+            startActivity(intent)
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(this, R.string.app_info_unavailable, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_PACKAGE_ADDED)
+            addAction(Intent.ACTION_PACKAGE_REMOVED)
+            addAction(Intent.ACTION_PACKAGE_CHANGED)
+            addAction(Intent.ACTION_PACKAGE_REPLACED)
+            addDataScheme("package")
+        }
+        registerReceiver(packageReceiver, filter)
+        receiverRegistered = true
+    }
+
+    override fun onStop() {
+        if (receiverRegistered) {
+            unregisterReceiver(packageReceiver)
+            receiverRegistered = false
+        }
+        super.onStop()
     }
 
     override fun onResume() {
@@ -89,9 +154,7 @@ class MainActivity : ComponentActivity() {
             if (roleManager?.isRoleAvailable(RoleManager.ROLE_HOME) == true &&
                 !roleManager.isRoleHeld(RoleManager.ROLE_HOME)
             ) {
-                homeRoleLauncher.launch(
-                    roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME)
-                )
+                homeRoleLauncher.launch(roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME))
                 return
             }
         }
@@ -105,15 +168,16 @@ class MainActivity : ComponentActivity() {
     private fun refreshApps() {
         refreshJob?.cancel()
         loading = true
+        loadError = false
         refreshJob = lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                runCatching { catalog.load() }
+            val result = try {
+                withContext(Dispatchers.IO) { runCatching { catalog.load() } }
+            } catch (e: CancellationException) {
+                throw e
             }
             apps = result.getOrDefault(emptyList())
+            loadError = result.isFailure
             loading = false
-            if (result.isFailure) {
-                Toast.makeText(this@MainActivity, R.string.catalog_failed, Toast.LENGTH_SHORT).show()
-            }
         }
     }
 
