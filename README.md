@@ -1,38 +1,25 @@
-# MONOLITH 0.3.0-alpha
+# MONOLITH
 
-Native, local-first Android HOME launcher for Android 8–16, implemented with Kotlin and Jetpack Compose.
+Native, local-first Android HOME launcher. Current candidate: **0.3.1-alpha**.
 
-## 0.3 Highlights
-- Persisted home folders, rename, add/move apps between home and folders, dissolve a folder without losing its apps
-- An explicit edit mode: long-press and drag home tiles to reorder within the home grid (currently no cross-page auto-scroll)
-- Android AppWidgetHost integration: provider picker, Android system binding consent, provider configuration, display and removal
-- 0.2 pinned app migration into the versioned layout model, preserving order and identifiers
-- New tests for reorder, folders, migration-related model operations and widget ID sanitization
+See [Stable signing setup](docs/SIGNING.md) for permanent release signing, update compatibility, and one-time Termux setup.
 
-## Building
-CI runs `gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` with Gradle 8.13 / JDK 17 / SDK 36. Successful main builds automatically publish a debug prerelease to GitHub Releases.
+## Features
 
-## How to use
-1. Install the debug APK; open it as a normal app before choosing it as a HOME app.
-2. Pin an app from All apps using long-press > Add to home.
-3. Long-press a pinned app > Create folder; then long-press another app > Move to folder.
-4. Tap a folder to rename, open apps or dissolve it. Dissolving returns all apps to the home grid.
-5. Tap Edit layout, then long-press and drag a home tile to rearrange it. Tap Done.
-6. Tap Add widget, select a compatible widget, authorize binding when Android asks and finish any provider configuration.
-7. Remove a widget with its Remove widget control.
+- AMOLED home, clock, launcher app drawer and search.
+- Pinned applications, persistent folders, drag-to-reorder edit mode.
+- Android AppWidgetHost picker/binding/configuration and widget removal.
+- Local settings; optional system Home role selection.
+- No account, advertising, root or Internet permission.
 
-## Safety and compatibility
-- Does not require root, internet, accessibility, all-packages query or device admin privileges.
-- Does not automatically change the default HOME role.
-- Keeps the original launcher installed: Settings > Apps > Default apps > Home app can restore it.
-- DEBUG signing may vary across GitHub Actions runners. If Android refuses an in-place update due to certificate mismatch, installing may require uninstalling MONOLITH and losing its app-private settings; do not uninstall without that consideration.
-- Physical testing on Lenovo Legion Y70 / Motorola Android 16 is pending. Widget provider support and manufacturer behavior vary.
-- Real desktop editing is limited to visible tiles; no multi-page workspace, wallpaper engine, folders drag-to-merge or widget resize yet.
-- No production-ready claims until device smoke tests and user acceptance.
+## Build
 
-## Components
-- `data/HomeLayoutStore.kt`: versioned home model and migration from 0.2 pinned IDs
-- `data/WidgetIdsStore.kt`: persisted widget host ID list
-- `MainActivity.kt`: widget binding/configuration and lifecycle, state ownership
-- `ui/MonolithScreen.kt`: home edit gestures, folders, app drawer and widgets
-- `docs/ROADMAP.md`: upcoming work
+CI runs unit tests, Android lint, debug assembly, and a **release-signing smoke test with a disposable key**. Disposable test APKs are not intended for installation or distribution.
+
+After the repository owner configures the two signing secrets, every successful `main` build signs the release APK with the same private key and publishes it to GitHub Releases as a prerelease.
+
+## Installation safety
+
+Keep the stock launcher installed. Select MONOLITH as the default Home app only after testing. You can revert in Android's **Default apps > Home app** settings.
+
+**Important:** 0.1–0.3 debug-signed APKs may require a one-time uninstall before installing permanently signed 0.3.1 because their signatures differ, and uninstall clears private MONOLITH data. After migration, future stable-signed updates can retain data.

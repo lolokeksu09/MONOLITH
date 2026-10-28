@@ -5,11 +5,12 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -26,17 +27,109 @@ jobs:
           SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -n 1)
           test -n "$SDKMANAGER"
           "$SDKMANAGER" --install "platforms;android-36" "build-tools;35.0.0"
-      - name: Verify and assemble
+      - name: Validate Termux signing script syntax
+        run: bash -n scripts/setup-signing-termux.sh
+      - name: Unit tests, Android Lint, debug APK
         run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+      - name: Verify release signing using a disposable CI-only key
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          export MONOLITH_KEYSTORE_FILE="$RUNNER_TEMP/monolith-ci-test-only.p12"
+          export MONOLITH_KEY_PASSWORD="$(openssl rand -hex 32)"
+          keytool -genkeypair -noprompt -storetype PKCS12 \
+            -keystore "$MONOLITH_KEYSTORE_FILE" -alias monolith \
+            -keyalg RSA -keysize 3072 -validity 30 \
+            -dname "CN=MONOLITH CI ONLY, O=Test, C=US" \
+            -storepass:env MONOLITH_KEY_PASSWORD -keypass:env MONOLITH_KEY_PASSWORD
+          MONOLITH_VERSION_CODE=4 MONOLITH_VERSION_NAME=0.3.1-ci \
+            gradle --no-daemon :app:assembleRelease
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose \
+            app/build/outputs/apk/release/app-release.apk
+          rm -f "$MONOLITH_KEYSTORE_FILE"
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: MONOLITH-debug-apk
+          name: MONOLITH-CI-debug-NOT-a-stable-signature
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-      - name: Publish debug alpha prerelease
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+  signed-release:
+    needs: verify
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check signing configuration
+        id: signing
+        shell: bash
+        env:
+          KEYSTORE_SECRET: ${{ secrets.MONOLITH_KEYSTORE_BASE64 }}
+          PASSWORD_SECRET: ${{ secrets.MONOLITH_KEY_PASSWORD }}
+        run: |
+          if [[ -z "$KEYSTORE_SECRET" || -z "$PASSWORD_SECRET" ]]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Stable signing not configured: run scripts/setup-signing-termux.sh to create the two GitHub Secrets."
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.signing.outputs.ready == 'true'
+      - uses: actions/setup-java@v4
+        if: steps.signing.outputs.ready == 'true'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.signing.outputs.ready == 'true'
+        with:
+          gradle-version: '8.13'
+      - name: Install Android SDK
+        if: steps.signing.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -n 1)
+          test -n "$SDKMANAGER"
+          "$SDKMANAGER" --install "platforms;android-36" "build-tools;35.0.0"
+      - name: Build and verify permanently signed APK
+        if: steps.signing.outputs.ready == 'true'
+        shell: bash
+        env:
+          MONOLITH_KEYSTORE_BASE64: ${{ secrets.MONOLITH_KEYSTORE_BASE64 }}
+          MONOLITH_KEY_PASSWORD: ${{ secrets.MONOLITH_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          export MONOLITH_KEYSTORE_FILE="$RUNNER_TEMP/monolith-release.p12"
+          printf '%s' "$MONOLITH_KEYSTORE_BASE64" | base64 --decode > "$MONOLITH_KEYSTORE_FILE"
+          test -s "$MONOLITH_KEYSTORE_FILE"
+          export MONOLITH_VERSION_CODE="$((10000 + GITHUB_RUN_NUMBER))"
+          export MONOLITH_VERSION_NAME="0.3.1-alpha.${GITHUB_RUN_NUMBER}"
+          gradle --no-daemon :app:assembleRelease
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs \
+            app/build/outputs/apk/release/app-release.apk
+      - uses: actions/upload-artifact@v4
+        if: steps.signing.outputs.ready == 'true'
+        with:
+          name: MONOLITH-permanently-signed-release
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+      - name: Publish signed prerelease to GitHub Releases
+        if: steps.signing.outputs.ready == 'true'
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "v0.3.0-alpha.${GITHUB_RUN_NUMBER}" "app/build/outputs/apk/debug/app-debug.apk#MONOLITH-0.3.0-alpha-debug.apk" --title "MONOLITH 0.3.0 alpha (${GITHUB_RUN_NUMBER})" --notes "Alpha debug APK. Build passed unit tests, lint and compilation. Keep your stock Android launcher installed." --prerelease --target "${GITHUB_SHA}"
+          set -euo pipefail
+          gh release create "v0.3.1-alpha.${GITHUB_RUN_NUMBER}" \
+            "app/build/outputs/apk/release/app-release.apk#MONOLITH-0.3.1-alpha-signed.apk" \
+            --title "MONOLITH 0.3.1 alpha (${GITHUB_RUN_NUMBER})" \
+            --notes "Permanently signed alpha APK. Uses the same private MONOLITH signing key across future releases. This certificate differs from old debug builds. Keep your stock launcher installed." \
+            --prerelease --target "$GITHUB_SHA"
+      - name: Destroy temporary keystore copy
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/monolith-release.p12"
