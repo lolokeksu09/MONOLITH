@@ -112,6 +112,7 @@ fun MonolithScreen(
     layout: HomeLayout,
     dockApps: List<String>,
     preferences: LauncherPreferences,
+    homeRequestGeneration: Int,
     launchStats: Map<String, LaunchStats>,
     hiddenApps: Set<String>,
     loading: Boolean,
@@ -150,6 +151,13 @@ fun MonolithScreen(
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
     var query by rememberSaveable { mutableStateOf("") }
     var editing by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(homeRequestGeneration) {
+        if (homeRequestGeneration > 0) {
+            screen = Screen.HOME
+            query = ""
+            editing = false
+        }
+    }
     var selectedApp by remember { mutableStateOf<LaunchableApp?>(null) }
     var selectedFolderId by remember { mutableStateOf<String?>(null) }
     var selectedDockId by remember { mutableStateOf<String?>(null) }
