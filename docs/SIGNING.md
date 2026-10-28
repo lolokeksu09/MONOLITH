@@ -20,7 +20,7 @@ The first key is generated locally on the owner's trusted device with `scripts/s
 2. `gh auth login` and complete GitHub authentication in the browser.
 3. Get the current MONOLITH repository and run `bash scripts/setup-signing-termux.sh` locally.
 4. The script refuses to rotate an already configured key.
-5. Trigger a new `main` build. The signed APK appears as a prerelease on GitHub Releases after test/lint/compilation and Android signature verification succeed.
+5. The setup script starts a new `main` workflow dispatch automatically. The signed APK appears as a prerelease on GitHub Releases after test/lint/compilation and Android signature verification succeed.
 
 GitHub CLI encrypts secret values locally. Do not paste any signing password or keystore into public issues, commits, terminals with shared logging or chat.
 
