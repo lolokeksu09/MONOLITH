@@ -124,6 +124,32 @@ class HomeBackupTest {
         }
     }
 
+    @Test fun drawerAppearanceSurvivesBackupRestore() {
+        val settings = LauncherPreferences(
+            showWallpaper = true, showDrawerSearch = false, drawerOpacity = 37
+        )
+        val restored = decodeHomeBackup(encodeHomeBackup(layout, settings))
+        assertEquals(settings, restored.preferences)
+    }
+
+    @Test fun olderBackupWithoutDrawerAppearanceUsesSafeDefaults() {
+        val document = JSONObject(encodeHomeBackup(layout, LauncherPreferences()))
+            .apply {
+                remove("showDrawerSearch")
+                remove("drawerOpacity")
+            }.toString()
+        val restored = decodeHomeBackup(document)
+        assertEquals(true, restored.preferences.showDrawerSearch)
+        assertEquals(65, restored.preferences.drawerOpacity)
+    }
+
+    @Test fun outOfRangeDrawerOpacityIsBounded() {
+        val document = JSONObject(encodeHomeBackup(layout, LauncherPreferences()))
+            .put("drawerOpacity", 100000).toString()
+        val restored = decodeHomeBackup(document)
+        assertEquals(100, restored.preferences.drawerOpacity)
+    }
+
     @Test fun acceptsEmptyDesktopAsValidBackup() {
         val decoded = decodeHomeBackup(encodeHomeBackup(HomeLayout(), LauncherPreferences()))
         assertTrue(decoded.layout.entries.isEmpty())
