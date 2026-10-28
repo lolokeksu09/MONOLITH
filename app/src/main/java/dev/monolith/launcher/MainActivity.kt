@@ -29,6 +29,11 @@ import dev.monolith.launcher.data.decodeHomeBackup
 import dev.monolith.launcher.data.LaunchableApp
 import dev.monolith.launcher.data.LaunchStats
 import dev.monolith.launcher.data.LaunchStatsStore
+import dev.monolith.launcher.data.HiddenAppsStore
+import dev.monolith.launcher.data.hideApp
+import dev.monolith.launcher.data.unhideApp
+import dev.monolith.launcher.data.retainCatalogOnError
+import dev.monolith.launcher.ui.AppIconCache
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.LauncherSettingsStore
 import dev.monolith.launcher.data.WidgetIdsStore
@@ -58,6 +63,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var layoutStore: HomeLayoutStore
     private lateinit var settingsStore: LauncherSettingsStore
     private lateinit var statsStore: LaunchStatsStore
+    private lateinit var hiddenStore: HiddenAppsStore
     private lateinit var widgetIdsStore: WidgetIdsStore
     private val widgetHost by lazy { AppWidgetHost(this, WIDGET_HOST_ID) }
     private val widgetManager by lazy { AppWidgetManager.getInstance(this) }
@@ -65,6 +71,7 @@ class MainActivity : ComponentActivity() {
     private var layout by mutableStateOf(HomeLayout())
     private var preferences by mutableStateOf(LauncherPreferences())
     private var launchStats by mutableStateOf<Map<String, LaunchStats>>(emptyMap())
+    private var hiddenApps by mutableStateOf<Set<String>>(emptySet())
     private var widgetIds by mutableStateOf<List<Int>>(emptyList())
     private var widgetProviders by mutableStateOf<List<AppWidgetProviderInfo>>(emptyList())
     private var loading by mutableStateOf(true)
@@ -76,7 +83,10 @@ class MainActivity : ComponentActivity() {
     private var receiverRegistered = false
 
     private val packageReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) = refreshApps()
+        override fun onReceive(context: Context, intent: Intent) {
+            AppIconCache.invalidate(intent.data?.schemeSpecificPart)
+            refreshApps()
+        }
     }
     private val homeRoleLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -96,7 +106,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun exportHomeTo(uri: Uri) {
-        val snapshot = encodeHomeBackup(layout, preferences)
+        val snapshot = encodeHomeBackup(layout, preferences, hiddenApps)
         lifecycleScope.launch {
             val saved = withContext(Dispatchers.IO) {
                 runCatching {
@@ -135,6 +145,8 @@ class MainActivity : ComponentActivity() {
                 onSuccess = { backup ->
                     layoutStore.write(backup.layout)
                     settingsStore.write(backup.preferences)
+                    hiddenStore.write(backup.hiddenApps)
+                    hiddenApps = backup.hiddenApps
                     layout = backup.layout
                     preferences = backup.preferences
                     Toast.makeText(this@MainActivity, R.string.backup_imported, Toast.LENGTH_LONG).show()
@@ -163,15 +175,18 @@ class MainActivity : ComponentActivity() {
         layoutStore = HomeLayoutStore(applicationContext)
         settingsStore = LauncherSettingsStore(applicationContext)
         statsStore = LaunchStatsStore(applicationContext)
+        hiddenStore = HiddenAppsStore(applicationContext)
         widgetIdsStore = WidgetIdsStore(applicationContext)
         layout = layoutStore.read()
         preferences = settingsStore.read()
+        hiddenApps = hiddenStore.read()
         widgetIds = widgetIdsStore.read()
         pendingWidgetId = savedInstanceState?.getInt("pendingWidgetId", -1)?.takeIf { it > 0 }
         setContent {
             MonolithScreen(
                 apps = apps, layout = layout, preferences = preferences,
                 launchStats = launchStats,
+                hiddenApps = hiddenApps,
                 loading = loading, loadError = loadError,
                 widgetIds = widgetIds, widgetHost = widgetHost, widgetManager = widgetManager,
                 widgetProviders = widgetProviders, widgetError = widgetError,
@@ -207,6 +222,20 @@ class MainActivity : ComponentActivity() {
                 onRemoveWidget = ::removeWidget,
                 onExportHome = { exportHomeLauncher.launch("MONOLITH-home-backup.json") },
                 onImportHome = { importHomeLauncher.launch(arrayOf("application/json", "text/plain")) },
+                onHideApp = { app ->
+                    val next = hideApp(hiddenApps, app.id)
+                    if (next != hiddenApps) {
+                        hiddenApps = next
+                        hiddenStore.write(next)
+                    }
+                },
+                onUnhideApp = { app ->
+                    val next = unhideApp(hiddenApps, app.id)
+                    if (next != hiddenApps) {
+                        hiddenApps = next
+                        hiddenStore.write(next)
+                    }
+                },
                 onClearLaunchHistory = {
                     statsStore.clear()
                     launchStats = emptyMap()
@@ -393,7 +422,7 @@ class MainActivity : ComponentActivity() {
             } catch (e: CancellationException) {
                 throw e
             }
-            apps = result.getOrDefault(emptyList())
+            apps = retainCatalogOnError(apps, result)
             if (result.isSuccess) launchStats = statsStore.read(apps)
             loadError = result.isFailure
             loading = false
