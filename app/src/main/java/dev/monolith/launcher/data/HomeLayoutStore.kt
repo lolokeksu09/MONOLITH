@@ -86,6 +86,10 @@ fun reorderHome(layout: HomeLayout, from: Int, to: Int): HomeLayout {
     })
 }
 
+/** Preserve the legacy 0.2 pinned-app order when migrating to the 0.3+ layout. */
+fun parseLegacyPinnedApps(value: String?): List<String> =
+    value.orEmpty().split('|').filter(String::isNotBlank).distinct()
+
 class HomeLayoutStore(context: Context) {
     private val preferences = context.getSharedPreferences("monolith_home", Context.MODE_PRIVATE)
 
@@ -93,7 +97,7 @@ class HomeLayoutStore(context: Context) {
         val encoded = preferences.getString("layout_v1", null)
         if (encoded == null) {
             // Non-destructive migration: 0.2 stored pinned identifiers in this preference.
-            val legacy = PinnedAppsStoreLegacyRead()
+            val legacy = readLegacyPinnedApps()
             return HomeLayout(legacy.map { HomeEntry.App(it) })
         }
         return try {
@@ -122,12 +126,12 @@ class HomeLayoutStore(context: Context) {
                 }
             }.distinctBy { it.key })
         } catch (_: Exception) {
-            HomeLayout(PinnedAppsStoreLegacyRead().map { HomeEntry.App(it) })
+            HomeLayout(readLegacyPinnedApps().map { HomeEntry.App(it) })
         }
     }
 
-    private fun PinnedAppsStoreLegacyRead(): List<String> =
-        preferences.getString("pinned", "").orEmpty().split('|').filter(String::isNotBlank).distinct()
+    private fun readLegacyPinnedApps(): List<String> =
+        parseLegacyPinnedApps(preferences.getString("pinned", ""))
 
     fun write(layout: HomeLayout) {
         val array = JSONArray()

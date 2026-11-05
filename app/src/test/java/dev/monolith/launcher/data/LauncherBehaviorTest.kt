@@ -4,24 +4,27 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class LauncherBehaviorTest {
+    private fun layoutOf(vararg ids: String) = HomeLayout(ids.map { HomeEntry.App(it) })
+
     @Test fun reorderMovesEarlierAndLater() {
-        val pins = listOf("a", "b", "c")
-        assertEquals(listOf("b", "a", "c"), movePinned(pins, "b", -1))
-        assertEquals(listOf("a", "c", "b"), movePinned(pins, "b", 1))
+        val layout = layoutOf("a", "b", "c")
+        assertEquals(listOf("b", "a", "c"), reorderHome(layout, 1, 0).appIds)
+        assertEquals(listOf("a", "c", "b"), reorderHome(layout, 1, 2).appIds)
     }
 
     @Test fun reorderDoesNotMutateOriginal() {
-        val pins = listOf("a", "b")
-        movePinned(pins, "b", -1)
-        assertEquals(listOf("a", "b"), pins)
+        val layout = layoutOf("a", "b")
+        reorderHome(layout, 1, 0)
+        assertEquals(listOf("a", "b"), layout.appIds)
     }
 
     @Test fun reorderRejectsMissingAndOutOfRange() {
-        val pins = listOf("a", "b")
-        assertEquals(pins, movePinned(pins, "missing", 1))
-        assertEquals(pins, movePinned(pins, "a", -1))
-        assertEquals(pins, movePinned(pins, "b", 1))
-        assertEquals(pins, movePinned(pins, "a", 99))
+        val layout = layoutOf("a", "b")
+        assertEquals(layout, reorderHome(layout, -1, 0))
+        assertEquals(layout, reorderHome(layout, 0, -1))
+        assertEquals(layout, reorderHome(layout, 1, 2))
+        assertEquals(layout, reorderHome(layout, 0, 99))
+        assertEquals(layout, reorderHome(layout, 0, 0))
     }
 
     @Test fun columnsAreBounded() {
@@ -37,8 +40,12 @@ class LauncherBehaviorTest {
         assertEquals(100, normalizeDrawerOpacity(999))
     }
 
-    @Test fun toggledPinsPreserveOrder() {
-        assertEquals(listOf("a", "c"), togglePinned(listOf("a"), "c"))
-        assertEquals(listOf("c"), togglePinned(listOf("a", "c"), "a"))
+    @Test fun pinAndUnpinPreserveOrder() {
+        val one = layoutOf("a")
+        val two = pinToHome(one, "c")
+        assertEquals(listOf("a", "c"), two.appIds)
+        assertEquals(listOf("c"), unpinFromHome(two, "a").appIds)
+        assertEquals(two, pinToHome(two, "c"))
+        assertEquals(listOf("a"), one.appIds)
     }
 }
