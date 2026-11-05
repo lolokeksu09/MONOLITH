@@ -311,7 +311,7 @@ private fun ReferenceOrbit(
     onActions: (LaunchableApp) -> Unit
 ) {
     val progress by animateFloatAsState(if (expanded) 1f else 0f, animationSpec = tween(280), label = "Orbit spread")
-    apps.take(orbitOffsets.size).forEachIndexed { index, app ->
+    if (expanded || progress > 0.01f) apps.take(orbitOffsets.size).forEachIndexed { index, app ->
         val (dx, dy) = orbitOffsets[index]
         val bitmap = rememberAppIcon(app)
         val label = app.label
@@ -321,8 +321,11 @@ private fun ReferenceOrbit(
                 .graphicsLayer { alpha = progress; scaleX = 0.65f + 0.35f * progress; scaleY = scaleX }
                 .background(Color(0xFF161616), CircleShape)
                 .semantics { contentDescription = label }
-                .combinedClickable(onClick = { if (expanded) onLaunch(app) },
-                    onLongClick = { if (expanded) onActions(app) }),
+                .combinedClickable(
+                    enabled = expanded,
+                    onClick = { onLaunch(app) },
+                    onLongClick = { onActions(app) }
+                ),
             contentAlignment = Alignment.Center
         ) {
             if (bitmap != null) {
