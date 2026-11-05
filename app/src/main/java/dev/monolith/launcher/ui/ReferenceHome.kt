@@ -7,7 +7,9 @@ import android.view.KeyEvent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -51,7 +53,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -63,14 +64,16 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -113,7 +116,8 @@ fun ReferenceHome(
     var orbitOpen by rememberSaveable { mutableStateOf(false) }
     var now by remember { mutableStateOf(LocalDateTime.now()) }
     val context = LocalContext.current
-    val motionDuration = if (remember { ValueAnimator.areAnimatorsEnabled() }) 380 else 0
+    // Re-read after resume/recomposition so system reduced-motion changes are respected.
+    val motionDuration = if (ValueAnimator.areAnimatorsEnabled()) 420 else 0
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -173,13 +177,19 @@ fun ReferenceHome(
             transitionSpec = {
                 val direction = if (targetState > initialState) 1 else -1
                 (slideInHorizontally(
-                    animationSpec = tween(motionDuration, easing = FastOutSlowInEasing),
-                    initialOffsetX = { direction * it / 5 }
-                ) + fadeIn(tween(motionDuration))) togetherWith
+                    animationSpec = if (motionDuration == 0) tween(0) else spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    ),
+                    initialOffsetX = { direction * it / 8 }
+                ) + fadeIn(tween(motionDuration, easing = FastOutSlowInEasing))) togetherWith
                     (slideOutHorizontally(
-                        animationSpec = tween(motionDuration, easing = FastOutSlowInEasing),
-                        targetOffsetX = { -direction * it / 5 }
-                    ) + fadeOut(tween(motionDuration / 2)))
+                        animationSpec = if (motionDuration == 0) tween(0) else spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness = Spring.StiffnessMediumLow
+                        ),
+                        targetOffsetX = { -direction * it / 8 }
+                    ) + fadeOut(tween(motionDuration, easing = FastOutSlowInEasing)))
             },
             label = "Reference scenes"
         ) { selected ->
@@ -206,7 +216,7 @@ fun ReferenceHome(
                 .size(width = 92.dp, height = 48.dp)
         ) {
             Text(stringResource(R.string.reference_settings), color = Soft,
-                fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                fontSize = 10.sp, fontWeight = FontWeight.Normal)
         }
 
         Column(
@@ -230,16 +240,16 @@ fun ReferenceHome(
                 TextButton(onClick = { orbitOpen = false; page = 1-page }) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(if (page == 0) "●  ○" else "○  ●",
-                            color = Paper, fontSize = 15.sp)
-                        Spacer(Modifier.width(10.dp))
+                            color = Soft, fontSize = 12.sp)
+                        Spacer(Modifier.width(9.dp))
                         Text(stringResource(if (page == 0) R.string.reference_editorial
                                             else R.string.reference_minimal),
-                            color = Soft, fontSize = 11.sp)
+                            color = Soft, fontSize = 10.sp)
                     }
                 }
                 TextButton(onClick = openDrawer) {
-                    Text(stringResource(R.string.reference_all_apps), color = Paper,
-                        fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.reference_all_apps), color = Soft,
+                        fontSize = 11.sp, fontWeight = FontWeight.Medium)
                 }
             }
             if (!isDefaultHome) {
@@ -266,36 +276,49 @@ private fun MinimalScene(
 ) {
     Box(Modifier.fillMaxSize().background(Ink)) {
         Column(
-            modifier = Modifier.align(Alignment.TopStart)
-                .padding(start = 29.dp, top = 40.dp)
+            modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()
+                .padding(start = 29.dp, top = 40.dp, end = 24.dp)
         ) {
             Text("●   MONOLITH    /    01",
                 color = Soft, fontSize = 10.sp, letterSpacing = 1.3.sp)
             Spacer(Modifier.height(23.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.width(145.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f).padding(end = 8.dp)) {
                     Text(stringResource(R.string.reference_media), color = Paper,
-                        fontSize = 12.sp, maxLines = 1)
-                    Text(stringResource(R.string.reference_media_hint),
-                        color = Soft, fontSize = 10.sp, maxLines = 1)
+                        fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        stringResource(R.string.reference_media_hint),
+                        color = Soft,
+                        fontSize = 10.sp,
+                        lineHeight = 12.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
                 MediaControl(0, stringResource(R.string.reference_play_pause), onPlayPause)
                 MediaControl(1, stringResource(R.string.reference_next_track), onNext)
             }
         }
 
-        Text(
-            now.format(DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())) +
+        VerticalRailText(
+            text = now.format(DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())) +
                 "   /   " + now.format(DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH)).uppercase(Locale.ENGLISH),
             modifier = Modifier.align(Alignment.CenterStart)
-                .offset(x = (-56).dp, y = 128.dp).rotate(-90f),
-            fontSize = 15.sp, color = Paper, letterSpacing = 1.sp
+                .offset(y = 128.dp).padding(start = 16.dp),
+            fontSize = 15.sp,
+            color = Paper,
+            letterSpacing = 1.sp
         )
-        Text(
-            stringResource(R.string.reference_hold_hint),
+        VerticalRailText(
+            text = stringResource(R.string.reference_hold_hint),
             modifier = Modifier.align(Alignment.CenterStart)
-                .offset(x = (-52).dp, y = (-105).dp).rotate(-90f),
-            color = Dim, fontSize = 10.sp, letterSpacing = 1.1.sp
+                .offset(y = (-105).dp).padding(start = 18.dp),
+            color = Dim,
+            fontSize = 10.sp,
+            letterSpacing = 1.1.sp
         )
 
         BoxWithConstraints(
@@ -342,6 +365,45 @@ private fun MinimalScene(
     }
 }
 
+/**
+ * Measures the rotated bounds instead of pushing unrotated text beyond the screen edge.
+ * This keeps every glyph inside the safe area at different font scales and locales.
+ */
+@Composable
+private fun VerticalRailText(
+    text: String,
+    modifier: Modifier,
+    color: Color,
+    fontSize: TextUnit,
+    letterSpacing: TextUnit
+) {
+    Layout(
+        content = {
+            Text(
+                text = text,
+                color = color,
+                fontSize = fontSize,
+                letterSpacing = letterSpacing,
+                maxLines = 1,
+                softWrap = false
+            )
+        },
+        modifier = modifier
+    ) { measurables, _ ->
+        val placeable = measurables.single().measure(Constraints())
+        val rotatedWidth = placeable.height
+        val rotatedHeight = placeable.width
+        layout(rotatedWidth, rotatedHeight) {
+            placeable.placeWithLayer(
+                x = (rotatedWidth - placeable.width) / 2,
+                y = (rotatedHeight - placeable.height) / 2
+            ) {
+                rotationZ = -90f
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun OrbitCluster(
@@ -354,13 +416,20 @@ private fun OrbitCluster(
 ) {
     val spread by animateFloatAsState(
         targetValue = if (expanded) 1f else 0f,
-        animationSpec = tween(motionDuration, easing = FastOutSlowInEasing),
+        animationSpec = when {
+            motionDuration == 0 -> tween(0)
+            expanded -> spring(
+                dampingRatio = Spring.DampingRatioNoBouncy,
+                stiffness = 260f
+            )
+            else -> tween(260, easing = FastOutSlowInEasing)
+        },
         label = "Orbit expansion"
     )
     val positions = orbitPositions(apps.size)
     if (expanded || spread > 0.01f) positions.forEachIndexed { index, point ->
         val app = apps[index]
-        val stagger = (index * .016f).coerceAtMost(.22f)
+        val stagger = (index * .012f).coerceAtMost(.18f)
         val local = ((spread - stagger) / (1f - stagger)).coerceIn(0f, 1f)
         val bitmap = rememberAppIcon(app)
         Box(
@@ -371,11 +440,9 @@ private fun OrbitCluster(
                 .size(48.dp)
                 .graphicsLayer {
                     alpha = local
-                    scaleX = .62f + .38f * local
+                    scaleX = .72f + .28f * local
                     scaleY = scaleX
                 }
-                .background(Color(0xFF121212), CircleShape)
-                .border(.7.dp, Color.White.copy(alpha = .11f), CircleShape)
                 .semantics { contentDescription = app.label }
                 .combinedClickable(
                     enabled = orbitHitTargetsEnabled(expanded),
@@ -386,7 +453,7 @@ private fun OrbitCluster(
         ) {
             if (bitmap != null) {
                 Image(bitmap.asImageBitmap(), contentDescription = null,
-                    modifier = Modifier.size(37.dp))
+                    modifier = Modifier.size(34.dp))
             } else {
                 Text(app.label.take(1), fontSize = 18.sp, color = Paper)
             }
@@ -447,15 +514,15 @@ private fun EditorialScene(
         Box(Modifier.fillMaxSize().background(
             Brush.horizontalGradient(
                 0f to Ink.copy(alpha = .99f),
-                .48f to Ink.copy(alpha = .76f),
+                .48f to Ink.copy(alpha = .68f),
                 1f to Color.Transparent
             )
         ))
         Box(Modifier.fillMaxSize().background(
             Brush.verticalGradient(
-                0f to Ink.copy(alpha = .17f),
+                0f to Ink.copy(alpha = .14f),
                 .7f to Color.Transparent,
-                1f to Ink.copy(alpha = .37f)
+                1f to Ink.copy(alpha = .28f)
             )
         ))
 
@@ -523,8 +590,8 @@ private fun EditorialScene(
 @Composable
 private fun EditorialShortcut(
     app: LaunchableApp,
-    onLaunch: (LaunchableApp) -> Unit,
-    onActions: (LaunchableApp) -> Unit
+    onLaunch: () -> Unit,
+    onActions: () -> Unit
 ) {
     val bitmap = rememberAppIcon(app)
     val mono = remember { ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) }) }
@@ -536,8 +603,8 @@ private fun EditorialShortcut(
     ) {
         Box(
             modifier = Modifier.size(40.dp)
-                .border(.75.dp, Paper.copy(alpha = .27f), CircleShape)
-                .background(Ink.copy(alpha = .34f), CircleShape),
+                .border(.6.dp, Paper.copy(alpha = .20f), CircleShape)
+                .background(Ink.copy(alpha = .22f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             if (bitmap != null) {
