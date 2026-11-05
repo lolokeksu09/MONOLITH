@@ -36,14 +36,19 @@ class OrbitCustomizationTest {
         assertEquals(listOf("alpha", "beta"), moveOrbitFavorite(listOf("alpha", "beta"), "beta", 1))
     }
 
-    @Test fun orbitCoordinatesHaveRoomForRealTouchTargets() {
-        val points = orbitPositions(15)
-        assertEquals(15, points.size)
-        for (i in points.indices) {
-            assertTrue(points[i].x in -100f..100f)
-            assertTrue(points[i].y in -135f..135f)
-            for (j in (i+1) until points.size) {
-                assertTrue("icons overlap", hypot(points[i].x-points[j].x, points[i].y-points[j].y) >= 51f)
+    @Test fun everyDensityHasRoomForRealTouchTargets() {
+        listOf(8, 12, 15).forEach { density ->
+            val points = orbitPositions(density)
+            assertEquals(density, points.size)
+            for (i in points.indices) {
+                assertTrue(points[i].x in -100f..100f)
+                assertTrue(points[i].y in -135f..135f)
+                for (j in (i+1) until points.size) {
+                    assertTrue(
+                        "icons overlap at density $density",
+                        hypot(points[i].x-points[j].x, points[i].y-points[j].y) >= 51f
+                    )
+                }
             }
         }
         assertTrue(orbitPositions(0).isEmpty())
