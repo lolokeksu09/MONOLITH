@@ -72,13 +72,16 @@ import dev.monolith.launcher.data.filterApps
 import dev.monolith.launcher.data.filterHiddenApps
 import dev.monolith.launcher.data.effectiveDrawerQuery
 import dev.monolith.launcher.data.sortApps
+import dev.monolith.launcher.data.ORBIT_CAPACITY
+import dev.monolith.launcher.data.moveOrbitFavorite
+import dev.monolith.launcher.data.toggleOrbitFavorite
 
 private val Background = Color(0xFF050505)
 private val Foreground = Color(0xFFF5F5F5)
 private val Muted = Color(0xFFADADAD)
 private val Panel = Color(0xFF161616)
 
-private enum class Screen { HOME, ALL_APPS, SETTINGS, HIDDEN_APPS }
+private enum class Screen { HOME, ALL_APPS, SETTINGS, ORBIT_APPS, HIDDEN_APPS }
 
 /**
  * Reference HOME is the only desktop.
@@ -92,6 +95,7 @@ fun MonolithScreen(
     homeRequestGeneration: Int,
     launchStats: Map<String, LaunchStats>,
     hiddenApps: Set<String>,
+    orbitFavorites: List<String>,
     loading: Boolean,
     loadError: Boolean,
     isDefaultHome: Boolean,
@@ -99,6 +103,7 @@ fun MonolithScreen(
     onMakeDefaultHome: () -> Unit,
     onLaunch: (LaunchableApp) -> Unit,
     onAppInfo: (LaunchableApp) -> Unit,
+    onOrbitFavoritesChange: (List<String>) -> Unit,
     onPreferencesChange: (LauncherPreferences) -> Unit,
     onHideApp: (LaunchableApp) -> Unit,
     onUnhideApp: (LaunchableApp) -> Unit,
@@ -106,6 +111,7 @@ fun MonolithScreen(
 ) {
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
     var query by rememberSaveable { mutableStateOf("") }
+    var orbitQuery by rememberSaveable { mutableStateOf("") }
     var selectedApp by remember { mutableStateOf<LaunchableApp?>(null) }
     val visibleApps = remember(apps, hiddenApps, query, preferences, launchStats) {
         sortApps(
@@ -114,8 +120,8 @@ fun MonolithScreen(
             preferences.appSort, launchStats
         )
     }
-    val referenceApps = remember(apps, hiddenApps, launchStats) {
-        chooseReferenceApps(apps, hiddenApps, launchStats)
+    val referenceApps = remember(apps, hiddenApps, launchStats, orbitFavorites) {
+        chooseReferenceApps(apps, hiddenApps, launchStats, favoriteIds = orbitFavorites)
     }
     val launchAndReturnHome: (LaunchableApp) -> Unit = { app ->
         screen = Screen.HOME
@@ -192,11 +198,32 @@ fun MonolithScreen(
                             TextButton(onClick = { screen = Screen.HOME; query = "" }) {
                                 Text("←", color = Foreground, fontSize = 23.sp)
                             }
-                            Text(stringResource(R.string.drawer_title), fontSize = 21.sp, fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.drawer_title), fontSize = 30.sp,
+                                fontWeight = FontWeight.Bold, letterSpacing = (-.7).sp)
                             TextButton(onClick = { screen = Screen.SETTINGS }) {
                                 Text(stringResource(R.string.settings), color = Muted, fontSize = 12.sp)
                             }
                         }
+                        Spacer(Modifier.height(9.dp))
+                        if (preferences.showDrawerSearch) {
+                            TextField(
+                                value = query,
+                                onValueChange = { query = it },
+                                placeholder = { Text(stringResource(R.string.drawer_search_placeholder)) },
+                                singleLine = true,
+                                shape = RoundedCornerShape(26.dp),
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
+                                colors = TextFieldDefaults.colors(
+                                    focusedTextColor = Foreground,
+                                    unfocusedTextColor = Foreground,
+                                    focusedContainerColor = Panel,
+                                    unfocusedContainerColor = Panel,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent
+                                )
+                            )
+                        }
+                        Spacer(Modifier.height(9.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -242,24 +269,6 @@ fun MonolithScreen(
                                 }
                             }
                         }
-                        if (preferences.showDrawerSearch) {
-                            TextField(
-                                value = query,
-                                onValueChange = { query = it },
-                                placeholder = { Text(stringResource(R.string.drawer_search_placeholder)) },
-                                singleLine = true,
-                                shape = RoundedCornerShape(26.dp),
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
-                                colors = TextFieldDefaults.colors(
-                                    focusedTextColor = Foreground,
-                                    unfocusedTextColor = Foreground,
-                                    focusedContainerColor = Panel,
-                                    unfocusedContainerColor = Panel,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent
-                                )
-                            )
-                        }
                     }
                 }
                 Screen.SETTINGS -> Column(
@@ -270,7 +279,15 @@ fun MonolithScreen(
                     Text(stringResource(R.string.settings), fontSize = 29.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(10.dp))
                     Text(stringResource(R.string.reference_only_description), color = Muted, fontSize = 13.sp)
-                    Spacer(Modifier.height(25.dp))
+                    Spacer(Modifier.height(15.dp))
+                    OutlinedButton(onClick = { orbitQuery = ""; screen = Screen.ORBIT_APPS },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp)) {
+                        Text(stringResource(R.string.reference_customize_orbit))
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(stringResource(R.string.reference_customize_hint),
+                        fontSize = 12.sp, color = Muted)
+                    Spacer(Modifier.height(20.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -327,6 +344,72 @@ fun MonolithScreen(
                     Spacer(Modifier.height(20.dp))
                     OutlinedButton(onClick = { screen = Screen.HOME }, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.back_home))
+                    }
+                }
+                Screen.ORBIT_APPS -> {
+                    val available = remember(apps, hiddenApps) {
+                        filterHiddenApps(apps, hiddenApps).sortedBy { it.label.lowercase() }
+                    }
+                    val byId = remember(available) { available.associateBy { it.id } }
+                    val listed = remember(available, byId, orbitFavorites) {
+                        orbitFavorites.mapNotNull(byId::get) + available.filterNot { it.id in orbitFavorites }
+                    }
+                    val filtered = remember(listed, orbitQuery) { filterApps(listed, orbitQuery) }
+                    Column(
+                        modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)
+                            .padding(horizontal = 20.dp, vertical = 14.dp)
+                    ) {
+                        Text(stringResource(R.string.reference_customize_orbit),
+                            fontSize = 26.sp, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.reference_selected_count, orbitFavorites.size, ORBIT_CAPACITY),
+                            color = Muted, fontSize = 13.sp)
+                        Spacer(Modifier.height(14.dp))
+                        TextField(
+                            value = orbitQuery,
+                            onValueChange = { orbitQuery = it },
+                            placeholder = { Text(stringResource(R.string.drawer_search_placeholder)) },
+                            singleLine = true, shape = RoundedCornerShape(20.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Panel, unfocusedContainerColor = Panel,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            )
+                        )
+                        Spacer(Modifier.height(9.dp))
+                        LazyColumn(Modifier.weight(1f)) {
+                            items(filtered, key = { it.id }) { app ->
+                                val selected = app.id in orbitFavorites
+                                Row(
+                                    Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(app.label, modifier = Modifier.weight(1f),
+                                        color = Foreground, fontSize = 13.sp,
+                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    if (selected && orbitQuery.isBlank()) {
+                                        TextButton(
+                                            onClick = { onOrbitFavoritesChange(moveOrbitFavorite(orbitFavorites, app.id, -1)) },
+                                            enabled = orbitFavorites.indexOf(app.id) > 0
+                                        ) { Text("↑", fontSize = 17.sp) }
+                                        TextButton(
+                                            onClick = { onOrbitFavoritesChange(moveOrbitFavorite(orbitFavorites, app.id, 1)) },
+                                            enabled = orbitFavorites.indexOf(app.id) < orbitFavorites.lastIndex
+                                        ) { Text("↓", fontSize = 17.sp) }
+                                    }
+                                    TextButton(
+                                        enabled = selected || orbitFavorites.size < ORBIT_CAPACITY,
+                                        onClick = { onOrbitFavoritesChange(toggleOrbitFavorite(orbitFavorites, app.id)) }
+                                    ) {
+                                        Text(stringResource(if(selected) R.string.reference_remove else R.string.reference_add))
+                                    }
+                                }
+                            }
+                        }
+                        OutlinedButton(
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
+                            onClick = { screen = Screen.SETTINGS }
+                        ) { Text(stringResource(R.string.reference_done)) }
                     }
                 }
                 Screen.HIDDEN_APPS -> Column(
@@ -405,13 +488,13 @@ private fun DrawerAppTile(app: LaunchableApp, onLaunch: () -> Unit, onActions: (
     ) {
         Box(Modifier.size(51.dp), contentAlignment = Alignment.Center) {
             if (bitmap != null) {
-                Image(bitmap.asImageBitmap(), contentDescription = app.label, modifier = Modifier.size(46.dp))
+                Image(bitmap.asImageBitmap(), contentDescription = app.label, modifier = Modifier.size(42.dp))
             } else {
                 Text(app.label.take(1), fontSize = 24.sp, color = Foreground)
             }
         }
         Spacer(Modifier.height(6.dp))
-        Text(app.label, color = Foreground, fontSize = 10.sp,
+        Text(app.label, color = Foreground, fontSize = 12.sp,
             maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
     }
 }

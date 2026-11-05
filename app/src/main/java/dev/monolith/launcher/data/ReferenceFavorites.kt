@@ -1,14 +1,20 @@
 package dev.monolith.launcher.data
 
 /**
- * Both Reference pages share the same visible launch targets.
- * Order by actual successful launches from MONOLITH; alphabetical on a new install.
+ * The Reference orbit contains chosen shortcuts first, then the most-used installed
+ * applications. Hidden apps never leak into home shortcuts, even if pinned earlier.
  */
 fun chooseReferenceApps(
     apps: List<LaunchableApp>,
     hiddenIds: Set<String> = emptySet(),
     stats: Map<String, LaunchStats> = emptyMap(),
-    limit: Int = 15
-): List<LaunchableApp> =
-    sortApps(filterHiddenApps(apps, hiddenIds), AppSort.FREQUENT, stats)
-        .take(limit.coerceAtLeast(0))
+    limit: Int = ORBIT_CAPACITY,
+    favoriteIds: List<String> = emptyList()
+): List<LaunchableApp> {
+    val installed = filterHiddenApps(apps, hiddenIds)
+    val byId = installed.associateBy { it.id }
+    val priority = normalizeOrbitFavorites(favoriteIds).mapNotNull(byId::get)
+    val usedIds = priority.mapTo(mutableSetOf()) { it.id }
+    val remaining = sortApps(installed.filterNot { it.id in usedIds }, AppSort.FREQUENT, stats)
+    return (priority + remaining).take(limit.coerceIn(0, ORBIT_CAPACITY))
+}
