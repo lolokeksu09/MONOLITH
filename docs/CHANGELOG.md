@@ -6,6 +6,9 @@
 - Reduced scene travel and matched incoming/outgoing fades for calmer page changes.
 - Preloads the selected orbit icons off the main thread before the first expansion to avoid first-open placeholder pop-in.
 - Keeps app touch targets disabled until expansion separates them, with boundary regression tests and unchanged 48dp targets.
+- Crossfades the page indicator and raises action-hint contrast to 4.63:1 on black without brightening decorative rails.
+- Adds localized orbit expanded/collapsed state and explicit open/action labels for TalkBack in Russian and English.
+- Aligns clock refreshes to minute boundaries instead of recomposing HOME every 15 seconds; remembers orbit geometry by app count.
 - Preserves application ID, signing configuration, HOME behavior, local settings, favorites, hidden apps and launch statistics. Physical-device motion acceptance remains required.
 
 ## 0.14.0-beta

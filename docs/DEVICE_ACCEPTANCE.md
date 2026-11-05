@@ -8,7 +8,8 @@ Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, rec
 - [ ] Tap/hold the center of the AMOLED page: orbit opens and collapses without a visual snap, only visible installed apps are shown, icon taps launch reliably. Check the shared spring, synchronized trigger/close-label fades and 48dp hit targets under 1.3x font scaling. Interrupt opening with Back or HOME and verify reversal stays smooth; taps during overlapping movement must not launch an app.
 - [ ] Verify the complete vertical time/date and hold hint remain visible inside the left safe area on both orbit states; confirm the full media hint wraps without clipping in Russian and English.
 - [ ] In Settings choose/reorder 15 orbit favorites, relaunch/reboot, verify order and hidden-app exclusion. Confirm a 16th selection is blocked.
-- [ ] Check reduced-motion system setting: app icons and page transitions are not forced to animate.
+- [ ] Check reduced-motion system setting: app icons, page indicator and page transitions are not forced to animate. Confirm the indicator crossfades when motion is enabled.
+- [ ] With TalkBack, verify the orbit announces expanded/collapsed state and both orbit and editorial icons expose Open application and Application actions in Russian and English. Confirm action hints remain readable on the physical AMOLED screen.
 - [ ] Swipe left/right between minimal/editorial pages; the grayscale rock backdrop appears offline and quick icons launch apps; back and HOME behave correctly.
 - [ ] Swipe up or tap All Apps; search with keyboard, clear/disable search, change sorting, hide/unhide an app.
 - [ ] Verify correct layout on landscape/rotation where supported, system bars and gesture-navigation insets, and large system font sizes.

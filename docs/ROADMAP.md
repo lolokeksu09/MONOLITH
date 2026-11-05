@@ -24,6 +24,7 @@ Updated 2026-11-06. Current stage: **0.15 beta in review**.
 
 - Unified orbit opening/closing motion, synchronized supporting-element fades and softened scene transitions.
 - Preloaded orbit icons and gated moving touch targets to avoid first-open pop-in and overlapping taps.
+- Improved hint contrast, page-indicator motion, localized accessibility semantics and minute-aligned clock updates.
 
 ## Next
 
