@@ -7,6 +7,7 @@ import android.view.KeyEvent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -71,6 +72,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
@@ -92,6 +94,7 @@ private val Ink = Color.Black
 private val Paper = Color(0xFFF4F3F0)
 private val Soft = Color(0xFFA7A6A4)
 private val Dim = Color(0xFF555557)
+private val Hint = Color(0xFF767678)
 private val Accent = Color(0xFFC9C5BB)
 
 /**
@@ -122,8 +125,10 @@ fun ReferenceHome(
 
     LaunchedEffect(Unit) {
         while (true) {
-            now = LocalDateTime.now()
-            delay(15_000L)
+            val current = LocalDateTime.now()
+            now = current
+            val millisIntoMinute = current.second * 1000L + current.nano / 1_000_000L
+            delay((60_000L - millisIntoMinute).coerceIn(250L, 60_000L))
         }
     }
     LaunchedEffect(homeRequestGeneration) {
@@ -239,13 +244,22 @@ fun ReferenceHome(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(onClick = { orbitOpen = false; page = 1-page }) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(if (page == 0) "●  ○" else "○  ●",
-                            color = Soft, fontSize = 12.sp)
-                        Spacer(Modifier.width(9.dp))
-                        Text(stringResource(if (page == 0) R.string.reference_editorial
-                                            else R.string.reference_minimal),
-                            color = Soft, fontSize = 10.sp)
+                    Crossfade(
+                        targetState = page,
+                        animationSpec = tween(
+                            motionDuration * 3 / 4,
+                            easing = FastOutSlowInEasing
+                        ),
+                        label = "Reference page indicator"
+                    ) { currentPage ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(if (currentPage == 0) "●  ○" else "○  ●",
+                                color = Soft, fontSize = 12.sp)
+                            Spacer(Modifier.width(9.dp))
+                            Text(stringResource(if (currentPage == 0) R.string.reference_editorial
+                                                else R.string.reference_minimal),
+                                color = Soft, fontSize = 10.sp)
+                        }
                     }
                 }
                 TextButton(onClick = openDrawer) {
@@ -283,6 +297,10 @@ private fun MinimalScene(
             stiffness = 180f
         ),
         label = "Orbit expansion"
+    )
+    val orbitStateDescription = stringResource(
+        if (orbitOpen) R.string.reference_orbit_expanded
+        else R.string.reference_orbit_collapsed
     )
 
     Box(Modifier.fillMaxSize().background(Ink)) {
@@ -327,7 +345,7 @@ private fun MinimalScene(
             text = stringResource(R.string.reference_hold_hint),
             modifier = Modifier.align(Alignment.CenterStart)
                 .offset(y = (-105).dp).padding(start = 18.dp),
-            color = Dim,
+            color = Hint,
             fontSize = 10.sp,
             letterSpacing = 1.1.sp
         )
@@ -340,6 +358,7 @@ private fun MinimalScene(
             val orbitScale = minOf(1f, (maxWidth.value - 28f) / 295f).coerceAtLeast(.92f)
             Box(
                 modifier = Modifier.size(304.dp)
+                    .semantics { stateDescription = orbitStateDescription }
                     .combinedClickable(
                         onClick = onToggleOrbit,
                         onLongClick = { if (!orbitOpen) onToggleOrbit() },
@@ -385,7 +404,7 @@ private fun MinimalScene(
             stringResource(R.string.reference_swipe_hint),
             modifier = Modifier.align(Alignment.BottomStart)
                 .padding(start = 30.dp, bottom = 102.dp),
-            fontSize = 11.sp, color = Dim, letterSpacing = .7.sp
+            fontSize = 11.sp, color = Hint, letterSpacing = .7.sp
         )
     }
 }
@@ -439,7 +458,7 @@ private fun OrbitCluster(
     onLaunch: (LaunchableApp) -> Unit,
     onActions: (LaunchableApp) -> Unit
 ) {
-    val positions = orbitPositions(apps.size)
+    val positions = remember(apps.size) { orbitPositions(apps.size) }
     // Warm all visible orbit icons before the first tap, without doing package I/O on the UI thread.
     val icons = positions.mapIndexed { index, _ -> rememberAppIcon(apps[index]) }
     val local = progress.coerceIn(0f, 1f)
@@ -461,7 +480,9 @@ private fun OrbitCluster(
                 .combinedClickable(
                     enabled = orbitHitTargetsEnabled(expanded, local),
                     onClick = { onLaunch(app) },
-                    onLongClick = { onActions(app) }
+                    onLongClick = { onActions(app) },
+                    onClickLabel = stringResource(R.string.open_app),
+                    onLongClickLabel = stringResource(R.string.app_actions)
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -612,7 +633,12 @@ private fun EditorialShortcut(
     Box(
         modifier = Modifier.size(48.dp)
             .semantics { contentDescription = app.label }
-            .combinedClickable(onClick = { onLaunch(app) }, onLongClick = { onActions(app) }),
+            .combinedClickable(
+                onClick = { onLaunch(app) },
+                onLongClick = { onActions(app) },
+                onClickLabel = stringResource(R.string.open_app),
+                onLongClickLabel = stringResource(R.string.app_actions)
+            ),
         contentAlignment = Alignment.Center
     ) {
         Box(
