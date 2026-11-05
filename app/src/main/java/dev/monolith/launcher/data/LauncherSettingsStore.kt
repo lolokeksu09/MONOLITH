@@ -1,5 +1,7 @@
 package dev.monolith.launcher.data
 
+import android.content.Context
+
 enum class AppIconStyle { ORIGINAL, MONO, INK }
 
 data class LauncherPreferences(
