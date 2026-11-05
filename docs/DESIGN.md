@@ -14,16 +14,16 @@ The two scenes intentionally have different density: minimal = mostly empty blac
 
 ## Rhythm and type
 
-- Screen content obeys Android safeDrawing insets.
+- Screen content obeys Android safeDrawing insets. Rotated rails use measured post-rotation bounds and must never use negative screen-edge offsets.
 - App-menu and media tap targets are at least 48dp; minimum orbit icon-center spacing is 58dp before device scaling.
-- One oversized day abbreviation; supporting labels 10–12sp; top media controls keep distinct hierarchy.
-- Avoid card kits, filler labels, decorative neon and fake music metadata.
+- One oversized day abbreviation; supporting labels 10–12sp; top media controls keep distinct hierarchy and may wrap to two lines.
+- Avoid card kits, heavy orbit backplates, filler labels, decorative neon and fake music metadata.
 
 ## Motion contract
 
-- Tap/hold opens orbit. Icons spread spatially from the trigger; close collapses.
-- Swipe left/right changes scene, up opens All Apps; Android Back dismisses orbit first.
-- Animations derive from system animator settings; turning off device animations removes delays.
+- Tap/hold opens orbit. Icons spread spatially from the trigger with a no-bounce spring and restrained stagger; close uses a short controlled collapse.
+- Swipe left/right changes scene, up opens All Apps; Android Back dismisses orbit first. Incoming and outgoing scenes use equal fade durations and a no-bounce spatial transition.
+- Animations derive from system animator settings; turning off device animations removes delays, and the setting is re-read on subsequent recompositions rather than cached permanently.
 - Hidden apps do not surface in orbit; offline or empty app catalogs are recoverable.
 
 ## Quality and limits

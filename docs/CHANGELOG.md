@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.0-beta
+- Fixed clipped vertical time/date and hold-hint rails with measured rotated bounds that stay inside the safe area.
+- Removed the fixed-width media label and allowed the player hint to wrap instead of cutting off text.
+- Reworked orbit expansion with a no-bounce spring, softer stagger and scale, a shorter controlled collapse, and symmetrical scene fades.
+- Reduced visual weight around orbit icons, editorial shortcuts and navigation labels while preserving 48dp hit targets.
+- Slightly opened the editorial gradients so the bundled rock texture remains readable.
+- Preserved application ID, permanent signing configuration, HOME role, local settings, favorites and hidden-app data; physical-device visual and gesture acceptance remains required.
+
 ## 0.13.0-beta
 - Replaced the 0.12 placeholder editorial mountain with a bundled, original grayscale cliff texture (offline, no borrowed TikTok artwork or wallpaper).
 - Redesigned the Reference UI around the clip: true AMOLED black, refined vertical time/date typography, clean media transport icons, monochrome editorial quick launches and a more deliberate 15-app honeycomb orbit.

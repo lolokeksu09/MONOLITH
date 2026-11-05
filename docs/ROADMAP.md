@@ -1,6 +1,6 @@
 # MONOLITH roadmap
 
-Updated 2026-11-05. Current stage: **0.13 beta**.
+Updated 2026-11-06. Current stage: **0.14 beta in review**.
 
 ## Implemented
 
@@ -15,12 +15,16 @@ Updated 2026-11-05. Current stage: **0.13 beta**.
 - Redesigned the orbit motion, screen transitions, media buttons, accessibility and app shortcuts.
 - Added a local favorite selector and ordering for up to 15 apps.
 
+## In 0.14 review
+
+- Fixed clipped vertical rails and media text using safe measured layouts.
+- Smoothed orbit and scene motion and reduced unnecessary visual weight around icons.
+
 ## Next
 
 1. Physical acceptance on the Lenovo Legion Y70 / Motorola Android 16 (gestures, navigation insets, HOME intents, rotation, keyboard, launch handling, media controls).
 2. Improve Reference-mode icon arrangement for different screen sizes and font scales; no overlap or invisible hit targets.
-3. Add a dedicated, opt-in favorites editor for the orbit without resurrecting the Classic Dock/grid system.
-4. Extend focused Compose UI tests and on-device profiling for animation and cold start.
+3. Extend focused Compose UI tests and on-device profiling for animation and cold start.
 
 ## Stable release gate
 
