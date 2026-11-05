@@ -1,38 +1,21 @@
 # MONOLITH roadmap
 
-Updated: 2026-11-05. The current repository baseline is **0.11.0-beta**; future entries are proposals, not implemented features.
+Updated 2026-11-05. Current stage: **0.12 beta**.
 
-## Delivered: 0.1–0.10 beta
+## Implemented
 
-- 0.1–0.3: HOME activity, app catalog, folders, pinning, persistent layout, widget hosting.
-- 0.4: Portable, validated JSON home backup; quick drawer access; pinned release certificate.
-- 0.5–0.6: Drawer sorting, display preferences, hidden apps, cached icons and resilient app loading.
-- 0.7–0.8: Persistent Dock; system wallpaper; wallpaper-backed drawer, bottom search and gestures.
-- 0.9–0.10: Persistent widget-height controls and order, safer removal, and reliable return to desktop.
+- Android HOME registration, app catalog, launches, sorting, hiding apps and launcher-only usage history.
+- Signed beta releases with pinned certificate verification and no root/network requirement.
+- Reference design: AMOLED minimal, animated orbital app cluster and editorial weekday screen.
+- 0.12: removed Classic HOME, Dock, folders, widgets and old layout backup UI. The Reference home is now the only desktop.
 
-See [Changelog](CHANGELOG.md) for details. Shipped features do **not** imply verified behavior on all OEM Android builds.
+## Next
 
-## Implemented in 0.11 beta: Reference home
+1. Physical acceptance on the Lenovo Legion Y70 / Motorola Android 16 (gestures, navigation insets, HOME intents, rotation, keyboard, launch handling, media controls).
+2. Improve Reference-mode icon arrangement for different screen sizes and font scales; no overlap or invisible hit targets.
+3. Add a dedicated, opt-in favorites editor for the orbit without resurrecting the Classic Dock/grid system.
+4. Extend focused Compose UI tests and on-device profiling for animation and cold start.
 
-- Native two-page reference-inspired home: AMOLED black + orbital shortcuts, and editorial day/monochrome cliff artwork with quick app links.
-- Mode switch keeps the old desktop available; existing widgets remain on Classic HOME.
-- Media transport controls dispatch to Android's active player; no track metadata shown without user opt-in.
-- Swipe between reference pages, access the drawer from either page, preserve language resources and backups.
+## Stable release gate
 
-## Next: quality and architecture
-
-1. Physical acceptance testing on the Lenovo Legion Y70 / Motorola Android 16 build. Record outcomes against [Device acceptance](DEVICE_ACCEPTANCE.md).
-2. Split `MonolithScreen.kt` (1,331 lines) and `MainActivity.kt` (499 lines) into focused home, drawer, widget, settings and state components **without** changing existing storage formats or HOME behavior.
-3. Add UI/instrumentation coverage for HOME intent, app launches, app drawer, widgets, restore and rotation.
-4. Profile cold start, icon rendering, scrolling and transition jank on-device before performance claims.
-
-## Proposed: themes
-
-- A theme model separate from stored launcher layout, with safe defaults and explicit import/export.
-- Built-in AMOLED minimalist and radial app-menu presets, inspired by customizable launchers rather than copied assets.
-- Optional visual editing of clock, app-menu layout, icons and animations.
-- Respect live wallpaper/gesture constraints, accessibility and user control. No root or privileged SystemUI dependency.
-
-## Stable 1.0 acceptance gate
-
-The launcher is not 1.0-ready until the existing CI remains green **and** the target Android device passes HOME role/restore, reboot, orientation, navigation gestures, keyboard/insets, app launching, widget providers, wallpapers, backup/import and upgrade compatibility. No claim of system lock-screen or recents replacement.
+All CI checks plus physical-device behavior, update-signing continuity and a recovery path to the stock HOME must pass before 1.0 stable.

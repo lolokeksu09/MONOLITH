@@ -1,18 +1,17 @@
-# MONOLITH physical-device acceptance checklist
+# MONOLITH 0.12 physical-device acceptance
 
-Target: Lenovo Legion Y70 with Motorola Android 16 firmware. Record phone build, tested APK release tag, date and pass/fail evidence for each check. Do not mark these as passed from CI alone.
+Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, record date, firmware, tested signed APK tag and pass/fail evidence. CI success is not device success.
 
-- [ ] Install an APK from a permanently signed GitHub prerelease without removing the stock launcher.
-- [ ] Select MONOLITH as default HOME, open/close applications, return HOME repeatedly; restore the stock HOME.
-- [ ] Restart the phone and verify preferred HOME, home layout, Dock, app visibility and sorting persist.
-- [ ] Swipe-up and edge-back system gestures work as expected; verify navigation bar/gesture insets and no conflicts.
-- [ ] Open drawer and bottom search; show/hide search, filter, clear text, change sort, dismiss keyboard and close drawer.
-- [ ] Add, reorder and remove pinned apps and folders; restart and verify state.
-- [ ] Add Android widgets from multiple providers, finish widget configuration, resize/reorder, cancel removal, confirm removal.
-- [ ] Apply black background, static Android wallpaper and live wallpaper; check scrolling and battery behavior where applicable.
-- [ ] Rotate and use split-screen where supported; verify widget layout, density, touch targets and keyboard visibility.
-- [ ] Export JSON, deliberately alter layout, then import and verify restore. Verify corrupt/oversized import is rejected.
-- [ ] Install a newer permanently signed prerelease **over** the existing one; confirm package ID, signature continuity and data retention.
-- [ ] Measure cold startup, app-grid scrolling and memory use on the target device; record rather than infer performance.
+- [ ] Install the new APK over an existing permanently signed MONOLITH release; verify the same app ID, certificate, no uninstall and no crash.
+- [ ] Select MONOLITH as HOME; repeatedly navigate home from apps and restore the stock launcher through Android settings.
+- [ ] Reboot and confirm HOME behavior, drawer sorting, search and hidden-app preferences persist.
+- [ ] Tap/hold the center of the AMOLED page: orbit opens and collapses, only visible installed apps are shown, icon taps launch reliably.
+- [ ] Swipe left/right between minimal/editorial pages; quick icons launch apps, back and HOME behave correctly.
+- [ ] Swipe up or tap All Apps; search with keyboard, clear/disable search, change sorting, hide/unhide an app.
+- [ ] Verify correct layout on landscape/rotation where supported, system bars and gesture-navigation insets, and large system font sizes.
+- [ ] Media play/pause and next track work with a compatible active media player; no crash when no player is active.
+- [ ] With a simulated package catalog error, the previous app catalog remains visible and Retry works.
+- [ ] Verify that old Classic UI and its settings are no longer reachable; old user data must not be automatically cleared.
+- [ ] Measure cold start, scroll responsiveness and orbit animation smoothness on the phone.
 
-Safety: do not uninstall the stock launcher; keep a working HOME fallback and an exported backup before reinstall/upgrade experiments.
+Never uninstall the stock HOME app; keep a working system fallback.
