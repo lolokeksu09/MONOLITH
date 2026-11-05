@@ -6,6 +6,7 @@ import android.media.AudioManager
 import android.view.KeyEvent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -179,17 +180,17 @@ fun ReferenceHome(
                 (slideInHorizontally(
                     animationSpec = if (motionDuration == 0) tween(0) else spring(
                         dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessMediumLow
+                        stiffness = 180f
                     ),
-                    initialOffsetX = { direction * it / 8 }
-                ) + fadeIn(tween(motionDuration, easing = FastOutSlowInEasing))) togetherWith
+                    initialOffsetX = { direction * it / 10 }
+                ) + fadeIn(tween(motionDuration * 3 / 4, easing = FastOutSlowInEasing))) togetherWith
                     (slideOutHorizontally(
                         animationSpec = if (motionDuration == 0) tween(0) else spring(
                             dampingRatio = Spring.DampingRatioNoBouncy,
-                            stiffness = Spring.StiffnessMediumLow
+                            stiffness = 180f
                         ),
-                        targetOffsetX = { -direction * it / 8 }
-                    ) + fadeOut(tween(motionDuration, easing = FastOutSlowInEasing)))
+                        targetOffsetX = { -direction * it / 10 }
+                    ) + fadeOut(tween(motionDuration * 3 / 4, easing = FastOutSlowInEasing)))
             },
             label = "Reference scenes"
         ) { selected ->
@@ -274,6 +275,16 @@ private fun MinimalScene(
     onPlayPause: () -> Unit,
     onNext: () -> Unit
 ) {
+    // One shared, velocity-preserving spring avoids a spec switch between open and close.
+    val orbitProgress by animateFloatAsState(
+        targetValue = if (orbitOpen) 1f else 0f,
+        animationSpec = if (motionDuration == 0) tween(0) else spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = 180f
+        ),
+        label = "Orbit expansion"
+    )
+
     Box(Modifier.fillMaxSize().background(Ink)) {
         Column(
             modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()
@@ -337,20 +348,34 @@ private fun MinimalScene(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                OrbitCluster(apps, orbitOpen, orbitScale, motionDuration, onLaunch, onActions)
-                if (!orbitOpen) {
-                    Canvas(Modifier.size(36.dp)) {
-                        drawCircle(Dim.copy(alpha = .52f),
-                            radius = size.minDimension * .27f, style = Stroke(width = 1.dp.toPx()))
-                        drawCircle(Soft.copy(alpha = .65f), radius = 2.dp.toPx())
+                OrbitCluster(apps, orbitOpen, orbitScale, orbitProgress, onLaunch, onActions)
+                Canvas(
+                    Modifier.size(36.dp).graphicsLayer {
+                        alpha = (1f - orbitProgress * 1.6f).coerceIn(0f, 1f)
+                        scaleX = 1f + orbitProgress * .18f
+                        scaleY = scaleX
                     }
+                ) {
+                    drawCircle(Dim.copy(alpha = .72f),
+                        radius = size.minDimension * .27f, style = Stroke(width = 1.dp.toPx()))
+                    drawCircle(Soft.copy(alpha = .85f), radius = 2.dp.toPx())
                 }
             }
-            if (orbitOpen) {
+            AnimatedVisibility(
+                visible = orbitOpen,
+                modifier = Modifier.align(Alignment.Center).offset(y = 176.dp),
+                enter = fadeIn(tween(
+                    if (motionDuration == 0) 0 else 220,
+                    easing = FastOutSlowInEasing
+                )),
+                exit = fadeOut(tween(
+                    if (motionDuration == 0) 0 else 180,
+                    easing = FastOutSlowInEasing
+                ))
+            ) {
                 Text(
                     stringResource(R.string.reference_close_orbit),
-                    modifier = Modifier.align(Alignment.Center).offset(y = 176.dp)
-                        .clickable(onClick = onToggleOrbit).padding(14.dp),
+                    modifier = Modifier.clickable(onClick = onToggleOrbit).padding(14.dp),
                     color = Soft, fontSize = 11.sp, letterSpacing = 1.sp
                 )
             }
@@ -410,28 +435,17 @@ private fun OrbitCluster(
     apps: List<LaunchableApp>,
     expanded: Boolean,
     orbitScale: Float,
-    motionDuration: Int,
+    progress: Float,
     onLaunch: (LaunchableApp) -> Unit,
     onActions: (LaunchableApp) -> Unit
 ) {
-    val spread by animateFloatAsState(
-        targetValue = if (expanded) 1f else 0f,
-        animationSpec = when {
-            motionDuration == 0 -> tween(0)
-            expanded -> spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness = 260f
-            )
-            else -> tween(260, easing = FastOutSlowInEasing)
-        },
-        label = "Orbit expansion"
-    )
     val positions = orbitPositions(apps.size)
-    if (expanded || spread > 0.01f) positions.forEachIndexed { index, point ->
+    // Warm all visible orbit icons before the first tap, without doing package I/O on the UI thread.
+    val icons = positions.mapIndexed { index, _ -> rememberAppIcon(apps[index]) }
+    val local = progress.coerceIn(0f, 1f)
+    if (expanded || local > .001f) positions.forEachIndexed { index, point ->
         val app = apps[index]
-        val stagger = (index * .012f).coerceAtMost(.18f)
-        val local = ((spread - stagger) / (1f - stagger)).coerceIn(0f, 1f)
-        val bitmap = rememberAppIcon(app)
+        val bitmap = icons[index]
         Box(
             modifier = Modifier
                 .offset(x = (point.x * orbitScale * local).dp,
@@ -439,13 +453,13 @@ private fun OrbitCluster(
                 .zIndex(index.toFloat())
                 .size(48.dp)
                 .graphicsLayer {
-                    alpha = local
-                    scaleX = .72f + .28f * local
+                    alpha = (local * 1.35f).coerceIn(0f, 1f)
+                    scaleX = .80f + .20f * local
                     scaleY = scaleX
                 }
                 .semantics { contentDescription = app.label }
                 .combinedClickable(
-                    enabled = orbitHitTargetsEnabled(expanded),
+                    enabled = orbitHitTargetsEnabled(expanded, local),
                     onClick = { onLaunch(app) },
                     onLongClick = { onActions(app) }
                 ),
