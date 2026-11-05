@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class LauncherBehaviorTest {
-    private fun layoutOf(vararg ids: String) = HomeLayout(ids.map(HomeEntry::App))
+    private fun layoutOf(vararg ids: String) = HomeLayout(ids.map { HomeEntry.App(it) })
 
     @Test fun reorderMovesEarlierAndLater() {
         val layout = layoutOf("a", "b", "c")
