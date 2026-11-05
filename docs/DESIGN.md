@@ -21,10 +21,10 @@ The two scenes intentionally have different density: minimal = mostly empty blac
 
 ## Motion contract
 
-- Tap/hold opens orbit. Icons spread spatially from the trigger with a no-bounce spring and restrained stagger; close uses a short controlled collapse.
-- Swipe left/right changes scene, up opens All Apps; Android Back dismisses orbit first. Incoming and outgoing scenes use equal fade durations and a no-bounce spatial transition.
+- Tap/hold opens orbit. Icons spread together from the trigger with one gentle no-bounce spring for both opening and closing; there is no per-index stagger or animation-spec switch. The center trigger and close label crossfade with the same state change.
+- Swipe left/right changes scene, up opens All Apps; Android Back dismisses orbit first. Incoming and outgoing scenes use equal fade durations, reduced travel and a no-bounce spatial transition.
 - Animations derive from system animator settings; turning off device animations removes delays, and the setting is re-read on subsequent recompositions rather than cached permanently.
-- Hidden apps do not surface in orbit; offline or empty app catalogs are recoverable.
+- Selected orbit icons are decoded off the main thread before the first expansion. Moving icons cannot receive taps until their 48dp targets are separated; hidden apps never surface in orbit, and offline or empty app catalogs are recoverable.
 
 ## Quality and limits
 

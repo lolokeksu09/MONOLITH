@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.0-beta
+- Unified orbit expansion and collapse under one no-bounce spring, removing the index stagger and the abrupt animation-spec switch.
+- Synchronized the center trigger with orbit progress and added soft close-label fades; the closed trigger is slightly easier to see.
+- Reduced scene travel and matched incoming/outgoing fades for calmer page changes.
+- Preloads the selected orbit icons off the main thread before the first expansion to avoid first-open placeholder pop-in.
+- Keeps app touch targets disabled until expansion separates them, with boundary regression tests and unchanged 48dp targets.
+- Preserves application ID, signing configuration, HOME behavior, local settings, favorites, hidden apps and launch statistics. Physical-device motion acceptance remains required.
+
 ## 0.14.0-beta
 - Fixed clipped vertical time/date and hold-hint rails with measured rotated bounds that stay inside the safe area.
 - Removed the fixed-width media label and allowed the player hint to wrap instead of cutting off text.
@@ -42,13 +50,13 @@
 
 ## 0.9.0-beta
 - Widget resizing controls: 128–512 dp heights in 64 dp increments, persisted per widget and restored after launcher restart
-- Android AppWidgetHostView receives updated size options so responsive providers can render layouts appropriately
+- Android AppWidgetHostView receives updated size options so responsive providers can render them appropriately
 - Removed widgets also delete stored dimensions; widget IDs and sizes are never exported across installations
 - Fixed invisible app filtering when the bottom search bar is disabled
 - App drawer offers pull-down close gesture from its header, clear-search affordance and returns grid to the top after sorting/filtering
 - Added focused JVM tests for resize bounds, height stepping and hidden search invariants
 - Retained the existing Android HOME role, pinned apps, Dock, sorting, wallpaper and permanent signing certificate
-- Still Beta until Lenovo Legion Y70 / Motorola Android 16 touch, wallpaper, IME and widget acceptance tests are performed
+- Beta release only; physical Lenovo/Motorola OEM acceptance remains mandatory before 1.0 stable
 
 ## 0.8.0-beta
 - Redesigned All Apps as a full-height, wallpaper-backed drawer with a 4-column default and a compact header
@@ -65,11 +73,11 @@
 - Added a persistent 5-slot bottom Dock, independent from scrolling home content
 - Long-press an application in All Apps and choose Add to Dock; long-press Dock icon to remove or move it
 - Added opt-in Android system wallpaper rendering (static and live wallpaper), keeping AMOLED pure-black as the default
-- Saved Dock order and wallpaper preference locally and in portable backups
+- Saved Dock order and wallpaper preference locally and in portable backups, with safe defaults for old backups
 - Existing backup versions 0.4–0.6 still import, with an empty Dock and wallpaper disabled by default
 - Added dock capacity, order and backup rejection tests
-- Existing signing certificate pinned to published 0.3.1–0.6 releases
-- Beta release only; physical Lenovo/Motorola OEM acceptance remains mandatory before 1.0 stable
+- Retained the existing Android HOME role, pinned apps, Dock, sorting, wallpaper and permanent signing certificate
+- Still Beta until Lenovo Legion Y70 / Motorola Android 16 touch, wallpaper, IME and widget acceptance tests are performed
 
 ## 0.6.0-alpha
 - Apps can be hidden from the drawer via long-press; the Hidden Apps screen in Settings restores installed apps

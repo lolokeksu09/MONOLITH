@@ -1,11 +1,11 @@
-# MONOLITH 0.14 physical-device acceptance
+# MONOLITH 0.15 physical-device acceptance
 
 Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, record date, firmware, tested signed APK tag and pass/fail evidence. CI success is not device success.
 
 - [ ] Install the new APK over an existing permanently signed MONOLITH release; verify the same app ID, certificate, no uninstall and no crash.
 - [ ] Select MONOLITH as HOME; repeatedly navigate home from apps and restore the stock launcher through Android settings.
 - [ ] Reboot and confirm HOME behavior, drawer sorting, search and hidden-app preferences persist.
-- [ ] Tap/hold the center of the AMOLED page: orbit opens and collapses without a visual snap, only visible installed apps are shown, icon taps launch reliably. Check spring motion, stagger and 48dp hit targets under 1.3x font scaling.
+- [ ] Tap/hold the center of the AMOLED page: orbit opens and collapses without a visual snap, only visible installed apps are shown, icon taps launch reliably. Check the shared spring, synchronized trigger/close-label fades and 48dp hit targets under 1.3x font scaling. Interrupt opening with Back or HOME and verify reversal stays smooth; taps during overlapping movement must not launch an app.
 - [ ] Verify the complete vertical time/date and hold hint remain visible inside the left safe area on both orbit states; confirm the full media hint wraps without clipping in Russian and English.
 - [ ] In Settings choose/reorder 15 orbit favorites, relaunch/reboot, verify order and hidden-app exclusion. Confirm a 16th selection is blocked.
 - [ ] Check reduced-motion system setting: app icons and page transitions are not forced to animate.
@@ -15,6 +15,6 @@ Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, rec
 - [ ] Media play/pause and next track work with a compatible active media player; no crash when no player is active.
 - [ ] With a simulated package catalog error, the previous app catalog remains visible and Retry works.
 - [ ] Verify that old Classic UI and its settings are no longer reachable; old user data must not be automatically cleared.
-- [ ] Measure cold start, scroll responsiveness and orbit animation smoothness on the phone.
+- [ ] Measure cold start, scroll responsiveness and orbit animation smoothness on the phone. Compare the first orbit opening after process start with later openings and check for late icon pop-in or frame drops.
 
 Never uninstall the stock HOME app; keep a working system fallback.
