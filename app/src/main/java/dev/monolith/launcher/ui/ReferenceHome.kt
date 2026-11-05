@@ -437,6 +437,7 @@ private fun EditorialScene(
     val weekday = now.format(DateTimeFormatter.ofPattern("EEEE", Locale.ENGLISH))
         .uppercase(Locale.ENGLISH)
     BoxWithConstraints(Modifier.fillMaxSize().background(Ink)) {
+        val editorialWidth = maxWidth.value
         Image(
             painter = painterResource(R.drawable.editorial_rock),
             contentDescription = null,
@@ -483,7 +484,7 @@ private fun EditorialScene(
             Text(
                 dayShort,
                 color = Paper,
-                fontSize = minOf(96f, maxWidth.value * .27f).sp,
+                fontSize = minOf(96f, editorialWidth * .27f).sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = (-4).sp,
                 maxLines = 1
