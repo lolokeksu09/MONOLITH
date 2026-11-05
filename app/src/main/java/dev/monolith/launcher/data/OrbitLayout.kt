@@ -15,5 +15,9 @@ private val ORBIT_GEOMETRY = listOf(
 
 fun orbitPositions(count: Int): List<OrbitPoint> = ORBIT_GEOMETRY.take(count.coerceIn(0, ORBIT_CAPACITY))
 
-/** Collapsed icons may animate out, but must never receive a tap. */
-fun orbitHitTargetsEnabled(expanded: Boolean): Boolean = expanded
+/**
+ * Collapsed and still-overlapping icons may animate, but must never receive a tap.
+ * At 90% expansion the closest 58dp centers are over 52dp apart, clearing 48dp targets.
+ */
+fun orbitHitTargetsEnabled(expanded: Boolean, progress: Float = 1f): Boolean =
+    expanded && progress >= .90f

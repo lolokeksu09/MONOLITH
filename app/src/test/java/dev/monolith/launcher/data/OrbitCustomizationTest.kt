@@ -54,4 +54,11 @@ class OrbitCustomizationTest {
         assertFalse(orbitHitTargetsEnabled(false))
         assertTrue(orbitHitTargetsEnabled(true))
     }
+
+    @Test fun movingOrbitWaitsUntilTouchTargetsAreSeparated() {
+        assertFalse(orbitHitTargetsEnabled(true, progress = 0f))
+        assertFalse(orbitHitTargetsEnabled(true, progress = .89f))
+        assertTrue(orbitHitTargetsEnabled(true, progress = .90f))
+        assertFalse(orbitHitTargetsEnabled(false, progress = 1f))
+    }
 }
