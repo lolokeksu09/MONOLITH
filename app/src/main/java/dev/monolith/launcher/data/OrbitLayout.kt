@@ -2,8 +2,6 @@ package dev.monolith.launcher.data
 
 data class OrbitPoint(val x: Float, val y: Float)
 
-const val ORBIT_CAPACITY = 15
-
 private val ORBIT_GEOMETRY_8 = listOf(
     OrbitPoint(-58f, -87f), OrbitPoint(58f, -87f),
     OrbitPoint(-87f, -29f), OrbitPoint(87f, -29f),
@@ -31,6 +29,7 @@ private val ORBIT_GEOMETRY_15 = listOf(
     OrbitPoint(29f, 116f)
 )
 
+/** 48dp targets retain more than 51dp between centers at every designed density. */
 fun orbitPositions(count: Int): List<OrbitPoint> {
     val bounded = count.coerceIn(0, ORBIT_CAPACITY)
     val geometry = when (bounded) {
@@ -41,5 +40,6 @@ fun orbitPositions(count: Int): List<OrbitPoint> {
     return geometry.take(bounded)
 }
 
+/** Collapsed and still-overlapping icons must never receive a tap. */
 fun orbitHitTargetsEnabled(expanded: Boolean, progress: Float = 1f): Boolean =
     expanded && progress >= .90f
