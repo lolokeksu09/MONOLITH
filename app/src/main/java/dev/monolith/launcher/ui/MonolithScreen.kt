@@ -99,6 +99,7 @@ import dev.monolith.launcher.data.sortApps
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.filterApps
 import dev.monolith.launcher.data.filterHiddenApps
+import dev.monolith.launcher.data.chooseReferenceApps
 import dev.monolith.launcher.data.effectiveDrawerQuery
 import dev.monolith.launcher.data.DEFAULT_WIDGET_HEIGHT_DP
 import dev.monolith.launcher.data.MIN_WIDGET_HEIGHT_DP
@@ -208,6 +209,24 @@ fun MonolithScreen(
             else -> Background
         }
         Surface(modifier = Modifier.fillMaxSize(), color = screenBackground) {
+            if (screen == Screen.HOME && preferences.referenceHome) {
+                ReferenceHome(
+                    apps = remember(apps, dockApps, pinnedIds, hiddenApps) {
+                        chooseReferenceApps(apps, dockApps, pinnedIds, hiddenApps)
+                    },
+                    homeRequestGeneration = homeRequestGeneration,
+                    isDefaultHome = isDefaultHome,
+                    loading = loading,
+                    loadError = loadError,
+                    onRetry = onRetry,
+                    onLaunch = launchAndReturnHome,
+                    onAppActions = { selectedApp = it },
+                    onAllApps = { screen = Screen.ALL_APPS; query = "" },
+                    onSettings = { screen = Screen.SETTINGS },
+                    onWidgets = { onShowWidgets(); screen = Screen.WIDGETS },
+                    onMakeDefaultHome = onMakeDefaultHome
+                )
+            } else {
             Column(
                 modifier = Modifier.fillMaxSize()
                     .windowInsetsPadding(WindowInsets.safeDrawing)
@@ -511,6 +530,7 @@ fun MonolithScreen(
                     }
                 }
             }
+            }
         }
 
         selectedApp?.let { app ->
@@ -636,7 +656,23 @@ private fun SettingsPage(
 ) {
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
     Text(stringResource(R.string.settings), fontSize = 29.sp, fontWeight = FontWeight.SemiBold)
-    Spacer(Modifier.height(28.dp))
+    Spacer(Modifier.height(20.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.reference_style_title))
+            Text(stringResource(R.string.reference_style_hint),
+                fontSize = 12.sp, color = Muted)
+        }
+        Switch(
+            checked = preferences.referenceHome,
+            onCheckedChange = { onPreferencesChange(preferences.copy(referenceHome = it)) }
+        )
+    }
+    Spacer(Modifier.height(24.dp))
     Text(stringResource(R.string.grid_columns), color = Muted)
     Spacer(Modifier.height(12.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

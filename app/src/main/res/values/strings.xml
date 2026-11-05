@@ -96,4 +96,20 @@
     <string name="widget_remove_title">Remove widget?</string>
     <string name="widget_remove_message">The widget will be removed from this home screen. The app stays installed.</string>
     <string name="widget_remove_cancel">Cancel</string>
+    <string name="reference_settings">SETTINGS</string>
+    <string name="reference_style_title">Reference home (AMOLED + editorial)</string>
+    <string name="reference_style_hint">Minimal black page, orbital app cluster, and swipe-to-editorial page. Turn off to restore the classic desktop and widgets.</string>
+    <string name="reference_media">MUSIC CONTROLS</string>
+    <string name="reference_media_hint">Control your active player</string>
+    <string name="reference_orbit_toggle">Show or hide orbit applications</string>
+    <string name="reference_hold_hint">TAP / HOLD TO OPEN</string>
+    <string name="reference_swipe_hint">SWIPE LEFT  —  EDITORIAL</string>
+    <string name="reference_editorial">EDITORIAL  →</string>
+    <string name="reference_minimal">←  MINIMAL</string>
+    <string name="reference_all_apps">ALL APPS  ↑</string>
+    <string name="reference_quick_apps">QUICK ACCESS</string>
+    <string name="reference_widgets">+ WIDGETS</string>
+    <string name="reference_good_morning">GOOD MORNING</string>
+    <string name="reference_good_afternoon">GOOD AFTERNOON</string>
+    <string name="reference_good_evening">GOOD EVENING</string>
 </resources>

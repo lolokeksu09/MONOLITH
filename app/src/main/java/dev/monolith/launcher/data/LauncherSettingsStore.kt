@@ -12,7 +12,8 @@ data class LauncherPreferences(
     val showPinDots: Boolean = true,
     val showWallpaper: Boolean = false,
     val showDrawerSearch: Boolean = true,
-    val drawerOpacity: Int = 65
+    val drawerOpacity: Int = 65,
+    val referenceHome: Boolean = true
 )
 
 fun normalizeDrawerOpacity(value: Int): Int = value.coerceIn(25, 100)
@@ -33,7 +34,8 @@ class LauncherSettingsStore(context: Context) {
         showPinDots = preferences.getBoolean("pin_dots", true),
         showWallpaper = preferences.getBoolean("show_wallpaper", false),
         showDrawerSearch = preferences.getBoolean("show_drawer_search", true),
-        drawerOpacity = normalizeDrawerOpacity(preferences.getInt("drawer_opacity", 65))
+        drawerOpacity = normalizeDrawerOpacity(preferences.getInt("drawer_opacity", 65)),
+        referenceHome = preferences.getBoolean("reference_home", true)
     )
 
     fun write(value: LauncherPreferences) {
@@ -48,6 +50,7 @@ class LauncherSettingsStore(context: Context) {
             .putBoolean("show_wallpaper", value.showWallpaper)
             .putBoolean("show_drawer_search", value.showDrawerSearch)
             .putInt("drawer_opacity", normalizeDrawerOpacity(value.drawerOpacity))
+            .putBoolean("reference_home", value.referenceHome)
             .apply()
     }
 }

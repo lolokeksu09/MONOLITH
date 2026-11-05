@@ -150,6 +150,19 @@ class HomeBackupTest {
         assertEquals(100, restored.preferences.drawerOpacity)
     }
 
+    @Test fun referenceHomeSettingRoundTripsAndClassicCanBeRestored() {
+        val classic = LauncherPreferences(referenceHome = false)
+        assertEquals(false, decodeHomeBackup(encodeHomeBackup(layout, classic)).preferences.referenceHome)
+        val reference = LauncherPreferences(referenceHome = true)
+        assertEquals(true, decodeHomeBackup(encodeHomeBackup(layout, reference)).preferences.referenceHome)
+    }
+
+    @Test fun backupsWithoutReferenceModeUseTheNewDefault() {
+        val raw = JSONObject(encodeHomeBackup(layout, LauncherPreferences()))
+            .apply { remove("referenceHome") }.toString()
+        assertEquals(true, decodeHomeBackup(raw).preferences.referenceHome)
+    }
+
     @Test fun acceptsEmptyDesktopAsValidBackup() {
         val decoded = decodeHomeBackup(encodeHomeBackup(HomeLayout(), LauncherPreferences()))
         assertTrue(decoded.layout.entries.isEmpty())

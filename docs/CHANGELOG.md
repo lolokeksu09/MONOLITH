@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.0-beta
+- Added native Reference HOME mode inspired by the supplied TikTok clip: AMOLED minimal landing, touch/hold orbital app cluster, swipe to editorial weekday/artwork page and functional app shortcuts.
+- Preserved full All Apps, settings, HOME role, widgets and classic layout through an explicit Reference HOME switch.
+- Added active media transport controls (play/pause, next) without requiring notification access; player metadata is not accessible without an opt-in notification listener.
+- Deterministic orbit ordering: Dock, pinned apps, then visible installed apps; hidden unpinned apps stay hidden.
+- Added durable settings/JSON backup compatibility and JVM regression tests, preserving existing backup format version.
+- Still beta pending Motorola Android 16 on-device review for gestures, playback dispatch and touch interactions.
+
 ## 0.10.0-beta
 - Launching an app from the drawer, folder, home tile or Dock now returns MONOLITH to HOME, clearing stale drawer search and edit state
 - Widget cards can be moved up or down; the ordered AppWidgetHost ID list is persisted without reallocating widgets

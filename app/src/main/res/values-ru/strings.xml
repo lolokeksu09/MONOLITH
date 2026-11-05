@@ -96,4 +96,20 @@
     <string name="widget_remove_title">Удалить виджет?</string>
     <string name="widget_remove_message">Виджет исчезнет с рабочего стола. Само приложение останется на телефоне.</string>
     <string name="widget_remove_cancel">Отмена</string>
+    <string name="reference_settings">НАСТРОЙКИ</string>
+    <string name="reference_style_title">Главный экран Reference (AMOLED + Editorial)</string>
+    <string name="reference_style_hint">Чёрный экран, круговая группа приложений и экран с обоями. Выключите, чтобы вернуть обычный рабочий стол и виджеты.</string>
+    <string name="reference_media">УПРАВЛЕНИЕ МУЗЫКОЙ</string>
+    <string name="reference_media_hint">Активный музыкальный плеер</string>
+    <string name="reference_orbit_toggle">Показать или скрыть круговое меню</string>
+    <string name="reference_hold_hint">НАЖМИ / УДЕРЖИВАЙ</string>
+    <string name="reference_swipe_hint">СВАЙП ВЛЕВО  —  ЭКРАН</string>
+    <string name="reference_editorial">ЭКРАН  →</string>
+    <string name="reference_minimal">←  МИНИМАЛ</string>
+    <string name="reference_all_apps">ПРИЛОЖЕНИЯ  ↑</string>
+    <string name="reference_quick_apps">БЫСТРЫЙ ДОСТУП</string>
+    <string name="reference_widgets">+ ВИДЖЕТЫ</string>
+    <string name="reference_good_morning">ДОБРОЕ УТРО</string>
+    <string name="reference_good_afternoon">ДОБРЫЙ ДЕНЬ</string>
+    <string name="reference_good_evening">ДОБРЫЙ ВЕЧЕР</string>
 </resources>

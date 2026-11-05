@@ -136,7 +136,7 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk "$ASSET"
           gh release create "v${VERSION_NAME}" "$ASSET" \
             --title "MONOLITH ${VERSION_NAME}" \
-            --notes "Permanently signed beta APK. Certificate pinned and verified. Includes persistent widget ordering, removal confirmation, and return to desktop after app launch. Physical Lenovo Legion Y70 / Motorola Android 16 acceptance is pending. Keep the stock launcher installed." \
+            --notes "Permanently signed beta APK. Certificate pinned and verified. Refer to docs/CHANGELOG.md at this release tag for features and fixes. Physical Lenovo Legion Y70 / Motorola Android 16 acceptance is pending. Keep the stock launcher installed." \
             --prerelease --target "$GITHUB_SHA"
       - name: Destroy temporary keystore copy
         if: always()
