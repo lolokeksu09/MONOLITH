@@ -50,4 +50,13 @@
     <string name="tracked_launches_only">Частота и недавние открытия учитывают только запуски из MONOLITH. Доступ к системной истории не нужен.</string>
     <string name="unhide_app">Показать</string>
     <string name="usage_cleared">История запусков очищена</string>
+    <string name="reference_play_pause">Воспроизвести или приостановить активный плеер</string>
+    <string name="reference_next_track">Следующая композиция</string>
+    <string name="reference_close_orbit">Закрыть приложения</string>
+    <string name="reference_customize_orbit">Настроить круг приложений</string>
+    <string name="reference_customize_hint">Выбери до 15 приложений и их порядок. Остальные места заполняются часто запускаемыми программами.</string>
+    <string name="reference_selected_count">Выбрано: %1$d из %2$d</string>
+    <string name="reference_add">Добавить</string>
+    <string name="reference_remove">Убрать</string>
+    <string name="reference_done">Готово</string>
 </resources>

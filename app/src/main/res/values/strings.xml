@@ -50,4 +50,13 @@
     <string name="tracked_launches_only">Frequency and recent opens count launches through MONOLITH only. No system usage permission is needed.</string>
     <string name="unhide_app">Unhide</string>
     <string name="usage_cleared">Local launch history cleared</string>
+    <string name="reference_play_pause">Play or pause the active music player</string>
+    <string name="reference_next_track">Next song</string>
+    <string name="reference_close_orbit">Close apps</string>
+    <string name="reference_customize_orbit">Customize orbit apps</string>
+    <string name="reference_customize_hint">Choose up to 15 apps and their order. The remaining spaces use your most-opened apps.</string>
+    <string name="reference_selected_count">Selected: %1$d of %2$d</string>
+    <string name="reference_add">Add</string>
+    <string name="reference_remove">Remove</string>
+    <string name="reference_done">Done</string>
 </resources>

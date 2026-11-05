@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.0-beta
+- Replaced the 0.12 placeholder editorial mountain with a bundled, original grayscale cliff texture (offline, no borrowed TikTok artwork or wallpaper).
+- Redesigned the Reference UI around the clip: true AMOLED black, refined vertical time/date typography, clean media transport icons, monochrome editorial quick launches and a more deliberate 15-app honeycomb orbit.
+- Added a spatial expansion/collapse motion with stagger, page transitions and system disabled-animation support.
+- Added a persistent orbit favorites picker (max 15, explicit order), hidden-app protection, and regression tests for spacing, ordering, bounds and collapsed hit targets.
+- Moved app-drawer search to the top and refined the drawer grid and type sizing. Existing app ID, signing, Android HOME role and previous user preferences are preserved.
+- Automated tests and signing are CI-gated; physical Lenovo Legion Y70 / Motorola Android 16 acceptance remains required.
+
 ## 0.12.0-beta
 - Reference HOME is the only desktop; removed Classic HOME, Dock, pinned/folder UI, AppWidgetHost integration and obsolete backup/import controls.
 - Removed obsolete home/widget persistence implementations and obsolete tests; old local data is not cleared during an upgrade.

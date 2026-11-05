@@ -1,6 +1,6 @@
 # MONOLITH roadmap
 
-Updated 2026-11-05. Current stage: **0.12 beta**.
+Updated 2026-11-05. Current stage: **0.13 beta**.
 
 ## Implemented
 
@@ -8,6 +8,12 @@ Updated 2026-11-05. Current stage: **0.12 beta**.
 - Signed beta releases with pinned certificate verification and no root/network requirement.
 - Reference design: AMOLED minimal, animated orbital app cluster and editorial weekday screen.
 - 0.12: removed Classic HOME, Dock, folders, widgets and old layout backup UI. The Reference home is now the only desktop.
+
+## Delivered in 0.13 beta
+
+- Rebuilt the reference-style editorial backdrop with an offline bundled rocky image and precise grayscale layout.
+- Redesigned the orbit motion, screen transitions, media buttons, accessibility and app shortcuts.
+- Added a local favorite selector and ordering for up to 15 apps.
 
 ## Next
 

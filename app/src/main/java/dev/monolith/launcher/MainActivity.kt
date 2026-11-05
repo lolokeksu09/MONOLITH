@@ -26,6 +26,8 @@ import dev.monolith.launcher.data.LaunchStatsStore
 import dev.monolith.launcher.data.LaunchableApp
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.LauncherSettingsStore
+import dev.monolith.launcher.data.OrbitFavoritesStore
+import dev.monolith.launcher.data.normalizeOrbitFavorites
 import dev.monolith.launcher.data.hideApp
 import dev.monolith.launcher.data.retainCatalogOnError
 import dev.monolith.launcher.data.unhideApp
@@ -43,11 +45,13 @@ class MainActivity : ComponentActivity() {
     private lateinit var settingsStore: LauncherSettingsStore
     private lateinit var statsStore: LaunchStatsStore
     private lateinit var hiddenStore: HiddenAppsStore
+    private lateinit var orbitStore: OrbitFavoritesStore
 
     private var apps by mutableStateOf<List<LaunchableApp>>(emptyList())
     private var preferences by mutableStateOf(LauncherPreferences())
     private var launchStats by mutableStateOf<Map<String, LaunchStats>>(emptyMap())
     private var hiddenApps by mutableStateOf<Set<String>>(emptySet())
+    private var orbitFavorites by mutableStateOf<List<String>>(emptyList())
     private var loading by mutableStateOf(true)
     private var loadError by mutableStateOf(false)
     private var isDefaultHome by mutableStateOf(false)
@@ -74,8 +78,10 @@ class MainActivity : ComponentActivity() {
         settingsStore = LauncherSettingsStore(applicationContext)
         statsStore = LaunchStatsStore(applicationContext)
         hiddenStore = HiddenAppsStore(applicationContext)
+        orbitStore = OrbitFavoritesStore(applicationContext)
         preferences = settingsStore.read()
         hiddenApps = hiddenStore.read()
+        orbitFavorites = orbitStore.read()
 
         setContent {
             MonolithScreen(
@@ -84,6 +90,7 @@ class MainActivity : ComponentActivity() {
                 homeRequestGeneration = homeRequestGeneration,
                 launchStats = launchStats,
                 hiddenApps = hiddenApps,
+                orbitFavorites = orbitFavorites,
                 loading = loading,
                 loadError = loadError,
                 isDefaultHome = isDefaultHome,
@@ -99,6 +106,11 @@ class MainActivity : ComponentActivity() {
                     }
                 },
                 onAppInfo = ::openAppInfo,
+                onOrbitFavoritesChange = { next ->
+                    val normalized = normalizeOrbitFavorites(next)
+                    orbitFavorites = normalized
+                    orbitStore.write(normalized)
+                },
                 onPreferencesChange = { next ->
                     preferences = next
                     settingsStore.write(next)
