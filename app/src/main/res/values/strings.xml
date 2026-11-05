@@ -36,6 +36,8 @@
     <string name="reference_minimal">←  MINIMAL</string>
     <string name="reference_only_description">Reference is now the only home screen. Swipe between the two pages or open All Apps.</string>
     <string name="reference_orbit_toggle">Show or hide orbit applications</string>
+    <string name="reference_orbit_collapsed">Orbit applications collapsed</string>
+    <string name="reference_orbit_expanded">Orbit applications expanded</string>
     <string name="reference_quick_apps">QUICK ACCESS</string>
     <string name="reference_settings">SETTINGS</string>
     <string name="reference_swipe_hint">SWIPE LEFT  —  EDITORIAL</string>

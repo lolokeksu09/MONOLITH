@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.15.0-beta
+- Unified orbit expansion and collapse under one no-bounce spring, removing the index stagger and the abrupt animation-spec switch.
+- Synchronized the center trigger with orbit progress and added soft close-label fades; the closed trigger is slightly easier to see.
+- Reduced scene travel and matched incoming/outgoing fades for calmer page changes.
+- Preloads the selected orbit icons off the main thread before the first expansion to avoid first-open placeholder pop-in.
+- Keeps app touch targets disabled until expansion separates them, with boundary regression tests and unchanged 48dp targets.
+- Crossfades the page indicator and raises action-hint contrast to 4.63:1 on black without brightening decorative rails.
+- Adds localized orbit expanded/collapsed state and explicit open/action labels for TalkBack in Russian and English.
+- Aligns clock refreshes to minute boundaries instead of recomposing HOME every 15 seconds; remembers orbit geometry by app count.
+- Preserves application ID, signing configuration, HOME behavior, local settings, favorites, hidden apps and launch statistics. Physical-device motion acceptance remains required.
+
 ## 0.14.0-beta
 - Fixed clipped vertical time/date and hold-hint rails with measured rotated bounds that stay inside the safe area.
 - Removed the fixed-width media label and allowed the player hint to wrap instead of cutting off text.

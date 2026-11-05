@@ -7,7 +7,8 @@ Source direction: the user-provided @ithemedesign TikTok video, not a copied pai
 - **Ink** `#000000` — AMOLED landing and drawer.
 - **Paper** `#F4F3F0` — typography and active controls.
 - **Soft** `#A7A6A4` — secondary editorial details.
-- **Dim** `#555557` — quiet rails and instructions.
+- **Dim** `#555557` — decorative rails and dividers.
+- **Hint** `#767678` — actionable instructions on black, 4.63:1 normal-text contrast.
 - **Accent** `#C9C5BB` — rare emphasis, never generic bright neon.
 
 The two scenes intentionally have different density: minimal = mostly empty black; editorial = artwork on the right, typography and monochrome application glyphs left. The generated `editorial_rock.png` is original, offline and independently usable; it is not copied from the clip.
@@ -21,10 +22,11 @@ The two scenes intentionally have different density: minimal = mostly empty blac
 
 ## Motion contract
 
-- Tap/hold opens orbit. Icons spread spatially from the trigger with a no-bounce spring and restrained stagger; close uses a short controlled collapse.
-- Swipe left/right changes scene, up opens All Apps; Android Back dismisses orbit first. Incoming and outgoing scenes use equal fade durations and a no-bounce spatial transition.
+- Tap/hold opens orbit. Icons spread together from the trigger with one gentle no-bounce spring for both opening and closing; there is no per-index stagger or animation-spec switch. The center trigger and close label crossfade with the same state change.
+- Swipe left/right changes scene, up opens All Apps; Android Back dismisses orbit first. Incoming and outgoing scenes use equal fade durations, reduced travel and a no-bounce spatial transition. The persistent page indicator crossfades instead of switching abruptly.
 - Animations derive from system animator settings; turning off device animations removes delays, and the setting is re-read on subsequent recompositions rather than cached permanently.
-- Hidden apps do not surface in orbit; offline or empty app catalogs are recoverable.
+- Selected orbit icons are decoded off the main thread before the first expansion. Moving icons cannot receive taps until their 48dp targets are separated; hidden apps never surface in orbit, and offline or empty app catalogs are recoverable.
+- Orbit expanded/collapsed state and app open/action labels are exposed through localized semantics. The clock refreshes at minute boundaries rather than forcing HOME recompositions every 15 seconds.
 
 ## Quality and limits
 

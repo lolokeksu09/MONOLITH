@@ -1,6 +1,6 @@
 # MONOLITH roadmap
 
-Updated 2026-11-06. Current stage: **0.14 beta in review**.
+Updated 2026-11-06. Current stage: **0.15 beta in review**.
 
 ## Implemented
 
@@ -15,10 +15,16 @@ Updated 2026-11-06. Current stage: **0.14 beta in review**.
 - Redesigned the orbit motion, screen transitions, media buttons, accessibility and app shortcuts.
 - Added a local favorite selector and ordering for up to 15 apps.
 
-## In 0.14 review
+## Delivered in 0.14 beta
 
 - Fixed clipped vertical rails and media text using safe measured layouts.
 - Smoothed orbit and scene motion and reduced unnecessary visual weight around icons.
+
+## In 0.15 review
+
+- Unified orbit opening/closing motion, synchronized supporting-element fades and softened scene transitions.
+- Preloaded orbit icons and gated moving touch targets to avoid first-open pop-in and overlapping taps.
+- Improved hint contrast, page-indicator motion, localized accessibility semantics and minute-aligned clock updates.
 
 ## Next
 
