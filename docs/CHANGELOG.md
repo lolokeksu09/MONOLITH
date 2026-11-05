@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.12.0-beta
+- Reference HOME is the only desktop; removed Classic HOME, Dock, pinned/folder UI, AppWidgetHost integration and obsolete backup/import controls.
+- Removed obsolete home/widget persistence implementations and obsolete tests; old local data is not cleared during an upgrade.
+- Retained Android HOME selection, app catalog, drawer, search, sorting, hidden applications, launch stats and media controls.
+- Reference shortcuts now favor successful launches from MONOLITH, with alphabetical fallback.
+- Simplified drawer settings and refreshed Russian/English resources and Android 16 device acceptance criteria.
+- Kept application ID and permanent signing certificate unchanged; still beta pending device QA.
+
 ## 0.11.0-beta
 - Added native Reference HOME mode inspired by the supplied TikTok clip: AMOLED minimal landing, touch/hold orbital app cluster, swipe to editorial weekday/artwork page and functional app shortcuts.
 - Preserved full All Apps, settings, HOME role, widgets and classic layout through an explicit Reference HOME switch.

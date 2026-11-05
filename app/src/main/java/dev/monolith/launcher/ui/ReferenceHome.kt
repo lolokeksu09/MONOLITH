@@ -88,7 +88,6 @@ fun ReferenceHome(
     onAppActions: (LaunchableApp) -> Unit,
     onAllApps: () -> Unit,
     onSettings: () -> Unit,
-    onWidgets: () -> Unit,
     onMakeDefaultHome: () -> Unit
 ) {
     var page by rememberSaveable { mutableIntStateOf(0) }
@@ -161,7 +160,6 @@ fun ReferenceHome(
                     apps = apps,
                     onLaunch = openApp,
                     onAppActions = onAppActions,
-                    onWidgets = onWidgets
                 )
             }
         }
@@ -344,7 +342,6 @@ private fun ReferenceEditorialPage(
     apps: List<LaunchableApp>,
     onLaunch: (LaunchableApp) -> Unit,
     onAppActions: (LaunchableApp) -> Unit,
-    onWidgets: () -> Unit
 ) {
     val dayName = now.format(DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH)).uppercase(Locale.ENGLISH)
     val weekday = now.format(DateTimeFormatter.ofPattern("EEEE", Locale.ENGLISH)).uppercase(Locale.ENGLISH)
@@ -375,10 +372,6 @@ private fun ReferenceEditorialPage(
                     }
                 }
                 Spacer(Modifier.height(8.dp))
-            }
-            TextButton(onClick = onWidgets) {
-                Text(stringResource(R.string.reference_widgets), fontSize = 10.sp,
-                    color = ReferenceWhite, letterSpacing = 1.2.sp)
             }
         }
         Text(

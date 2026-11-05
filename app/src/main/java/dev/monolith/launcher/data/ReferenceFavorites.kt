@@ -1,16 +1,14 @@
 package dev.monolith.launcher.data
 
-/** Order: existing Dock, pinned shortcuts, then visible installed apps. */
+/**
+ * Both Reference pages share the same visible launch targets.
+ * Order by actual successful launches from MONOLITH; alphabetical on a new install.
+ */
 fun chooseReferenceApps(
     apps: List<LaunchableApp>,
-    dockIds: List<String>,
-    pinnedIds: List<String>,
     hiddenIds: Set<String> = emptySet(),
+    stats: Map<String, LaunchStats> = emptyMap(),
     limit: Int = 15
-): List<LaunchableApp> {
-    val byId = apps.associateBy { it.id }
-    val favorites = (dockIds + pinnedIds).distinct().mapNotNull(byId::get)
-    val used = favorites.mapTo(mutableSetOf()) { it.id }
-    val available = apps.filter { it.id !in used && it.id !in hiddenIds }
-    return (favorites + available).take(limit.coerceAtLeast(0))
-}
+): List<LaunchableApp> =
+    sortApps(filterHiddenApps(apps, hiddenIds), AppSort.FREQUENT, stats)
+        .take(limit.coerceAtLeast(0))
