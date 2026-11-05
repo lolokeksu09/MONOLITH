@@ -590,8 +590,8 @@ private fun EditorialScene(
 @Composable
 private fun EditorialShortcut(
     app: LaunchableApp,
-    onLaunch: () -> Unit,
-    onActions: () -> Unit
+    onLaunch: (LaunchableApp) -> Unit,
+    onActions: (LaunchableApp) -> Unit
 ) {
     val bitmap = rememberAppIcon(app)
     val mono = remember { ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) }) }
