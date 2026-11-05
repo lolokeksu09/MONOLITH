@@ -8,6 +8,8 @@ Native, offline-first AMOLED Android HOME launcher written in Kotlin + Jetpack C
 
 **0.15 refinement:** keeps the true-black two-scene design and configurable 15-app orbit while making motion more coherent. Orbit opening and closing now share one gentle spring, the trigger and close label crossfade instead of popping, scene transitions use smaller travel with matched fades, and orbit icons warm up before the first tap. Touch targets stay disabled until the moving icons are separated. The page indicator now crossfades, action hints meet normal-text contrast on black, orbit state and app actions have localized accessibility labels, and the clock updates only at minute boundaries. The 0.14 layout fixes, original bundled rock wallpaper, reduced-motion support, local favorites and offline operation remain unchanged.
 
+**Next stage:** the 0.16 / INK visual direction is recorded in [its implementation plan](docs/PLAN_0.16.md). Original / Mono / INK icons, 8 / 12 / 15 orbit densities and the related visual refinements are **planned, not implemented in the 0.15 APK**.
+
 MONOLITH now has one design, based on the supplied reference video:
 
 - Minimal AMOLED-black landing page with clock and Android media play/pause and next-track controls.

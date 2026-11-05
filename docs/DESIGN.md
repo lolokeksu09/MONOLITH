@@ -13,6 +13,18 @@ Source direction: the user-provided @ithemedesign TikTok video, not a copied pai
 
 The two scenes intentionally have different density: minimal = mostly empty black; editorial = artwork on the right, typography and monochrome application glyphs left. The generated `editorial_rock.png` is original, offline and independently usable; it is not copied from the clip.
 
+## Documented 0.16 / INK direction — not implemented
+
+The [0.16 requirement registry](PLAN_0.16.md) owns scope, status and verification. This section records only the visual direction:
+
+- Keep the existing Ink / Paper / Soft / Hint tokens and true-black identity. Do not add neon, glass, gradients, heavy cards or dynamic Material You color as the default.
+- Application artwork gains Original / Mono / INK modes. Original preserves current brand art; Mono uses a tested grayscale treatment; INK uses a native monochrome adaptive-icon layer on Android 13+ when available and visibly falls back to original art otherwise. Upgrades remain on Original. Never substitute generic Material icons for third-party brands or force one destructive mask.
+- Launcher-owned controls move to one Material Symbols Rounded family with consistent optical sizing and accessible 48dp targets. Application icons receive density-aware, optically consistent bounds without unbounded cache growth.
+- Orbit density becomes selectable at 8 / 12 / 15 while preserving favorite order and hidden-app exclusion. Empty space is intentional; permanent labels around every orbit icon are not.
+- The editorial scene keeps its rock and one oversized day abbreviation but removes repeated day labels. The drawer adopts the same editorial rhythm, a slim labeled search field and less premature name truncation.
+- Media and HOME-setup chrome become contextual and honest. No fabricated track/artist metadata or new media permission is part of this direction; stock-HOME recovery remains available.
+- Motion stays restrained. New work must preserve reduced motion, stable press feedback, TalkBack semantics and Russian/English layouts rather than adding continuous decorative animation.
+
 ## Rhythm and type
 
 - Screen content obeys Android safeDrawing insets. Rotated rails use measured post-rotation bounds and must never use negative screen-edge offsets.

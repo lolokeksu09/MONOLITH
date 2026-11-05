@@ -2,6 +2,8 @@
 
 Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, record date, firmware, tested signed APK tag and pass/fail evidence. CI success is not device success.
 
+Release `v0.15.0-beta.380` is published, but this checklist remains open until real results are recorded. For a future 0.16 candidate, rerun every applicable item below and the additional per-requirement checks in [the 0.16 plan](PLAN_0.16.md). That plan is a test reference, not evidence that its unimplemented features work.
+
 - [ ] Install the new APK over an existing permanently signed MONOLITH release; verify the same app ID, certificate, no uninstall and no crash.
 - [ ] Select MONOLITH as HOME; repeatedly navigate home from apps and restore the stock launcher through Android settings.
 - [ ] Reboot and confirm HOME behavior, drawer sorting, search and hidden-app preferences persist.
