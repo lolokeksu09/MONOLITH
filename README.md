@@ -2,11 +2,11 @@
 
 Native, offline-first AMOLED Android HOME launcher written in Kotlin + Jetpack Compose.
 
-**Current prerelease: 0.13.0-beta** · Android API 26–36 · Application ID: `dev.monolith.launcher`.
+**Current development prerelease: 0.14.0-beta** · Android API 26–36 · Application ID: `dev.monolith.launcher`.
 
 ## Single Reference HOME
 
-**0.13 visual redesign:** true-black minimal screen, an animated staggered 15-app orbit, 48dp hit targets, typographic rails, motion-aware scene transitions, original bundled monochrome rock wallpaper, and grayscale shortcuts on the editorial scene. Customize and reorder your orbit shortcuts from Settings; no root or network connection required.
+**0.14 refinement:** keeps the true-black two-scene design and configurable 15-app orbit, fixes clipped vertical rails and media text, softens icon treatments, and uses smoother spring-based orbit motion with symmetrical scene transitions. The original bundled monochrome rock wallpaper, 48dp hit targets, reduced-motion support, local favorites and offline operation remain unchanged.
 
 MONOLITH now has one design, based on the supplied reference video:
 
