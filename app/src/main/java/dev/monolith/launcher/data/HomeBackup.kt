@@ -58,6 +58,7 @@ fun encodeHomeBackup(
         .put("showWallpaper", preferences.showWallpaper)
         .put("showDrawerSearch", preferences.showDrawerSearch)
         .put("drawerOpacity", normalizeDrawerOpacity(preferences.drawerOpacity))
+        .put("referenceHome", preferences.referenceHome)
         .put("dockApps", JSONArray().apply { normalizeDock(dockApps).forEach { put(it) } })
         .put("hiddenApps", JSONArray().apply { hiddenApps.sorted().forEach { put(it) } })
         .put("entries", entries)
@@ -121,7 +122,8 @@ fun decodeHomeBackup(raw: String): HomeBackup {
         showPinDots = root.optBoolean("pinDots", true),
         showWallpaper = root.optBoolean("showWallpaper", false),
         showDrawerSearch = root.optBoolean("showDrawerSearch", true),
-        drawerOpacity = normalizeDrawerOpacity(root.optInt("drawerOpacity", 65))
+        drawerOpacity = normalizeDrawerOpacity(root.optInt("drawerOpacity", 65)),
+        referenceHome = root.optBoolean("referenceHome", true)
     ), parseHiddenBackupIds(root.optJSONArray("hiddenApps")), parseDockBackupIds(root.optJSONArray("dockApps")))
 }
 

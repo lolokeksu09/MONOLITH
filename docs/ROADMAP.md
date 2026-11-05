@@ -1,6 +1,6 @@
 # MONOLITH roadmap
 
-Updated: 2026-11-05. The current repository baseline is **0.10.0-beta**; future entries are proposals, not implemented features.
+Updated: 2026-11-05. The current repository baseline is **0.11.0-beta**; future entries are proposals, not implemented features.
 
 ## Delivered: 0.1–0.10 beta
 
@@ -11,6 +11,13 @@ Updated: 2026-11-05. The current repository baseline is **0.10.0-beta**; future 
 - 0.9–0.10: Persistent widget-height controls and order, safer removal, and reliable return to desktop.
 
 See [Changelog](CHANGELOG.md) for details. Shipped features do **not** imply verified behavior on all OEM Android builds.
+
+## Implemented in 0.11 beta: Reference home
+
+- Native two-page reference-inspired home: AMOLED black + orbital shortcuts, and editorial day/monochrome cliff artwork with quick app links.
+- Mode switch keeps the old desktop available; existing widgets remain on Classic HOME.
+- Media transport controls dispatch to Android's active player; no track metadata shown without user opt-in.
+- Swipe between reference pages, access the drawer from either page, preserve language resources and backups.
 
 ## Next: quality and architecture
 

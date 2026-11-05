@@ -2,10 +2,11 @@
 
 Native, offline-first Android HOME launcher built with Kotlin and Jetpack Compose.
 
-**Status:** `0.10.0-beta` (not a stable 1.0 release). **Android:** API 26–36. **Application ID:** `dev.monolith.launcher`.
+**Status:** `0.11.0-beta` (not a stable 1.0 release). **Android:** API 26–36. **Application ID:** `dev.monolith.launcher`.
 
 ## What works today
 
+- **Reference HOME mode (0.11 beta):** minimal black AMOLED page, touch/hold app orbit, left-swipe editorial page with original cliff artwork, quick app links, music transport keys and full app drawer. Classic home remains available in Settings.
 - HOME role selection with an explicit return path to the stock launcher.
 - Desktop clock, pinned apps, reorderable folders and a persistent five-app Dock.
 - All Apps drawer with search, hiding/restoring apps, adjustable grid and icon sizes, and sorting by name, install date or **launches made through MONOLITH**.
@@ -35,7 +36,7 @@ Public prerelease version: `monolithVersionName` in `gradle.properties`. CI runs
 
 ## Current limitations
 
-- No multi-page home desktop or visual theme editor yet.
+- Reference mode has two fixed visual pages; a freely editable multi-page home desktop and theme editor are not implemented yet.
 - No system lock-screen replacement, recents/QuickSwitch replacement or guarantee of OEM gesture parity.
 - Widgets cannot be portably recreated from JSON backups.
 - Android 16 Motorola/Lenovo gesture, keyboard, live-wallpaper and widget interactions still require a physical-device acceptance pass. A green CI build alone is **not** device certification.
