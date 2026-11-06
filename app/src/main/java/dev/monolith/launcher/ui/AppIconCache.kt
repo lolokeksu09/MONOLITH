@@ -99,7 +99,7 @@ private fun nativeInkDrawable(drawable: Drawable): Drawable? =
 
 private fun renderMonochrome(drawable: Drawable, sizePx: Int): Bitmap =
     renderDrawable(drawable, sizePx, Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        colorFilter = ColorMatrixColorFilter(ColorMatrix().apply { setToSaturation(0f) })
+        colorFilter = ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(0f) })
     })
 
 private fun renderInk(drawable: Drawable, sizePx: Int): Bitmap =
