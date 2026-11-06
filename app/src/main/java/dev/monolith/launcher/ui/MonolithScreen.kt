@@ -60,6 +60,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -334,6 +336,7 @@ fun MonolithScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         AppIconStyle.entries.forEach { style ->
                             ChoiceButton(
+                                modifier = Modifier.weight(1f),
                                 selected = preferences.appIconStyle == style,
                                 label = stringResource(iconStyleLabel(style)),
                                 onClick = {
@@ -350,6 +353,7 @@ fun MonolithScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf(8, 12, 15).forEach { density ->
                             ChoiceButton(
+                                modifier = Modifier.weight(1f),
                                 selected = preferences.orbitDensity == density,
                                 label = "$density",
                                 onClick = {
@@ -383,6 +387,7 @@ fun MonolithScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         (3..6).forEach { columns ->
                             ChoiceButton(
+                                modifier = Modifier.weight(1f),
                                 selected = preferences.drawerColumns == columns,
                                 label = "$columns",
                                 onClick = {
@@ -557,14 +562,21 @@ fun MonolithScreen(
 }
 
 @Composable
-private fun ChoiceButton(selected: Boolean, label: String, onClick: () -> Unit) {
+private fun ChoiceButton(
+    modifier: Modifier = Modifier,
+    selected: Boolean,
+    label: String,
+    onClick: () -> Unit
+) {
+    val buttonModifier = modifier.heightIn(min = 48.dp).semantics { this.selected = selected }
+    val contentPadding = PaddingValues(horizontal = 4.dp)
     if (selected) {
-        Button(onClick = onClick) {
-            Text(label, fontSize = 12.sp, maxLines = 1)
+        Button(onClick = onClick, modifier = buttonModifier, contentPadding = contentPadding) {
+            Text(label, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     } else {
-        OutlinedButton(onClick = onClick) {
-            Text(label, fontSize = 12.sp, maxLines = 1)
+        OutlinedButton(onClick = onClick, modifier = buttonModifier, contentPadding = contentPadding) {
+            Text(label, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
