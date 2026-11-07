@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.17.0-beta
+- Debounces drawer search input so filtering and Collator sorting of the installed catalog no longer run on the main thread for every keystroke.
+- Announces the HOME page position through a localized state description and hides the purely visual page dots from screen readers.
+- Adds Robolectric-based Compose UI tests for loading, catalog-error retry, drawer contents, hidden-app exclusion, debounced search with clear and Settings icon-mode selection.
+- Code-level audit fixes only; physical Lenovo Legion Y70 / Motorola Android 16 acceptance for these paths remains open, and no release or device-validated claim is implied by this entry.
+
 ## 0.16.0-beta
 - Adds Original, Mono and INK application-icon appearances across orbit, editorial shortcuts and All Apps; INK uses native Android 13+ monochrome artwork when available and original artwork otherwise.
 - Adds persisted 8 / 12 / 15 orbit densities without truncating saved favorites, changing their order or bypassing hidden-app exclusions.
