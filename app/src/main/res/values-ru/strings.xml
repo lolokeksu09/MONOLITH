@@ -45,6 +45,7 @@
     <string name="reference_minimal">←  МИНИМАЛ</string>
     <string name="reference_only_description">Reference теперь единственный главный экран. Переключай страницы свайпом или открывай меню приложений.</string>
     <string name="reference_orbit_toggle">Показать или скрыть круговое меню</string>
+    <string name="reference_page_state">Экран %1$d из %2$d</string>
     <string name="reference_orbit_collapsed">Круг приложений свёрнут</string>
     <string name="reference_orbit_expanded">Круг приложений раскрыт</string>
     <string name="reference_quick_apps">БЫСТРЫЙ ДОСТУП</string>

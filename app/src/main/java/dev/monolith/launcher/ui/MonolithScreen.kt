@@ -81,6 +81,7 @@ import dev.monolith.launcher.data.sortApps
 import dev.monolith.launcher.data.ORBIT_CAPACITY
 import dev.monolith.launcher.data.moveOrbitFavorite
 import dev.monolith.launcher.data.toggleOrbitFavorite
+import kotlinx.coroutines.delay
 
 private val Background = Color(0xFF050505)
 private val Foreground = Color(0xFFF4F3F0)
@@ -114,12 +115,13 @@ fun MonolithScreen(
 ) {
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
     var query by rememberSaveable { mutableStateOf("") }
+    var debouncedQuery by rememberSaveable { mutableStateOf("") }
     var orbitQuery by rememberSaveable { mutableStateOf("") }
     var selectedApp by remember { mutableStateOf<LaunchableApp?>(null) }
-    val visibleApps = remember(apps, hiddenApps, query, preferences, launchStats) {
+    val visibleApps = remember(apps, hiddenApps, debouncedQuery, preferences, launchStats) {
         sortApps(
             filterApps(filterHiddenApps(apps, hiddenApps),
-                effectiveDrawerQuery(query, preferences.showDrawerSearch)),
+                effectiveDrawerQuery(debouncedQuery, preferences.showDrawerSearch)),
             preferences.appSort, launchStats
         )
     }
@@ -150,6 +152,12 @@ fun MonolithScreen(
     }
     LaunchedEffect(preferences.showDrawerSearch) {
         if (!preferences.showDrawerSearch) query = ""
+    }
+    // Filtering and Collator sorting stay off the keystroke path; the drawer
+    // reacts to the settled query instead of recomputing on every symbol.
+    LaunchedEffect(query) {
+        delay(180)
+        debouncedQuery = query
     }
     BackHandler(enabled = screen != Screen.HOME) {
         screen = Screen.HOME
