@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.16.0-beta
+- Adds Original, Mono and INK application-icon appearances across orbit, editorial shortcuts and All Apps; INK uses native Android 13+ monochrome artwork when available and original artwork otherwise.
+- Adds persisted 8 / 12 / 15 orbit densities without truncating saved favorites, changing their order or bypassing hidden-app exclusions.
+- Decodes density-aware icons off the main thread and separates cache entries by app, appearance and size within the existing 8 MiB bound.
+- Uses a consistent rounded vector family for launcher-owned Back, Settings, search, clear, sorting, close and media controls while retaining accessible labels and 48dp targets.
+- Simplifies editorial copy to one localized oversized day abbreviation and aligns All Apps with a compact editorial header, labeled search and two-line application names.
+- Replaces active-player wording with honest system-media-key status; adds no notification or media permission and preserves the existing HOME role flow.
+- Adds JVM coverage for preference defaults, density normalization, favorite preservation and all three orbit geometries.
+- Implementation is on a feature branch pending CI and physical-device acceptance; merge, signed release and install-over-0.15 verification are not claimed.
+
 ## 0.15.0-beta
 - Unified orbit expansion and collapse under one no-bounce spring, removing the index stagger and the abrupt animation-spec switch.
 - Synchronized the center trigger with orbit progress and added soft close-label fades; the closed trigger is slightly easier to see.

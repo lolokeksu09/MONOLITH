@@ -43,6 +43,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -57,9 +58,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -81,6 +79,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import dev.monolith.launcher.R
+import dev.monolith.launcher.data.AppIconStyle
 import dev.monolith.launcher.data.LaunchableApp
 import dev.monolith.launcher.data.orbitHitTargetsEnabled
 import dev.monolith.launcher.data.orbitPositions
@@ -97,14 +96,10 @@ private val Dim = Color(0xFF555557)
 private val Hint = Color(0xFF767678)
 private val Accent = Color(0xFFC9C5BB)
 
-/**
- * A two-scene, native Android launcher, inspired by the supplied iThemeDesign video.
- * The black landing screen and the editorial scene intentionally have different
- * visual density. All shortcuts refer to installed, visible applications.
- */
 @Composable
 fun ReferenceHome(
     apps: List<LaunchableApp>,
+    iconStyle: AppIconStyle,
     homeRequestGeneration: Int,
     isDefaultHome: Boolean,
     loading: Boolean,
@@ -120,7 +115,6 @@ fun ReferenceHome(
     var orbitOpen by rememberSaveable { mutableStateOf(false) }
     var now by remember { mutableStateOf(LocalDateTime.now()) }
     val context = LocalContext.current
-    // Re-read after resume/recomposition so system reduced-motion changes are respected.
     val motionDuration = if (ValueAnimator.areAnimatorsEnabled()) 420 else 0
 
     LaunchedEffect(Unit) {
@@ -203,6 +197,7 @@ fun ReferenceHome(
                 MinimalScene(
                     now = now,
                     apps = apps,
+                    iconStyle = iconStyle,
                     orbitOpen = orbitOpen,
                     motionDuration = motionDuration,
                     onToggleOrbit = { orbitOpen = !orbitOpen },
@@ -212,17 +207,21 @@ fun ReferenceHome(
                     onNext = { sendMediaKey(context, KeyEvent.KEYCODE_MEDIA_NEXT) }
                 )
             } else {
-                EditorialScene(now, apps, openApp, onAppActions)
+                EditorialScene(now, apps, iconStyle, openApp, onAppActions)
             }
         }
 
         TextButton(
             onClick = onSettings,
             modifier = Modifier.align(Alignment.TopEnd).padding(top = 20.dp, end = 17.dp)
-                .size(width = 92.dp, height = 48.dp)
+                .size(48.dp)
         ) {
-            Text(stringResource(R.string.reference_settings), color = Soft,
-                fontSize = 10.sp, fontWeight = FontWeight.Normal)
+            Icon(
+                painterResource(R.drawable.ic_settings),
+                contentDescription = stringResource(R.string.settings),
+                tint = Soft,
+                modifier = Modifier.size(20.dp)
+            )
         }
 
         Column(
@@ -281,6 +280,7 @@ fun ReferenceHome(
 private fun MinimalScene(
     now: LocalDateTime,
     apps: List<LaunchableApp>,
+    iconStyle: AppIconStyle,
     orbitOpen: Boolean,
     motionDuration: Int,
     onToggleOrbit: () -> Unit,
@@ -289,7 +289,6 @@ private fun MinimalScene(
     onPlayPause: () -> Unit,
     onNext: () -> Unit
 ) {
-    // One shared, velocity-preserving spring avoids a spec switch between open and close.
     val orbitProgress by animateFloatAsState(
         targetValue = if (orbitOpen) 1f else 0f,
         animationSpec = if (motionDuration == 0) tween(0) else spring(
@@ -327,14 +326,23 @@ private fun MinimalScene(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                MediaControl(0, stringResource(R.string.reference_play_pause), onPlayPause)
-                MediaControl(1, stringResource(R.string.reference_next_track), onNext)
+                MediaControl(
+                    R.drawable.ic_play_arrow,
+                    stringResource(R.string.reference_play_pause),
+                    onPlayPause
+                )
+                MediaControl(
+                    R.drawable.ic_skip_next,
+                    stringResource(R.string.reference_next_track),
+                    onNext
+                )
             }
         }
 
         VerticalRailText(
             text = now.format(DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())) +
-                "   /   " + now.format(DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH)).uppercase(Locale.ENGLISH),
+                "   /   " + now.format(DateTimeFormatter.ofPattern("EEE", Locale.getDefault()))
+                    .uppercase(Locale.getDefault()),
             modifier = Modifier.align(Alignment.CenterStart)
                 .offset(y = 128.dp).padding(start = 16.dp),
             fontSize = 15.sp,
@@ -354,7 +362,6 @@ private fun MinimalScene(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            // Keep 48dp hit targets spaced >=52dp even on compact phones.
             val orbitScale = minOf(1f, (maxWidth.value - 28f) / 295f).coerceAtLeast(.92f)
             Box(
                 modifier = Modifier.size(304.dp)
@@ -367,7 +374,9 @@ private fun MinimalScene(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                OrbitCluster(apps, orbitOpen, orbitScale, orbitProgress, onLaunch, onActions)
+                OrbitCluster(
+                    apps, iconStyle, orbitOpen, orbitScale, orbitProgress, onLaunch, onActions
+                )
                 Canvas(
                     Modifier.size(36.dp).graphicsLayer {
                         alpha = (1f - orbitProgress * 1.6f).coerceIn(0f, 1f)
@@ -392,11 +401,23 @@ private fun MinimalScene(
                     easing = FastOutSlowInEasing
                 ))
             ) {
-                Text(
-                    stringResource(R.string.reference_close_orbit),
-                    modifier = Modifier.clickable(onClick = onToggleOrbit).padding(14.dp),
-                    color = Soft, fontSize = 11.sp, letterSpacing = 1.sp
-                )
+                Row(
+                    modifier = Modifier.clickable(onClick = onToggleOrbit)
+                        .height(48.dp).padding(horizontal = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painterResource(R.drawable.ic_close),
+                        contentDescription = null,
+                        tint = Soft,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        stringResource(R.string.reference_close_orbit),
+                        color = Soft, fontSize = 11.sp, letterSpacing = 1.sp
+                    )
+                }
             }
         }
 
@@ -409,10 +430,6 @@ private fun MinimalScene(
     }
 }
 
-/**
- * Measures the rotated bounds instead of pushing unrotated text beyond the screen edge.
- * This keeps every glyph inside the safe area at different font scales and locales.
- */
 @Composable
 private fun VerticalRailText(
     text: String,
@@ -452,6 +469,7 @@ private fun VerticalRailText(
 @Composable
 private fun OrbitCluster(
     apps: List<LaunchableApp>,
+    iconStyle: AppIconStyle,
     expanded: Boolean,
     orbitScale: Float,
     progress: Float,
@@ -459,8 +477,9 @@ private fun OrbitCluster(
     onActions: (LaunchableApp) -> Unit
 ) {
     val positions = remember(apps.size) { orbitPositions(apps.size) }
-    // Warm all visible orbit icons before the first tap, without doing package I/O on the UI thread.
-    val icons = positions.mapIndexed { index, _ -> rememberAppIcon(apps[index]) }
+    val icons = positions.mapIndexed { index, _ ->
+        rememberAppIcon(apps[index], iconStyle)
+    }
     val local = progress.coerceIn(0f, 1f)
     if (expanded || local > .001f) positions.forEachIndexed { index, point ->
         val app = apps[index]
@@ -497,33 +516,18 @@ private fun OrbitCluster(
 }
 
 @Composable
-private fun MediaControl(kind: Int, description: String, onClick: () -> Unit) {
+private fun MediaControl(iconRes: Int, description: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier.size(48.dp).semantics { contentDescription = description }
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(Modifier.size(19.dp)) {
-            val w = size.width
-            val h = size.height
-            if (kind == 0) {
-                drawLine(Paper, androidx.compose.ui.geometry.Offset(w*.3f,h*.20f),
-                    androidx.compose.ui.geometry.Offset(w*.3f,h*.80f),
-                    strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
-                drawLine(Paper, androidx.compose.ui.geometry.Offset(w*.7f,h*.20f),
-                    androidx.compose.ui.geometry.Offset(w*.7f,h*.80f),
-                    strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
-            } else {
-                val triangle = Path().apply {
-                    moveTo(w*.18f,h*.18f); lineTo(w*.72f,h*.5f)
-                    lineTo(w*.18f,h*.82f); close()
-                }
-                drawPath(triangle, Paper)
-                drawLine(Paper, androidx.compose.ui.geometry.Offset(w*.82f,h*.18f),
-                    androidx.compose.ui.geometry.Offset(w*.82f,h*.82f),
-                    strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
-            }
-        }
+        Icon(
+            painterResource(iconRes),
+            contentDescription = null,
+            tint = Paper,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
 
@@ -531,13 +535,12 @@ private fun MediaControl(kind: Int, description: String, onClick: () -> Unit) {
 private fun EditorialScene(
     now: LocalDateTime,
     apps: List<LaunchableApp>,
+    iconStyle: AppIconStyle,
     onLaunch: (LaunchableApp) -> Unit,
     onActions: (LaunchableApp) -> Unit
 ) {
-    val dayShort = now.format(DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH))
-        .uppercase(Locale.ENGLISH)
-    val weekday = now.format(DateTimeFormatter.ofPattern("EEEE", Locale.ENGLISH))
-        .uppercase(Locale.ENGLISH)
+    val locale = Locale.getDefault()
+    val dayShort = now.format(DateTimeFormatter.ofPattern("EEE", locale)).uppercase(locale)
     BoxWithConstraints(Modifier.fillMaxSize().background(Ink)) {
         val editorialWidth = maxWidth.value
         Image(
@@ -567,10 +570,9 @@ private fun EditorialScene(
             Text("MONOLITH   /   02", color = Soft,
                 fontSize = 10.sp, letterSpacing = 1.4.sp)
             Spacer(Modifier.height(26.dp))
-            Text(weekday, color = Paper, fontSize = 11.sp, letterSpacing = 2.2.sp)
             Text(
-                now.format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.getDefault())),
-                color = Soft, fontSize = 11.sp
+                now.format(DateTimeFormatter.ofPattern("dd MMMM yyyy", locale)),
+                color = Soft, fontSize = 11.sp, maxLines = 2
             )
             Spacer(Modifier.height(14.dp))
             Text("────────────────", color = Dim, fontSize = 9.sp)
@@ -581,8 +583,6 @@ private fun EditorialScene(
                 .offset(y = (-94).dp)
                 .padding(start = 25.dp)
         ) {
-            Text("Today /", color = Soft, fontSize = 14.sp,
-                fontWeight = FontWeight.Light)
             Text(
                 dayShort,
                 color = Paper,
@@ -591,7 +591,7 @@ private fun EditorialScene(
                 letterSpacing = (-4).sp,
                 maxLines = 1
             )
-            Text("—  " + now.format(DateTimeFormatter.ofPattern("HH:mm")),
+            Text("—  " + now.format(DateTimeFormatter.ofPattern("HH:mm", locale)),
                 fontSize = 11.sp, color = Soft, letterSpacing = 1.9.sp)
         }
 
@@ -604,7 +604,9 @@ private fun EditorialScene(
             Spacer(Modifier.height(13.dp))
             apps.take(8).chunked(4).forEach { rowApps ->
                 Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                    rowApps.forEach { app -> EditorialShortcut(app, onLaunch, onActions) }
+                    rowApps.forEach { app ->
+                        EditorialShortcut(app, iconStyle, onLaunch, onActions)
+                    }
                 }
                 Spacer(Modifier.height(9.dp))
             }
@@ -625,11 +627,11 @@ private fun EditorialScene(
 @Composable
 private fun EditorialShortcut(
     app: LaunchableApp,
+    iconStyle: AppIconStyle,
     onLaunch: (LaunchableApp) -> Unit,
     onActions: (LaunchableApp) -> Unit
 ) {
-    val bitmap = rememberAppIcon(app)
-    val mono = remember { ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) }) }
+    val bitmap = rememberAppIcon(app, iconStyle)
     Box(
         modifier = Modifier.size(48.dp)
             .semantics { contentDescription = app.label }
@@ -649,7 +651,7 @@ private fun EditorialShortcut(
         ) {
             if (bitmap != null) {
                 Image(bitmap.asImageBitmap(), contentDescription = null,
-                    modifier = Modifier.size(23.dp), colorFilter = mono)
+                    modifier = Modifier.size(25.dp))
             } else {
                 Text(app.label.take(1), color = Paper, fontSize = 14.sp,
                     fontWeight = FontWeight.Medium)

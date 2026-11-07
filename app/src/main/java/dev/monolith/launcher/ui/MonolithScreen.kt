@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,6 +34,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -56,13 +58,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.monolith.launcher.R
+import dev.monolith.launcher.data.AppIconStyle
 import dev.monolith.launcher.data.AppSort
 import dev.monolith.launcher.data.LaunchableApp
 import dev.monolith.launcher.data.LaunchStats
@@ -77,16 +83,13 @@ import dev.monolith.launcher.data.moveOrbitFavorite
 import dev.monolith.launcher.data.toggleOrbitFavorite
 
 private val Background = Color(0xFF050505)
-private val Foreground = Color(0xFFF5F5F5)
-private val Muted = Color(0xFFADADAD)
-private val Panel = Color(0xFF161616)
+private val Foreground = Color(0xFFF4F3F0)
+private val Muted = Color(0xFFA7A6A4)
+private val Panel = Color(0xFF101010)
 
 private enum class Screen { HOME, ALL_APPS, SETTINGS, ORBIT_APPS, HIDDEN_APPS }
 
-/**
- * Reference HOME is the only desktop.
- * The old classic home, Dock, folders and widget host have been removed from the UI.
- */
+/** Reference HOME remains the only desktop. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MonolithScreen(
@@ -120,8 +123,16 @@ fun MonolithScreen(
             preferences.appSort, launchStats
         )
     }
-    val referenceApps = remember(apps, hiddenApps, launchStats, orbitFavorites) {
-        chooseReferenceApps(apps, hiddenApps, launchStats, favoriteIds = orbitFavorites)
+    val referenceApps = remember(
+        apps, hiddenApps, launchStats, orbitFavorites, preferences.orbitDensity
+    ) {
+        chooseReferenceApps(
+            apps = apps,
+            hiddenIds = hiddenApps,
+            stats = launchStats,
+            limit = preferences.orbitDensity,
+            favoriteIds = orbitFavorites
+        )
     }
     val launchAndReturnHome: (LaunchableApp) -> Unit = { app ->
         screen = Screen.HOME
@@ -154,6 +165,7 @@ fun MonolithScreen(
             when (screen) {
                 Screen.HOME -> ReferenceHome(
                     apps = referenceApps,
+                    iconStyle = preferences.appIconStyle,
                     homeRequestGeneration = homeRequestGeneration,
                     isDefaultHome = isDefaultHome,
                     loading = loading,
@@ -195,13 +207,31 @@ fun MonolithScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            TextButton(onClick = { screen = Screen.HOME; query = "" }) {
-                                Text("←", color = Foreground, fontSize = 23.sp)
+                            TextButton(
+                                onClick = { screen = Screen.HOME; query = "" },
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                Icon(
+                                    painterResource(R.drawable.ic_arrow_back),
+                                    contentDescription = stringResource(R.string.back_home),
+                                    tint = Foreground
+                                )
                             }
-                            Text(stringResource(R.string.drawer_title), fontSize = 30.sp,
-                                fontWeight = FontWeight.Bold, letterSpacing = (-.7).sp)
-                            TextButton(onClick = { screen = Screen.SETTINGS }) {
-                                Text(stringResource(R.string.settings), color = Muted, fontSize = 12.sp)
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("MONOLITH / 03", color = Muted, fontSize = 9.sp,
+                                    letterSpacing = 1.5.sp)
+                                Text(stringResource(R.string.drawer_title), fontSize = 20.sp,
+                                    fontWeight = FontWeight.Medium, letterSpacing = .2.sp)
+                            }
+                            TextButton(
+                                onClick = { screen = Screen.SETTINGS },
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                Icon(
+                                    painterResource(R.drawable.ic_settings),
+                                    contentDescription = stringResource(R.string.settings),
+                                    tint = Muted
+                                )
                             }
                         }
                         Spacer(Modifier.height(9.dp))
@@ -209,13 +239,29 @@ fun MonolithScreen(
                             TextField(
                                 value = query,
                                 onValueChange = { query = it },
+                                label = { Text(stringResource(R.string.drawer_search_label)) },
                                 placeholder = { Text(stringResource(R.string.drawer_search_placeholder)) },
+                                leadingIcon = {
+                                    Icon(painterResource(R.drawable.ic_search),
+                                        contentDescription = null, modifier = Modifier.size(20.dp))
+                                },
+                                trailingIcon = if (query.isEmpty()) null else ({
+                                    TextButton(onClick = { query = "" }, modifier = Modifier.size(48.dp)) {
+                                        Icon(
+                                            painterResource(R.drawable.ic_close),
+                                            contentDescription = stringResource(R.string.drawer_clear_search),
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }),
                                 singleLine = true,
-                                shape = RoundedCornerShape(26.dp),
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                                 colors = TextFieldDefaults.colors(
                                     focusedTextColor = Foreground,
                                     unfocusedTextColor = Foreground,
+                                    focusedLabelColor = Foreground,
+                                    unfocusedLabelColor = Muted,
                                     focusedContainerColor = Panel,
                                     unfocusedContainerColor = Panel,
                                     focusedIndicatorColor = Color.Transparent,
@@ -265,7 +311,12 @@ fun MonolithScreen(
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 items(visibleApps, key = { it.id }) { app ->
-                                    DrawerAppTile(app, { launchAndReturnHome(app) }, { selectedApp = app })
+                                    DrawerAppTile(
+                                        app = app,
+                                        iconStyle = preferences.appIconStyle,
+                                        onLaunch = { launchAndReturnHome(app) },
+                                        onActions = { selectedApp = app }
+                                    )
                                 }
                             }
                         }
@@ -279,7 +330,41 @@ fun MonolithScreen(
                     Text(stringResource(R.string.settings), fontSize = 29.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(10.dp))
                     Text(stringResource(R.string.reference_only_description), color = Muted, fontSize = 13.sp)
-                    Spacer(Modifier.height(15.dp))
+                    Spacer(Modifier.height(22.dp))
+                    Text(stringResource(R.string.appearance_title), color = Muted, fontSize = 12.sp)
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        AppIconStyle.entries.forEach { style ->
+                            ChoiceButton(
+                                modifier = Modifier.weight(1f),
+                                selected = preferences.appIconStyle == style,
+                                label = stringResource(iconStyleLabel(style)),
+                                onClick = {
+                                    onPreferencesChange(preferences.copy(appIconStyle = style))
+                                }
+                            )
+                        }
+                    }
+                    Text(stringResource(R.string.appearance_hint), fontSize = 11.sp,
+                        lineHeight = 15.sp, color = Muted)
+                    Spacer(Modifier.height(20.dp))
+                    Text(stringResource(R.string.orbit_density), color = Muted, fontSize = 12.sp)
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(8, 12, 15).forEach { density ->
+                            ChoiceButton(
+                                modifier = Modifier.weight(1f),
+                                selected = preferences.orbitDensity == density,
+                                label = "$density",
+                                onClick = {
+                                    onPreferencesChange(preferences.copy(orbitDensity = density))
+                                }
+                            )
+                        }
+                    }
+                    Text(stringResource(R.string.orbit_density_hint), fontSize = 11.sp,
+                        lineHeight = 15.sp, color = Muted)
+                    Spacer(Modifier.height(20.dp))
                     OutlinedButton(onClick = { orbitQuery = ""; screen = Screen.ORBIT_APPS },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp)) {
                         Text(stringResource(R.string.reference_customize_orbit))
@@ -301,15 +386,14 @@ fun MonolithScreen(
                     Text(stringResource(R.string.drawer_columns), color = Muted)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         (3..6).forEach { columns ->
-                            if (preferences.drawerColumns == columns) {
-                                Button(onClick = { onPreferencesChange(preferences.copy(drawerColumns = columns)) }) {
-                                    Text("$columns")
+                            ChoiceButton(
+                                modifier = Modifier.weight(1f),
+                                selected = preferences.drawerColumns == columns,
+                                label = "$columns",
+                                onClick = {
+                                    onPreferencesChange(preferences.copy(drawerColumns = columns))
                                 }
-                            } else {
-                                OutlinedButton(onClick = { onPreferencesChange(preferences.copy(drawerColumns = columns)) }) {
-                                    Text("$columns")
-                                }
-                            }
+                            )
                         }
                     }
                     Spacer(Modifier.height(18.dp))
@@ -367,8 +451,12 @@ fun MonolithScreen(
                         TextField(
                             value = orbitQuery,
                             onValueChange = { orbitQuery = it },
+                            label = { Text(stringResource(R.string.drawer_search_label)) },
                             placeholder = { Text(stringResource(R.string.drawer_search_placeholder)) },
-                            singleLine = true, shape = RoundedCornerShape(20.dp),
+                            leadingIcon = {
+                                Icon(painterResource(R.drawable.ic_search), contentDescription = null)
+                            },
+                            singleLine = true, shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth(),
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Panel, unfocusedContainerColor = Panel,
@@ -473,12 +561,37 @@ fun MonolithScreen(
     }
 }
 
+@Composable
+private fun ChoiceButton(
+    modifier: Modifier = Modifier,
+    selected: Boolean,
+    label: String,
+    onClick: () -> Unit
+) {
+    val buttonModifier = modifier.heightIn(min = 48.dp).semantics { this.selected = selected }
+    val contentPadding = PaddingValues(horizontal = 4.dp)
+    if (selected) {
+        Button(onClick = onClick, modifier = buttonModifier, contentPadding = contentPadding) {
+            Text(label, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    } else {
+        OutlinedButton(onClick = onClick, modifier = buttonModifier, contentPadding = contentPadding) {
+            Text(label, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DrawerAppTile(app: LaunchableApp, onLaunch: () -> Unit, onActions: () -> Unit) {
-    val bitmap = rememberAppIcon(app)
+private fun DrawerAppTile(
+    app: LaunchableApp,
+    iconStyle: AppIconStyle,
+    onLaunch: () -> Unit,
+    onActions: () -> Unit
+) {
+    val bitmap = rememberAppIcon(app, iconStyle)
     Column(
-        modifier = Modifier.fillMaxWidth().combinedClickable(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 88.dp).combinedClickable(
             onClickLabel = stringResource(R.string.open_app),
             onLongClickLabel = stringResource(R.string.app_actions),
             onClick = onLaunch,
@@ -488,14 +601,26 @@ private fun DrawerAppTile(app: LaunchableApp, onLaunch: () -> Unit, onActions: (
     ) {
         Box(Modifier.size(51.dp), contentAlignment = Alignment.Center) {
             if (bitmap != null) {
-                Image(bitmap.asImageBitmap(), contentDescription = app.label, modifier = Modifier.size(42.dp))
+                Image(
+                    bitmap.asImageBitmap(),
+                    contentDescription = app.label,
+                    modifier = Modifier.size(42.dp)
+                )
             } else {
                 Text(app.label.take(1), fontSize = 24.sp, color = Foreground)
             }
         }
         Spacer(Modifier.height(6.dp))
-        Text(app.label, color = Foreground, fontSize = 12.sp,
-            maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+        Text(
+            app.label,
+            color = Foreground,
+            fontSize = 12.sp,
+            lineHeight = 14.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.heightIn(min = 28.dp)
+        )
     }
 }
 
@@ -504,8 +629,14 @@ private fun SortPicker(selected: AppSort, onChange: (AppSort) -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box {
         TextButton(onClick = { open = true }) {
-            Text(stringResource(sortLabel(selected)), fontSize = 12.sp)
-            Text("  ▾", fontSize = 12.sp, color = Muted)
+            Icon(
+                painterResource(R.drawable.ic_sort),
+                contentDescription = null,
+                tint = Muted,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.width(7.dp))
+            Text(stringResource(sortLabel(selected)), fontSize = 12.sp, maxLines = 1)
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             AppSort.entries.forEach { choice ->
@@ -516,6 +647,12 @@ private fun SortPicker(selected: AppSort, onChange: (AppSort) -> Unit) {
             }
         }
     }
+}
+
+private fun iconStyleLabel(value: AppIconStyle): Int = when (value) {
+    AppIconStyle.ORIGINAL -> R.string.icon_original
+    AppIconStyle.MONO -> R.string.icon_mono
+    AppIconStyle.INK -> R.string.icon_ink
 }
 
 private fun sortLabel(value: AppSort): Int = when (value) {
