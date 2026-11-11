@@ -13,9 +13,9 @@ Source direction: the user-provided @ithemedesign TikTok video, not a copied pai
 
 The two scenes intentionally have different density: minimal = mostly empty black; editorial = artwork on the right, typography and application glyphs left. The generated `editorial_rock.png` is original, offline and independently usable; it is not copied from the clip.
 
-## 0.16 / INK implementation — verification pending
+## 0.16 / INK in main — device verification pending
 
-The [0.16 requirement registry](PLAN_0.16.md) owns scope, status and verification. PR #35 implements this direction on a feature branch; physical visual acceptance is not claimed:
+The [0.16 requirement registry](PLAN_0.16.md) owns scope, status and verification. PR #35 merged this implementation into `main` on 2026-11-07; physical visual acceptance is not claimed:
 
 - Existing Ink / Paper / Soft / Hint tokens and true-black identity remain. No neon, glass, heavy cards or dynamic Material You default is added.
 - Original preserves brand art; Mono uses grayscale; INK uses a native monochrome adaptive-icon layer on Android 13+ when available and original art otherwise. Upgrades and the current clean-install candidate remain Original. Generic Material icons never replace third-party brands.
