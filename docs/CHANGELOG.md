@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.18.0-beta — Reference polish preview
+- Removes decorative MONOLITH / 01, 02, 03 counters from Minimal HOME, Editorial and All Apps while retaining navigation and Settings.
+- Refines upper-left media spacing, unobtrusive Settings chrome and high-contrast grayscale cliff composition; keeps unavailable player metadata honest.
+- Uses true AMOLED black on launcher-owned screens, with cleaner Editorial typography and a drawn divider instead of decorative dash text.
+- Balances partially populated Orbit clusters (1–15 app counts) around their actual interaction center without changing saved favorites or complete 8/12/15 patterns.
+- Includes 0.17 search debounce, immediate clear, localized page-indicator semantics and Compose UI tests.
+- Debug preview is a separate app `dev.monolith.launcher.preview` labeled MONOLITH Preview; it does not overwrite or update the permanently signed `dev.monolith.launcher` or share its local preferences.
+- Physical Lenovo Legion Y70 / Motorola Android 16 motion, gestures, accessibility and exact visual acceptance remain open. GitHub CI is not phone QA.
+
 ## 0.16.0-beta
 - Adds Original, Mono and INK application-icon appearances across orbit, editorial shortcuts and All Apps; INK uses native Android 13+ monochrome artwork when available and original artwork otherwise.
 - Adds persisted 8 / 12 / 15 orbit densities without truncating saved favorites, changing their order or bypassing hidden-app exclusions.
