@@ -2,7 +2,7 @@
 
 Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, record date, firmware, tested signed APK tag and pass/fail evidence. CI success is not device success.
 
-Release `v0.15.0-beta.380` is published, but this checklist remains open until real results are recorded. PR #35 contains 0.16 candidate code; it is not a signed release or physical evidence. For a 0.16 candidate, rerun every applicable 0.15 item and the additional checks below.
+Release `v0.15.0-beta.380` is published, but this checklist remains open until real results are recorded. PR #35 merged 0.16 code into `main` on 2026-11-07; this does not establish a signed release or physical-device evidence. For a 0.16 candidate, rerun every applicable 0.15 item and the additional checks below.
 
 ## 0.16 / INK additions
 
