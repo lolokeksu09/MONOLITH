@@ -2,11 +2,11 @@
 
 Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, record date, firmware, tested signed APK tag and pass/fail evidence. CI success is not device success.
 
-**Current signed candidate:** [`v0.19.0-beta.414`](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.19.0-beta.414), from main commit `cf4086c3f0b4a36c0e12af28880262a094ee8ec4`. [Android CI #414](https://github.com/lolokeksu09/MONOLITH/actions/runs/43075481033) completed successfully with pinned production signing. **No physical-device acceptance evidence is recorded yet.** Run all applicable historical checks for this exact signed candidate; record the installed version, certificate continuity, firmware, date and observed result.
+**Current signed candidate:** [v0.20.0-beta.428](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.20.0-beta.428), from source commit `4cd84776b511e7bdf7f3b0838ebb90e7553f128a`. [Signed-release CI #428](https://github.com/lolokeksu09/MONOLITH/actions/runs/43082198569) completed successfully with pinned production signing. **No physical-device acceptance evidence is recorded yet.** Run applicable historical checks for this exact signed APK; record the installed version, certificate continuity, firmware, date and observed result.
 
-## 0.20 candidate — catalog responsiveness and Orbit dismissal (not device-tested)
+## 0.20 signed beta — catalog responsiveness and Orbit dismissal (not device-tested)
 
-**Exact candidate:** [PR #43](https://github.com/lolokeksu09/MONOLITH/pull/43); requirements in [PLAN_0.20.md](PLAN_0.20.md). These are open physical checks; do not mark pass based on CI.
+**Exact signed candidate:** [v0.20.0-beta.428](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.20.0-beta.428), built from merged [PR #43](https://github.com/lolokeksu09/MONOLITH/pull/43); requirements in [PLAN_0.20.md](PLAN_0.20.md). All hardware checks below remain open, regardless of CI success.
 
 - [ ] Search a large installed-app list in both RU and EN with Top and Bottom search. Confirm keyboard input stays responsive and the filtered result matches the settled query. Record actual observed latency if available; do not infer FPS from architecture.
 - [ ] Rapidly edit queries and switch A–Z / Z–A / frequent / recent / installation sorting; confirm no stale old results appear and no false `No applications found` state appears while still calculating.

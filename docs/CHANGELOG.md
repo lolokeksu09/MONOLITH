@@ -1,12 +1,14 @@
 # Changelog
 
-## 0.20.0-beta — Responsive catalog and Orbit interaction candidate (not released)
+## 0.20.0-beta — Responsive catalog and Orbit interaction
 - Moves drawer filtering and locale-aware sorting off the Compose UI thread to a cancellable background projection.
 - Rejects older completed projections after a search, sort, hidden-app or app-catalog change; prevents transient display of newly hidden apps.
 - Distinguishes pending data from a completed empty result without fabricating a zero-app count. Adds a visible 48dp Clear search action on the empty-results screen.
 - Enables tapping free background space to dismiss expanded Orbit without obstructing real app shortcuts, media controls or swipe navigation. Closed HOME retains its explicit 48dp opening target.
 - Adds JVM request-generation/privacy tests and Robolectric Compose UI tests, RU/EN labels and specific [device acceptance checks](PLAN_0.20.md).
-- No new permissions, themes, tracking, preference migration or identity/signing change. No FPS/device validation or signed release claim.
+- No new permissions, themes, tracking, preference migration or identity/signing change. No FPS or installed-device validation claim.
+- [PR #43](https://github.com/lolokeksu09/MONOLITH/pull/43) merged to `main` at `4cd84776b511e7bdf7f3b0838ebb90e7553f128a` on 2026-11-11. [Android CI #427](https://github.com/lolokeksu09/MONOLITH/actions/runs/43081707883) passed, and [signed-release CI #428](https://github.com/lolokeksu09/MONOLITH/actions/runs/43082198569) verified pinned production signing and published [v0.20.0-beta.428](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.20.0-beta.428).
+- Production APK: `MONOLITH-0.20.0-beta.428-signed.apk` with SHA-256 `49651d54ed9b7834b3a5b42300ffd6ebee7acf24d9751271aa87562e81186be6`. App package `dev.monolith.launcher`; real-device upgrade and behavior acceptance remain pending.
 
 
 ## 0.19.0-beta — Interaction-first patch

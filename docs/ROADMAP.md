@@ -1,6 +1,6 @@
 # MONOLITH roadmap
 
-Updated 2026-11-11. **Current signed beta: [v0.19.0-beta.414](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.19.0-beta.414)** from main commit `cf4086c3f0b4a36c0e12af28880262a094ee8ec4`; [Android CI #414](https://github.com/lolokeksu09/MONOLITH/actions/runs/43075481033) succeeded, pinned signing certificate verified and production APK published. **Physical Lenovo Legion Y70 / Motorola Android 16 acceptance remains open.** See [product direction](PRODUCT_DIRECTION.md) for unresolved measurements and future proposals.
+Updated 2026-11-11. **Current signed beta: [v0.20.0-beta.428](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.20.0-beta.428)** from main commit `4cd84776b511e7bdf7f3b0838ebb90e7553f128a`; [Android CI #428](https://github.com/lolokeksu09/MONOLITH/actions/runs/43082198569) succeeded, pinned permanent signing was verified and the release asset was published. **Physical Lenovo Legion Y70 / Motorola Android 16 acceptance remains open.**
 
 ## Implemented
 
@@ -56,7 +56,7 @@ The authoritative scope, REQ-ID registry, decisions and evidence states live in 
 
 ## Next work — verification first
 
-1. **P0 device reliability:** test the exact `v0.19.0-beta.414` signed APK on Lenovo Legion Y70 / Motorola Android 16; record install-over continuity, app launch, saved data, HOME role and stock-launcher recovery. Follow [device acceptance](DEVICE_ACCEPTANCE.md).
+1. **P0 device reliability:** test the exact `v0.20.0-beta.428` signed APK on Lenovo Legion Y70 / Motorola Android 16; record install-over continuity, app launch, saved data, HOME role and stock-launcher recovery. Follow [device acceptance](DEVICE_ACCEPTANCE.md).
 2. **P0 visual reference acceptance:** compare Minimal, Orbit open/close, Editorial and All Apps against the supplied clip on the actual device; record screenshots/short videos and conditions before proposing further code changes.
 3. **P1 interaction ergonomics:** investigate one-handed use, drawer search placement and extra Orbit actions; only change behavior if device evidence supports it.
 4. **P1 motion/performance:** measure cold-start/icon readiness, interrupted animations, scrolling and reduced-motion behavior. Do not claim FPS improvements without measurements.
@@ -76,7 +76,7 @@ The detailed rationale, scope boundaries and acceptance criteria are in [product
 
 0.19 is published as `v0.19.0-beta.414`. On-device install-over, TalkBack, IME, animation, stock HOME recovery and visual comparison remain unchecked. No stable 1.0 claim.
 
-## 0.20 performance and interaction candidate (PR #43; not released)
+## Delivered in 0.20 responsive interaction beta (PR #43)
 
 [PR #43](https://github.com/lolokeksu09/MONOLITH/pull/43) follows [PRODUCT_DIRECTION.md](PRODUCT_DIRECTION.md) on reliability and responsiveness:
 
@@ -85,7 +85,7 @@ The detailed rationale, scope boundaries and acceptance criteria are in [product
 3. Make an empty search easy to recover from through a separately accessible clear action.
 4. Allow an expanded Orbit to close by tapping empty background while preserving actual media/icon controls and swipe actions.
 
-This work is tracked by [PLAN_0.20.md](PLAN_0.20.md). **Signed v0.19.0-beta.414 remains the latest published version** until an independently checked production 0.20 release. Physical app-catalog responsiveness, gesture, TalkBack and HOME recovery checks remain open.
+This work is tracked by [PLAN_0.20.md](PLAN_0.20.md). **Signed v0.20.0-beta.428 is now published** after successful verification. Physical catalog responsiveness, gestures, TalkBack and HOME recovery remain unchecked.
 
 ## Stable release gate
 
