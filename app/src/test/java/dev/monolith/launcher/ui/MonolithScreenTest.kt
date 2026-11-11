@@ -119,6 +119,15 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun backReturnsToParentSettingsAndThenDrawerOrigin() {
+        assertEquals(Screen.SETTINGS, destinationOnBack(Screen.ORBIT_APPS, Screen.HOME))
+        assertEquals(Screen.SETTINGS, destinationOnBack(Screen.HIDDEN_APPS, Screen.ALL_APPS))
+        assertEquals(Screen.ALL_APPS, destinationOnBack(Screen.SETTINGS, Screen.ALL_APPS))
+        assertEquals(Screen.HOME, destinationOnBack(Screen.SETTINGS, Screen.HOME))
+        assertEquals(Screen.HOME, destinationOnBack(Screen.ALL_APPS, Screen.HOME))
+    }
+
+    @Test
     fun emptyEditorialOffersRealPathToAllApps() {
         launchMonolith(apps = emptyList())
         composeRule.onNodeWithText("EDITORIAL →").performClick()
