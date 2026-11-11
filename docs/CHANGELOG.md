@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.18.0-beta — Reference polish preview
+## 0.18.0-beta — Reference polish
 - Removes decorative MONOLITH / 01, 02, 03 counters from Minimal HOME, Editorial and All Apps while retaining navigation and Settings.
 - Refines upper-left media spacing, unobtrusive Settings chrome and high-contrast grayscale cliff composition; keeps unavailable player metadata honest.
 - Uses true AMOLED black on launcher-owned screens, with cleaner Editorial typography and a drawn divider instead of decorative dash text.
@@ -8,6 +8,8 @@
 - Includes 0.17 search debounce, immediate clear, localized page-indicator semantics and Compose UI tests.
 - Debug preview is a separate app `dev.monolith.launcher.preview` labeled MONOLITH Preview; it does not overwrite or update the permanently signed `dev.monolith.launcher` or share its local preferences.
 - Physical Lenovo Legion Y70 / Motorola Android 16 motion, gestures, accessibility and exact visual acceptance remain open. GitHub CI is not phone QA.
+- Merged [PR #39](https://github.com/lolokeksu09/MONOLITH/pull/39) into `main` as `cdbda9baa68946ffbba22e300e3997c8ca887866` on 2026-11-11. [Android CI #400](https://github.com/lolokeksu09/MONOLITH/actions/runs/43060986709) succeeded and the pinned permanent certificate was verified.
+- Published signed prerelease [v0.18.0-beta.400](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.18.0-beta.400) with production package `dev.monolith.launcher` and APK `MONOLITH-0.18.0-beta.400-signed.apk` (SHA-256 `b4ffeb5cc60790010a2e1cbc9cb62309aeb9223ad446f541346c610556b04a24`). Device install-over and visual QA remain unverified.
 
 ## 0.16.0-beta
 - Adds Original, Mono and INK application-icon appearances across orbit, editorial shortcuts and All Apps; INK uses native Android 13+ monochrome artwork when available and original artwork otherwise.

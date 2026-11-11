@@ -2,11 +2,12 @@
 
 Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, record date, firmware, tested signed APK tag and pass/fail evidence. CI success is not device success.
 
-Release `v0.15.0-beta.380` is published, but this checklist remains open until real results are recorded. PR #35 merged 0.16 code into `main` on 2026-11-07; this does not establish a signed release or physical-device evidence. For a 0.16 candidate, rerun every applicable 0.15 item and the additional checks below.
+**Current signed candidate:** [`v0.18.0-beta.400`](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.18.0-beta.400), from main commit `cdbda9baa68946ffbba22e300e3997c8ca887866`. [Android CI #400](https://github.com/lolokeksu09/MONOLITH/actions/runs/43060986709) completed successfully with pinned production signing. **No physical-device acceptance evidence is recorded yet.** Run all applicable historical checks for this exact signed candidate; record the installed version, certificate continuity, firmware, date and observed result.
 
-## 0.18 Reference polish preview checks
+## 0.18 signed release / optional debug Preview checks
 
-- [ ] Install `MONOLITH Preview` alongside production MONOLITH. Verify package `dev.monolith.launcher.preview`; confirm original launcher and preferences remain intact.
+- [ ] **Production update:** install the permanently signed `MONOLITH-0.18.0-beta.400-signed.apk` over an existing same-certificate MONOLITH installation (no uninstall); verify `dev.monolith.launcher`, versionCode `10400`, preserved settings, favorites, hidden-app list and launch history. Confirm HOME is still recoverable.
+- [ ] **Optional debug Preview:** install `MONOLITH Preview` beside production with package `dev.monolith.launcher.preview`; verify separate app data and that the original launcher is intact. Preview is **not** the release APK.
 - [ ] Check the Minimal screen against the provided video: quiet media controls upper left, vertical clock at left, uncluttered empty center, subtle Settings access.
 - [ ] Expand Orbit with 1, 3, 5, 7, 9, 10, 11, 13, 14 and 15 installed apps. Check centering, symmetry, 48dp tap targets, no premature taps, and appearance modes.
 - [ ] Check the Editorial screen against the video: one oversized localized weekday, right-side original rock art, compact quick apps and greeting. Test RU/EN and large fonts.

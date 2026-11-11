@@ -44,10 +44,22 @@ The [0.16 requirement registry](PLAN_0.16.md) owns scope, status and verificatio
 
 This is a native Compose launcher on Android 26–36. CI is a build/correctness gate, not a visual device review. Visual fidelity, gestures, motion, icon fallback and accessibility must be inspected on Lenovo Legion Y70 / Motorola Android 16 and cannot be confirmed by source code or a mockup.
 
-## 0.18 Reference polish preview — unaccepted on device
+## 0.18 Reference polish — signed prerelease, unaccepted on device
 
 - The source is the supplied 12.6-second reference clip: quiet media upper left; a minimal vertical time rail; a central expanding real-app cluster; a second editorial page with one oversized weekday, rock artwork at right and small quick app icons.
 - Remove fake screen counters and avoid ornamental labels. Preserve Settings, All Apps, app actions, localized semantics and the recovery path to stock HOME.
 - Fully populated 8 / 12 / 15 Orbit geometries remain unchanged; partial populations are centered and kept at least 51dp apart.
-- The debug variant installs as a separate `dev.monolith.launcher.preview` app to prevent accidental overwrite of permanently signed MONOLITH during visual evaluation.
+- The debug variant installs as a separate `dev.monolith.launcher.preview` app for safe evaluation. The production variant remains `dev.monolith.launcher` and was published as signed [v0.18.0-beta.400](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.18.0-beta.400) after pinned-certificate verification.
 - Exact motion timing, insets, readability and device performance still require acceptance on Lenovo Legion Y70 / Motorola Android 16.
+
+## Product differentiation and usability guardrails
+
+The [product direction](PRODUCT_DIRECTION.md) defines proposed priorities and distinguishes them from features already implemented. MONOLITH is an application-first HOME interface, not a recreation of a conventional permanent app grid. The supplied clip guides composition, but app-launch reliability, one-handed reach, clear navigation and stock-HOME recovery take priority over visual resemblance.
+
+- **Minimal:** real negative space, one purposeful trigger, legible vertical time and media keys; no arbitrary numerical screen counters or extra filler copy.
+- **Orbit:** favourite-first real app shortcuts, symmetrical incomplete clusters and tactile 48dp hit targets. Visually elegant motion is insufficient if it adds accidental taps or slows common launches.
+- **Editorial:** a meaningful second destination with working quick launches, original offline grayscale artwork and a single oversized day label. The scene must earn its space through utility.
+- **All Apps:** search, sorting, hidden apps and predictable IME behavior are necessary; moving its search affordance is a proposed ergonomic decision, not an accepted design change.
+- **Performance and access:** prefer measured responsiveness, short coherent motion, reduced-motion compatibility and TalkBack. Never promise zero jank or exact frame timing before on-device tests.
+
+Avoid neon, glass cards, generic premium dashboard components, fake playback status and visual additions that lack a clear interaction purpose.

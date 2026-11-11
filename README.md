@@ -2,9 +2,11 @@
 
 Native, offline-first AMOLED Android HOME launcher written in Kotlin + Jetpack Compose.
 
-**Main development version: 0.16.0-beta** · Android API 26–36 · Application ID: `dev.monolith.launcher`. PR #35 merged on 2026-11-07. Check [GitHub Releases](https://github.com/lolokeksu09/MONOLITH/releases) for signed APK availability; merge alone does not establish publication.
+**Latest verified signed prerelease: [0.18.0-beta.400](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.18.0-beta.400)** (published 2026-11-11). Android API 26–36 · production application ID: `dev.monolith.launcher` · source commit `cdbda9b`. The signed prerelease passed CI and pinned-certificate verification; physical-device acceptance is still open. The debug-only `dev.monolith.launcher.preview` installs separately and cannot update production MONOLITH.
 
 ## Single Reference HOME
+
+**0.18 / Reference polish (merged and signed prerelease):** removes ornamental numbered scene headers, tightens the Minimal media hierarchy, refines Editorial rock contrast, uses true-black launcher surfaces and centers partially populated Orbit arrangements (1–15 apps). It also incorporates the 0.17 search-debounce, immediate-clear, localized page-state and Compose UI-test changes. [PR #39](https://github.com/lolokeksu09/MONOLITH/pull/39) is merged; [CI run #400](https://github.com/lolokeksu09/MONOLITH/actions/runs/43060986709) completed successfully. Physical gestures, motion and visual fidelity have **not** been device-accepted.
 
 **0.16 / INK (merged):** adds Original / Mono / INK application-icon appearances, density-aware icon decoding and persisted 8 / 12 / 15 orbit densities. Reducing density does not delete favorites. The editorial scene keeps its rock and one localized oversized day abbreviation; All Apps gains a compact editorial header, labeled search, coherent control symbols and two-line app names. Media controls identify system media keys and unknown playback status without fake metadata or new permissions. These changes were merged in PR #35 after successful exact-head PR CI. Physical-device acceptance remains open.
 
@@ -21,7 +23,7 @@ MONOLITH has one design, based on the supplied reference video:
 
 **The Classic HOME, legacy Dock, pinned desktop grid, folders, Android widget host and old home backup UI are removed from 0.12.** There is no switch back to Classic.
 
-The authoritative scope and verification states are in [the 0.16 requirement registry](docs/PLAN_0.16.md). Code is merged; publication and physical-device acceptance require independent verification.
+The shipped 0.18 implementation and future product direction are separated in the [roadmap](docs/ROADMAP.md) and [product direction](docs/PRODUCT_DIRECTION.md). The [0.16 requirement registry](docs/PLAN_0.16.md) remains a historical scope record, not the latest release status. The [visual system](docs/DESIGN.md) defines design constraints; physical acceptance is tracked separately.
 
 ## Upgrade safety
 
@@ -43,4 +45,4 @@ Manually dispatched main-branch releases use the original private signing key fr
 
 ## Status
 
-This is still **beta**. Real Motorola Android 16 validation is required for HOME, gestures, app launch, insets, media controls, rotation, update compatibility, every icon appearance and every orbit density. See [device acceptance](docs/DEVICE_ACCEPTANCE.md) and [0.12 removal details](docs/REMOVAL_0.12.md).
+This is still **beta**. The signed 0.18.0-beta.400 release is published, but Lenovo Legion Y70 / Motorola Android 16 testing remains open for HOME, gestures, app launch, insets, media controls, rotation, update compatibility, icon appearance and Orbit populations. See [device acceptance](docs/DEVICE_ACCEPTANCE.md), [proposed next priorities](docs/PRODUCT_DIRECTION.md) and [0.12 removal details](docs/REMOVAL_0.12.md).
