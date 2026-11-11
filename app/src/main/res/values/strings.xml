@@ -17,6 +17,10 @@
     <string name="drawer_search_label">Search applications</string>
     <string name="drawer_search_placeholder">App name</string>
     <string name="drawer_search_toggle">Show search bar in app drawer</string>
+    <string name="drawer_search_position">Search bar position</string>
+    <string name="drawer_search_top">Top</string>
+    <string name="drawer_search_bottom">Bottom</string>
+    <string name="drawer_search_position_hint">Choose Bottom for one-handed access. Existing layouts stay at Top.</string>
     <string name="drawer_title">Apps</string>
     <string name="hidden_apps_description">Hidden apps stay installed. Unhide an app to show it in All Apps and on the Reference pages.</string>
     <string name="hidden_apps_title">Hidden applications</string>
@@ -49,6 +53,8 @@
     <string name="reference_orbit_collapsed">Orbit applications collapsed</string>
     <string name="reference_orbit_expanded">Orbit applications expanded</string>
     <string name="reference_quick_apps">QUICK ACCESS</string>
+    <string name="reference_no_quick_apps">No shortcuts available yet</string>
+    <string name="reference_browse_all_apps">Browse all apps</string>
     <string name="reference_swipe_hint">SWIPE LEFT  —  EDITORIAL</string>
     <string name="retry">Try again</string>
     <string name="settings">Settings</string>
