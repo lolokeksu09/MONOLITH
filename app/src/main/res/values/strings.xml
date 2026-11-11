@@ -14,6 +14,7 @@
     <string name="default_sort">Sort by default</string>
     <string name="drawer_clear_search">Clear search</string>
     <string name="drawer_columns">Application menu columns</string>
+    <string name="drawer_updating">Updating applications…</string>
     <string name="drawer_search_label">Search applications</string>
     <string name="drawer_search_placeholder">App name</string>
     <string name="drawer_search_toggle">Show search bar in app drawer</string>
@@ -69,6 +70,7 @@
     <string name="usage_cleared">Local launch history cleared</string>
     <string name="reference_play_pause">Send play or pause to the system media session</string>
     <string name="reference_next_track">Send next track to the system media session</string>
+    <string name="reference_dismiss_orbit">Dismiss expanded orbit</string>
     <string name="reference_close_orbit">Close apps</string>
     <string name="reference_customize_orbit">Customize orbit apps</string>
     <string name="reference_customize_hint">Choose up to 15 apps and their order. The remaining spaces use your most-opened apps.</string>
