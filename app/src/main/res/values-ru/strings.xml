@@ -17,6 +17,10 @@
     <string name="drawer_search_label">Поиск приложений</string>
     <string name="drawer_search_placeholder">Название приложения</string>
     <string name="drawer_search_toggle">Показывать строку поиска в меню</string>
+    <string name="drawer_search_position">Расположение строки поиска</string>
+    <string name="drawer_search_top">Сверху</string>
+    <string name="drawer_search_bottom">Снизу</string>
+    <string name="drawer_search_position_hint">Выберите «Снизу» для управления одной рукой. По умолчанию поиск остаётся сверху.</string>
     <string name="drawer_title">Приложения</string>
     <string name="hidden_apps_description">Скрытые приложения остаются установленными. Верните приложение кнопкой «Показать».</string>
     <string name="hidden_apps_title">Скрытые приложения</string>
@@ -49,6 +53,8 @@
     <string name="reference_orbit_collapsed">Круг приложений свёрнут</string>
     <string name="reference_orbit_expanded">Круг приложений раскрыт</string>
     <string name="reference_quick_apps">БЫСТРЫЙ ДОСТУП</string>
+    <string name="reference_no_quick_apps">Пока нет ярлыков</string>
+    <string name="reference_browse_all_apps">Открыть список приложений</string>
     <string name="reference_swipe_hint">СВАЙП ВЛЕВО  —  ЭКРАН</string>
     <string name="retry">Повторить</string>
     <string name="settings">Настройки</string>
