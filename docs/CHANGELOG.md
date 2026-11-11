@@ -8,7 +8,7 @@
 - Simplifies editorial copy to one localized oversized day abbreviation and aligns All Apps with a compact editorial header, labeled search and two-line application names.
 - Replaces active-player wording with honest system-media-key status; adds no notification or media permission and preserves the existing HOME role flow.
 - Adds JVM coverage for preference defaults, density normalization, favorite preservation and all three orbit geometries.
-- Implementation is on a feature branch pending CI and physical-device acceptance; merge, signed release and install-over-0.15 verification are not claimed.
+- Merged into `main` via PR #35 on 2026-11-07 after successful exact-head PR CI. Physical-device acceptance remains open; signed release publication and install-over-0.15 verification are not established here.
 
 ## 0.15.0-beta
 - Unified orbit expansion and collapse under one no-bounce spring, removing the index stagger and the abrupt animation-spec switch.
