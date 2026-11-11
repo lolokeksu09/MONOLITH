@@ -121,12 +121,15 @@ class MonolithScreenTest {
         }
         composeRule.onNodeWithText("No applications found").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Clear search").performClick()
-        // Clearing does not wait for the 180ms nonblank-search debounce.
-        composeRule.mainClock.autoAdvance = false
-        composeRule.mainClock.advanceTimeByFrame()
+        // Synchronize the Compose effect with Robolectric; the production
+        // blank-query path does not include the 180ms debounce delay.
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNodeWithText("Alpha").assertExists()
+            }.isSuccess
+        }
         composeRule.onNodeWithText("Alpha").assertIsDisplayed()
         composeRule.onNodeWithText("Beta").assertIsDisplayed()
-        composeRule.mainClock.autoAdvance = true
     }
 
     @Test
