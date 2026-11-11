@@ -1,7 +1,7 @@
 # Changelog
 
 ## 0.17.0-beta
-- Debounces drawer search input so filtering and Collator sorting of the installed catalog no longer run on the main thread for every keystroke.
+- Debounces nonblank drawer search input by 180ms; clearing search restores results immediately, and scroll reset follows the settled query. Filtering/sorting still execute on the UI thread, but not for every keystroke.
 - Announces the HOME page position through a localized state description and hides the purely visual page dots from screen readers.
 - Adds Robolectric-based Compose UI tests for loading, catalog-error retry, drawer contents, hidden-app exclusion, debounced search with clear and Settings icon-mode selection.
 - Code-level audit fixes only; physical Lenovo Legion Y70 / Motorola Android 16 acceptance for these paths remains open, and no release or device-validated claim is implied by this entry.
