@@ -26,7 +26,7 @@ GitHub CLI encrypts secret values locally. Do not paste any signing password or 
 
 ## CI
 
-PR validation uses a throwaway test-only signing key to verify that the `release` build can be signed, but never distributes that APK. Main builds publish a permanent-key signed release only after both secrets exist. Without secrets, CI still tests the code but **will not publish a pretend stable-signature APK**.
+PR validation uses a throwaway test-only signing key to verify that the `release` build can be signed, but never distributes that APK. A signed release is published only when the `Android CI` workflow is manually dispatched on `main`, after successful verification and only when both secrets exist. Ordinary pushes and PRs run verification without publishing an APK. Without secrets, CI still tests the code but **will not publish a pretend stable-signature APK**.
 
 `MONOLITH_VERSION_CODE` is derived from the GitHub Actions run number (10000 + run number) for strictly increasing codes on successive release builds. `MONOLITH_VERSION_NAME` includes the run number as well.
 
