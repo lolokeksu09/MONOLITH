@@ -108,7 +108,8 @@ class MonolithScreenTest {
             currentPreferences.value.drawerSearchPosition)
         composeRule.onNodeWithText("Back home").performScrollTo().performClick()
         composeRule.onNodeWithText("ALL APPS ↑").performClick()
-        composeRule.onNode(hasSetTextAction()).performTextInput("Beta")
+        // Partial query avoids matching both TextField value and result label.
+        composeRule.onNode(hasSetTextAction()).performTextInput("Bet")
         composeRule.waitUntil(5_000) {
             runCatching {
                 composeRule.onNodeWithText("Alpha").assertDoesNotExist()
