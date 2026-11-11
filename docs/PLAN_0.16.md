@@ -1,5 +1,7 @@
 # MONOLITH 0.16 / INK implementation plan
 
+> **Historical 0.16 scope and implementation evidence.** The status table below records the state at the time of the 0.16 work and was not rewritten retroactively. Later delivery evidence: signed [v0.16.0-beta.390](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.16.0-beta.390) was published, and the subsequent signed [v0.18.0-beta.400](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.18.0-beta.400) incorporated further UI, search and Orbit improvements on 2026-11-11. Neither publication establishes successful physical-device acceptance. For **current** status and proposals, use [ROADMAP](ROADMAP.md) and [PRODUCT_DIRECTION](PRODUCT_DIRECTION.md).
+
 Status (2026-11-11): **PR #35 merged into `main` on 2026-11-07; exact-head PR CI succeeded; physical acceptance remains open**. A signed release and an install-over-0.15 have not been verified in this document. This is the single scope and requirement registry for 0.16. A requirement is not CI-verified, device-accepted or released merely because implementation code exists.
 
 ## Basis and boundaries
