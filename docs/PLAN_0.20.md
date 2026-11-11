@@ -1,8 +1,10 @@
 # MONOLITH 0.20 — Responsive catalog and Orbit interaction
 
-**State:** implementation candidate in [PR #43](https://github.com/lolokeksu09/MONOLITH/pull/43). Neither a signed production release nor physical-device acceptance is established by this plan.  
+**State:** [PR #43](https://github.com/lolokeksu09/MONOLITH/pull/43) merged; **signed prerelease [v0.20.0-beta.428](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.20.0-beta.428) published**. Physical-device acceptance is still open.  
 **Base:** [v0.19.0-beta.414](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.19.0-beta.414), signed and published; on-device acceptance remains open.  
 **Source of priorities:** [PRODUCT_DIRECTION.md](PRODUCT_DIRECTION.md), P0 safe HOME/app access, P1 responsiveness and predictable interaction. 
+
+**Delivery evidence:** merged source commit `4cd84776b511e7bdf7f3b0838ebb90e7553f128a`. [Main CI #427](https://github.com/lolokeksu09/MONOLITH/actions/runs/43081707883) and [signed-release CI #428](https://github.com/lolokeksu09/MONOLITH/actions/runs/43082198569) both completed successfully; permanently signed production APK `MONOLITH-0.20.0-beta.428-signed.apk` SHA-256 `49651d54ed9b7834b3a5b42300ffd6ebee7acf24d9751271aa87562e81186be6` matches the published GitHub release. This proves build/release provenance, not installed-device motion/IME/gesture or launch performance.
 
 ## Focus and tradeoffs
 
@@ -38,6 +40,6 @@
 
 1. New regression tests exist and are capable of failing before the corresponding implementation.
 2. Confirm tests, Lint, debug APK assembly and disposable-signature check on the *exact* PR head in GitHub Actions.
-3. Merge only an explicitly verified head into `main`; verify main CI separately.
-4. If a production beta release is issued, use the original signing workflow and verify its pinned certificate and APK digest.
+3. Merge only an explicitly verified head into `main`; verify main CI separately. **Completed for PR #43 and main CI #427.**
+4. Production beta release: **completed** by the original pinned-signature workflow (#428), with APK digest checked.
 5. Complete [physical-device acceptance](DEVICE_ACCEPTANCE.md) separately; unchecked items remain unchecked.
