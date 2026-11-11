@@ -60,6 +60,10 @@ class OrbitCustomizationTest {
         (1..15).forEach { count ->
             val points = orbitPositions(count)
             assertEquals(count, points.size)
+            assertTrue(
+                "orbit $count is not mirrored around its vertical axis",
+                points.all { point -> points.any { it.x == -point.x && it.y == point.y } }
+            )
             val centerX = points.map { it.x.toDouble() }.average()
             val centerY = points.map { it.y.toDouble() }.average()
             assertTrue("orbit $count is horizontally shifted", abs(centerX) <= 5.0)
