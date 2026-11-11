@@ -1,0 +1,31 @@
+name: MONOLITH 0.18 single-use release dispatch
+on:
+  push:
+    branches:
+      - ops/dispatch-018-release-approved-20261111
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  dispatch:
+    if: ${{ github.repository == 'lolokeksu09/MONOLITH' && github.event.head_commit.message == 'ops: dispatch signed MONOLITH 0.18 release (approved)' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm pinned main and version
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_MAIN: cdbda9baa68946ffbba22e300e3997c8ca887866
+        run: |
+          set -euo pipefail
+          ACTUAL_MAIN="$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq '.sha')"
+          test "$ACTUAL_MAIN" = "$EXPECTED_MAIN"
+          VERSION="$(gh api "repos/${GITHUB_REPOSITORY}/contents/gradle.properties?ref=main" --jq '.content' | base64 --decode | sed -n 's/^monolithVersionName=//p')"
+          test "$VERSION" = "0.18.0-beta"
+      - name: Start production release workflow on main
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run android.yml --repo "$GITHUB_REPOSITORY" --ref main
