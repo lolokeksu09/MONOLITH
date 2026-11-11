@@ -40,11 +40,12 @@
     <string name="reference_good_morning">ДОБРОЕ УТРО</string>
     <string name="reference_hold_hint">НАЖМИ / УДЕРЖИВАЙ</string>
     <string name="reference_legacy_data_note">Старый рабочий стол, Dock, папки, виджеты и импорт его резервной копии удалены. Старые данные при обновлении не стираются.</string>
-    <string name="reference_media">МЕДИАКЛАВИШИ</string>
-    <string name="reference_media_hint">Системные клавиши · статус неизвестен</string>
+    <string name="reference_media">МЕДИА</string>
+    <string name="reference_media_hint">Системные клавиши · статус воспроизведения недоступен</string>
     <string name="reference_minimal">←  МИНИМАЛ</string>
     <string name="reference_only_description">Reference теперь единственный главный экран. Переключай страницы свайпом или открывай меню приложений.</string>
     <string name="reference_orbit_toggle">Показать или скрыть круговое меню</string>
+    <string name="reference_page_state">Экран %1$d из %2$d</string>
     <string name="reference_orbit_collapsed">Круг приложений свёрнут</string>
     <string name="reference_orbit_expanded">Круг приложений раскрыт</string>
     <string name="reference_quick_apps">БЫСТРЫЙ ДОСТУП</string>
