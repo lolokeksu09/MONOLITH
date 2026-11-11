@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.19.0-beta — Interaction-first patch candidate (not released)
+- Limits the central Orbit opening control to a real 48dp touch target instead of a 304dp invisible interactive region; keeps the central shortcut tappable when one app is visible.
+- Closes Orbit before presenting a real application's long-press action sheet, while letting that sheet handle Android Back.
+- Adds opt-in bottom drawer search for one-handed use; old installs retain Top without migration. Position is saved in the existing settings store.
+- Adds IME-aware drawer layout and keyboard Search action. Retains debounce, immediate clear, app sorting and hidden-app behavior.
+- Restores predictable Back navigation from Orbit/Hidden app settings to Settings, and from Settings back to its HOME or All Apps entry point.
+- Adds a working All Apps action when the Editorial shortcut list is empty.
+- Removes duplicated icon accessibility text from app grid artwork, keeping the real app-name label.
+- Adds targeted preference, route, and Compose UI regression checks.
+- Based on [product direction](PRODUCT_DIRECTION.md) and [implementation contract](PLAN_0.19.md). No performance/FPS, physical-device, signed release or stable-readiness claim.
+
+
 ## 0.18.0-beta — Reference polish
 - Removes decorative MONOLITH / 01, 02, 03 counters from Minimal HOME, Editorial and All Apps while retaining navigation and Settings.
 - Refines upper-left media spacing, unobtrusive Settings chrome and high-contrast grayscale cliff composition; keeps unavailable player metadata honest.

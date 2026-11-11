@@ -31,6 +31,18 @@ The following is implemented in the signed 0.18 beta candidate (see [changelog](
 
 **Delivery record:** [PR #39](https://github.com/lolokeksu09/MONOLITH/pull/39) merged into `main`; [Android CI run #400](https://github.com/lolokeksu09/MONOLITH/actions/runs/43060986709) completed successfully and published `v0.18.0-beta.400`. The permanent-key certificate check passed. On-device install-over, real animations, gestures and launcher recovery still need evidence in [device acceptance](DEVICE_ACCEPTANCE.md).
 
+## 0.19 development response to this direction (not in a signed release)
+
+[PR #41](https://github.com/lolokeksu09/MONOLITH/pull/41) implements a **bounded patch** responding to the priorities below, rather than treating every proposed direction as already approved:
+
+- P0 interaction reliability: replace the wide invisible Orbit clickable surface with an explicit 48dp central trigger; preserve access to a central app icon and collapse Orbit before opening app actions.
+- P1 ergonomics: add opt-in Bottom drawer search, retain Top for existing users and store the choice without changing old preference keys; add IME layout/search affordances.
+- P1 predictable navigation: route Back through the actual nested Settings hierarchy and return to the initiating drawer when appropriate.
+- P2 utility: make the Editorial empty-shortcuts state navigate to a real All Apps screen, rather than present dead space.
+- Maintain RU/EN labels, local-only data, permanent signing identity and original fallback to stock HOME.
+
+The [0.19 requirement matrix](PLAN_0.19.md) gives exact code paths and test conditions. **No physical performance data, visual comparison pass, production signed 0.19 APK or stable-readiness is asserted.** The last *published* version remains 0.18 until a separately verified release.
+
 ## Proposed priorities (not shipped)
 
 | Priority | Question / proposed work | Acceptance evidence | Decision state |

@@ -4,6 +4,21 @@ Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, rec
 
 **Current signed candidate:** [`v0.18.0-beta.400`](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.18.0-beta.400), from main commit `cdbda9baa68946ffbba22e300e3997c8ca887866`. [Android CI #400](https://github.com/lolokeksu09/MONOLITH/actions/runs/43060986709) completed successfully with pinned production signing. **No physical-device acceptance evidence is recorded yet.** Run all applicable historical checks for this exact signed candidate; record the installed version, certificate continuity, firmware, date and observed result.
 
+## 0.19 interaction-first candidate — not device-tested
+
+Apply these checks to an exact build of [PR #41](https://github.com/lolokeksu09/MONOLITH/pull/41) after the relevant code is available. Do not mark complete based on CI alone.
+
+- [ ] Tap the center of the closed Minimal screen; the 48dp trigger expands Orbit. Tap the surrounding former 304dp invisible region; it must **not** unexpectedly toggle Orbit.
+- [ ] With exactly one available Orbit shortcut, expand and tap its central icon; verify the actual application opens rather than collapsing the Orbit.
+- [ ] Long-press an Orbit icon, inspect the app actions sheet, press Back to dismiss it and verify navigation is stable. Check opening/closing interruptions, rapid taps, TalkBack and reduced motion.
+- [ ] In Settings choose Top then Bottom search. Confirm Bottom is reachable with one hand while preserving focus/clear, search result filtering, sorting and hidden-app exclusion. Reboot and verify saved placement. Previous installations must remain Top without user action.
+- [ ] Open Bottom search with the IME, type and clear, press the keyboard Search action, inspect system insets and keyboard overlap. Repeat in Russian and English at default and large font size. Test Top and search-disabled paths.
+- [ ] Use Android Back through HOME → Settings → Orbit apps (or Hidden apps) → Settings → HOME; then All Apps → Settings → All Apps. Confirm no accidental exit or lost input.
+- [ ] With no visible shortcuts on Editorial, use the explicit All Apps action and confirm the drawer opens. With shortcuts, test real launch and long-press.
+- [ ] Check the All Apps icon tile with TalkBack and confirm the app name is not announced twice from the icon and text.
+- [ ] Compare Minimal / Orbit / Editorial / All Apps screenshots and actual motion to the supplied video on Lenovo Legion Y70 / Motorola Android 16. Record real performance rather than assuming a speedup.
+- [ ] Install a *permanently signed* 0.19 release over a prior permanently signed version only if such a release has actually been published. Confirm certificate, role recovery, settings and favorites. Debug Preview cannot update the production app.
+
 ## 0.18 signed release / optional debug Preview checks
 
 - [ ] **Production update:** install the permanently signed `MONOLITH-0.18.0-beta.400-signed.apk` over an existing same-certificate MONOLITH installation (no uninstall); verify `dev.monolith.launcher`, versionCode `10400`, preserved settings, favorites, hidden-app list and launch history. Confirm HOME is still recoverable.

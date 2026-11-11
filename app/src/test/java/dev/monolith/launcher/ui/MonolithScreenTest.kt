@@ -11,9 +11,11 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performScrollTo
 import dev.monolith.launcher.data.AppIconStyle
 import dev.monolith.launcher.data.LaunchableApp
 import dev.monolith.launcher.data.LauncherPreferences
+import dev.monolith.launcher.data.DrawerSearchPosition
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -70,6 +72,68 @@ class MonolithScreenTest {
                 onClearLaunchHistory = {}
             )
         }
+    }
+
+    @Test
+    fun orbitTriggerOnlyOccupiesCentralTouchTarget() {
+        launchMonolith(apps = listOf(appAlpha))
+        val collapsed = composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications collapsed"
+            )
+        )
+        val triggerWidth = collapsed.fetchSemanticsNode().boundsInRoot.width
+        val settingsWidth = composeRule.onNodeWithContentDescription("Settings")
+            .fetchSemanticsNode().boundsInRoot.width
+        assertTrue("Orbit must not turn its whole 304dp area into a button",
+            triggerWidth <= settingsWidth * 1.5f)
+        collapsed.performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithContentDescription("Alpha").assertExists()
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications expanded"
+            )
+        ).assertExists()
+    }
+
+    @Test
+    fun oneHandedBottomSearchIsOptInAndStillFilters() {
+        launchMonolith()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        composeRule.onNodeWithText("Search bar position").assertExists()
+        composeRule.onNodeWithText("Bottom").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        assertEquals(DrawerSearchPosition.BOTTOM,
+            currentPreferences.value.drawerSearchPosition)
+        composeRule.onNodeWithText("Back home").performScrollTo().performClick()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        // Partial query avoids matching both TextField value and result label.
+        composeRule.onNode(hasSetTextAction()).performTextInput("Bet")
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNodeWithText("Alpha").assertDoesNotExist()
+                composeRule.onNodeWithText("Beta").assertExists()
+            }.isSuccess
+        }
+        composeRule.onNodeWithText("Beta").assertIsDisplayed()
+    }
+
+    @Test
+    fun backReturnsToParentSettingsAndThenDrawerOrigin() {
+        assertEquals(Screen.SETTINGS, destinationOnBack(Screen.ORBIT_APPS, Screen.HOME))
+        assertEquals(Screen.SETTINGS, destinationOnBack(Screen.HIDDEN_APPS, Screen.ALL_APPS))
+        assertEquals(Screen.ALL_APPS, destinationOnBack(Screen.SETTINGS, Screen.ALL_APPS))
+        assertEquals(Screen.HOME, destinationOnBack(Screen.SETTINGS, Screen.HOME))
+        assertEquals(Screen.HOME, destinationOnBack(Screen.ALL_APPS, Screen.HOME))
+    }
+
+    @Test
+    fun emptyEditorialOffersRealPathToAllApps() {
+        launchMonolith(apps = emptyList())
+        composeRule.onNodeWithText("EDITORIAL →").performClick()
+        composeRule.onNodeWithText("Browse all apps").performClick()
+        composeRule.onNodeWithText("Apps").assertIsDisplayed()
     }
 
     @Test

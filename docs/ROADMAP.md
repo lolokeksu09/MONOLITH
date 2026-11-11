@@ -64,6 +64,18 @@ The authoritative scope, REQ-ID registry, decisions and evidence states live in 
 
 The detailed rationale, scope boundaries and acceptance criteria are in [product direction](PRODUCT_DIRECTION.md). Proposed work above is **not implemented or guaranteed**.
 
+## 0.19 interaction patch — implemented on candidate branch, not released
+
+[PR #41](https://github.com/lolokeksu09/MONOLITH/pull/41) is the implementation candidate for bounded requirements in [PLAN_0.19.md](PLAN_0.19.md). These statements describe branch code, **not** physical acceptance or a signed production update:
+
+1. Limit Orbit's tap/hold trigger to its actual 48dp center, keeping a centered app reachable and preventing a 304dp invisible touch region from swallowing interaction.
+2. Add an explicit optional drawer search position (Top / Bottom), persistent without altering old defaults or saved data; keep IME Search action and safe drawing/IME insets.
+3. Return Back through nested Settings or the original drawer entry screen; dismiss app-action sheets before the underlying navigation.
+4. Give an empty Editorial shortcut list a real All Apps recovery action.
+5. Preserve existing icon appearances, offline operation, hidden apps, favorites, permanent signing identity and original HOME fallback.
+
+The 0.18 signed prerelease remains the published baseline until 0.19 is merged and deliberately released. CI and device checks for the new candidate must be tracked separately.
+
 ## Stable release gate
 
 All CI checks plus physical-device behavior, update-signing continuity and a recovery path to stock HOME must pass before 1.0 stable.

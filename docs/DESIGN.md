@@ -63,3 +63,15 @@ The [product direction](PRODUCT_DIRECTION.md) defines proposed priorities and di
 - **Performance and access:** prefer measured responsiveness, short coherent motion, reduced-motion compatibility and TalkBack. Never promise zero jank or exact frame timing before on-device tests.
 
 Avoid neon, glass cards, generic premium dashboard components, fake playback status and visual additions that lack a clear interaction purpose.
+
+## 0.19 interaction-focused candidate (physical acceptance pending)
+
+The 0.19 changes apply the [product direction](PRODUCT_DIRECTION.md) to concrete UI surfaces without introducing a new theme or a permanent icon grid:
+
+- **Opening Orbit:** the 304dp layout region only arranges positions; a 48dp central button opens the cluster. The full outer region is no longer an invisible click target. The central button yields to real app shortcuts when expanded, including a single centered app. Back and the explicit Close action remain available.
+- **One-hand option:** All Apps search is Top by default, with a persisted Bottom choice. Both positions reuse the same input/clear behavior and have IME-aware layout; visual and reach tradeoffs are open for device inspection.
+- **Navigation:** nested Settings preserve the caller; returning from customization/hidden apps does not unexpectedly jump HOME. Modal action sheets should own Back until dismissed.
+- **Editorial utility:** where no shortcuts exist, one compact working All Apps action replaces a dead empty list. No fake songs, weather, app counts or background services are added.
+- **Accessibility:** avoid redundant icon-image labels when the app tile already presents its name, retain 48dp controls and document TalkBack/reduced-motion device checks.
+
+No new color palette, ornamental glass, neon or decorative card system is introduced. This remains a code/CI candidate; on-device screenshots, motion and layout evidence are still required in [device acceptance](DEVICE_ACCEPTANCE.md).

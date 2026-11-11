@@ -6,6 +6,9 @@ Native, offline-first AMOLED Android HOME launcher written in Kotlin + Jetpack C
 
 ## Single Reference HOME
 
+**0.19 implementation candidate (not released):** this development branch is improving interaction reliability and ergonomics without changing MONOLITH's core visual identity. The central Orbit trigger is being reduced to a real 48dp target, Settings/Back navigation is made predictable, Editorial gains an empty-shortcuts recovery action, and drawer search can optionally move to the bottom for one-handed access (default remains Top). [Implementation and device acceptance criteria](docs/PLAN_0.19.md). These changes are not part of the last signed 0.18 APK until separately merged and published.
+
+
 **0.18 / Reference polish (merged and signed prerelease):** removes ornamental numbered scene headers, tightens the Minimal media hierarchy, refines Editorial rock contrast, uses true-black launcher surfaces and centers partially populated Orbit arrangements (1–15 apps). It also incorporates the 0.17 search-debounce, immediate-clear, localized page-state and Compose UI-test changes. [PR #39](https://github.com/lolokeksu09/MONOLITH/pull/39) is merged; [CI run #400](https://github.com/lolokeksu09/MONOLITH/actions/runs/43060986709) completed successfully. Physical gestures, motion and visual fidelity have **not** been device-accepted.
 
 **0.16 / INK (merged):** adds Original / Mono / INK application-icon appearances, density-aware icon decoding and persisted 8 / 12 / 15 orbit densities. Reducing density does not delete favorites. The editorial scene keeps its rock and one localized oversized day abbreviation; All Apps gains a compact editorial header, labeled search, coherent control symbols and two-line app names. Media controls identify system media keys and unknown playback status without fake metadata or new permissions. These changes were merged in PR #35 after successful exact-head PR CI. Physical-device acceptance remains open.
