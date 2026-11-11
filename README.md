@@ -2,11 +2,11 @@
 
 Native, offline-first AMOLED Android HOME launcher written in Kotlin + Jetpack Compose.
 
-**Development version in PR #35: 0.16.0-beta** · Android API 26–36 · Application ID: `dev.monolith.launcher`. The latest published release remains 0.15 until a separately authorized 0.16 merge and release succeed.
+**Main development version: 0.16.0-beta** · Android API 26–36 · Application ID: `dev.monolith.launcher`. PR #35 merged on 2026-11-07. Check [GitHub Releases](https://github.com/lolokeksu09/MONOLITH/releases) for signed APK availability; merge alone does not establish publication.
 
 ## Single Reference HOME
 
-**0.16 / INK candidate:** adds Original / Mono / INK application-icon appearances, density-aware icon decoding and persisted 8 / 12 / 15 orbit densities. Reducing density does not delete favorites. The editorial scene keeps its rock and one localized oversized day abbreviation; All Apps gains a compact editorial header, labeled search, coherent control symbols and two-line app names. Media controls identify system media keys and unknown playback status without fake metadata or new permissions. These changes are implemented in PR #35, but CI and physical acceptance are still separate gates.
+**0.16 / INK (merged):** adds Original / Mono / INK application-icon appearances, density-aware icon decoding and persisted 8 / 12 / 15 orbit densities. Reducing density does not delete favorites. The editorial scene keeps its rock and one localized oversized day abbreviation; All Apps gains a compact editorial header, labeled search, coherent control symbols and two-line app names. Media controls identify system media keys and unknown playback status without fake metadata or new permissions. These changes were merged in PR #35 after successful exact-head PR CI. Physical-device acceptance remains open.
 
 **0.15 refinement:** keeps the true-black two-scene design and configurable 15-app orbit while making motion more coherent. Orbit opening and closing share one gentle spring, supporting elements crossfade, scene transitions use smaller travel, and orbit icons warm up before the first tap. Touch targets stay disabled until moving icons are separated. The page indicator crossfades, action hints meet normal-text contrast on black, accessibility labels are localized, and the clock updates at minute boundaries.
 
@@ -21,7 +21,7 @@ MONOLITH has one design, based on the supplied reference video:
 
 **The Classic HOME, legacy Dock, pinned desktop grid, folders, Android widget host and old home backup UI are removed from 0.12.** There is no switch back to Classic.
 
-The authoritative scope and verification states are in [the 0.16 requirement registry](docs/PLAN_0.16.md). Feature-branch code is not a claim that 0.16 is merged, released or device-accepted.
+The authoritative scope and verification states are in [the 0.16 requirement registry](docs/PLAN_0.16.md). Code is merged; publication and physical-device acceptance require independent verification.
 
 ## Upgrade safety
 
@@ -39,7 +39,7 @@ CI (JDK 17, Gradle 8.13, Android SDK 36) executes unit tests, Android Lint, debu
 gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
 ```
 
-Main-branch releases use the original private signing key from GitHub Actions Secrets and verify the pinned public certificate SHA-256. No private key is included in the repository. See [Signing](docs/SIGNING.md).
+Manually dispatched main-branch releases use the original private signing key from GitHub Actions Secrets and verify the pinned public certificate SHA-256. No private key is included in the repository. See [Signing](docs/SIGNING.md).
 
 ## Status
 
