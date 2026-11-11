@@ -1,6 +1,6 @@
 # MONOLITH roadmap
 
-Updated 2026-11-11. Current stage: **0.16 / INK merged to `main` via PR #35; exact-head PR CI passed; physical acceptance open**. `v0.15.0-beta.380` is the last release recorded in these documents; verify current signed assets via [GitHub Releases](https://github.com/lolokeksu09/MONOLITH/releases).
+Updated 2026-11-11. **Current signed beta: [v0.18.0-beta.400](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.18.0-beta.400)**, produced from main commit `cdbda9baa68946ffbba22e300e3997c8ca887866` by successful [Android CI #400](https://github.com/lolokeksu09/MONOLITH/actions/runs/43060986709). The pinned signing certificate was verified and the release asset was published. **Physical Lenovo Legion Y70 / Motorola Android 16 acceptance remains open.** See [product direction](PRODUCT_DIRECTION.md) for proposed—not shipped—improvements.
 
 ## Implemented
 
@@ -38,12 +38,31 @@ The authoritative scope, REQ-ID registry, decisions and evidence states live in 
 5. Honest media status without fake metadata or new permissions; existing HOME setup and stock recovery paths remain.
 6. Russian/English resources and focused JVM tests, with physical accessibility and performance checks still open.
 
-## Next verification work
+## Delivered in 0.17 scope, consolidated into 0.18 (PR #39)
 
-1. PR #35 merged on 2026-11-07 after successful exact-head verification. Check signed release assets, version and certificate separately; do not infer availability from merge.
-2. Test an exact, correctly signed 0.16 APK on Lenovo Legion Y70 / Motorola Android 16: all icon modes/fallbacks, all densities, persistence, first/interrupted opening, TalkBack, reduced motion, fonts, IME, media and HOME recovery.
-3. Retain applicable open 0.15 physical checks and record evidence against the exact candidate rather than copying prior assumptions.
-4. Review [draft PR #36](https://github.com/lolokeksu09/MONOLITH/pull/36) (0.17 search, accessibility and UI tests) separately; it is not merged.
+- Debounced nonblank drawer queries; clearing search restores results without the input debounce, and list scroll follows the settled query.
+- Added localized HOME page-state semantics, decorative-dot semantics cleanup and Robolectric Compose UI tests.
+- Separate draft [PR #36](https://github.com/lolokeksu09/MONOLITH/pull/36) remains open, but its relevant improvements were incorporated into 0.18 by PR #39. Do not merge its old branch just to repeat them.
+
+## Delivered in 0.18 beta (PR #39)
+
+- Removed decorative `MONOLITH / 01/02/03` counters from Minimal HOME, Editorial and All Apps, while retaining Settings/navigation.
+- Adjusted upper-left media presentation, made launcher-owned backgrounds true AMOLED black and refined the Editorial rock/typography hierarchy.
+- Balanced Orbit arrangements for 1–15 visible apps without changing complete 8/12/15 layouts, favorites or hidden-app exclusion.
+- Added independent debug-only `dev.monolith.launcher.preview` app label/package; the signed release remains the original `dev.monolith.launcher`.
+- Published signed prerelease `v0.18.0-beta.400` after merging [PR #39](https://github.com/lolokeksu09/MONOLITH/pull/39) and passing [Android CI #400](https://github.com/lolokeksu09/MONOLITH/actions/runs/43060986709). Production signing certificate remained pinned.
+- Separate draft [PR #38](https://github.com/lolokeksu09/MONOLITH/pull/38) remains open, but its partial-Orbit geometry changes were integrated through PR #39. Treat it as already incorporated, not additional release scope.
+- **Not validated:** signed install-over on an actual device, visual fidelity, real gestures, motion performance, TalkBack and HOME recovery.
+
+## Next work — verification first
+
+1. **P0 device reliability:** test the exact `v0.18.0-beta.400` signed APK on Lenovo Legion Y70 / Motorola Android 16; record install-over continuity, app launch, saved data, HOME role and stock-launcher recovery. Follow [device acceptance](DEVICE_ACCEPTANCE.md).
+2. **P0 visual reference acceptance:** compare Minimal, Orbit open/close, Editorial and All Apps against the supplied clip on the actual device; record screenshots/short videos and conditions before proposing further code changes.
+3. **P1 interaction ergonomics:** investigate one-handed use, drawer search placement and extra Orbit actions; only change behavior if device evidence supports it.
+4. **P1 motion/performance:** measure cold-start/icon readiness, interrupted animations, scrolling and reduced-motion behavior. Do not claim FPS improvements without measurements.
+5. **P2 product identity:** evaluate usefulness of Editorial and evolve distinctive interaction/typography without replacing real shortcuts with decorative content.
+
+The detailed rationale, scope boundaries and acceptance criteria are in [product direction](PRODUCT_DIRECTION.md). Proposed work above is **not implemented or guaranteed**.
 
 ## Stable release gate
 
