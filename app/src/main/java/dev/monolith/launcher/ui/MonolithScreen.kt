@@ -153,11 +153,15 @@ fun MonolithScreen(
     LaunchedEffect(preferences.showDrawerSearch) {
         if (!preferences.showDrawerSearch) query = ""
     }
-    // Filtering and Collator sorting stay off the keystroke path; the drawer
-    // reacts to the settled query instead of recomputing on every symbol.
+    // Only nonblank input is debounced. Clearing search must restore the full
+    // catalog immediately; sorting still runs on the UI thread after settling.
     LaunchedEffect(query) {
-        delay(180)
-        debouncedQuery = query
+        if (query.isBlank()) {
+            debouncedQuery = ""
+        } else {
+            delay(180)
+            debouncedQuery = query
+        }
     }
     BackHandler(enabled = screen != Screen.HOME) {
         screen = Screen.HOME
@@ -187,7 +191,7 @@ fun MonolithScreen(
                 )
                 Screen.ALL_APPS -> {
                     val gridState = rememberLazyGridState()
-                    LaunchedEffect(query, preferences.appSort, preferences.drawerColumns) {
+                    LaunchedEffect(debouncedQuery, preferences.appSort, preferences.drawerColumns) {
                         gridState.scrollToItem(0)
                     }
                     Column(
