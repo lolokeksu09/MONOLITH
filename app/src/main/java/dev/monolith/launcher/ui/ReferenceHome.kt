@@ -68,6 +68,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -144,6 +145,7 @@ fun ReferenceHome(
         orbitOpen = false
         onAllApps()
     }
+    val pageState = stringResource(R.string.reference_page_state, page + 1, 2)
 
     Box(
         Modifier.fillMaxSize().background(Ink)
@@ -242,7 +244,12 @@ fun ReferenceHome(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = { orbitOpen = false; page = 1-page }) {
+                TextButton(
+                    onClick = { orbitOpen = false; page = 1-page },
+                    modifier = Modifier.semantics {
+                        stateDescription = pageState
+                    }
+                ) {
                     Crossfade(
                         targetState = page,
                         animationSpec = tween(
@@ -252,8 +259,10 @@ fun ReferenceHome(
                         label = "Reference page indicator"
                     ) { currentPage ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            // Purely visual dots; the announced state lives on the button.
                             Text(if (currentPage == 0) "●  ○" else "○  ●",
-                                color = Soft, fontSize = 12.sp)
+                                color = Soft, fontSize = 12.sp,
+                                modifier = Modifier.clearAndSetSemantics { })
                             Spacer(Modifier.width(9.dp))
                             Text(stringResource(if (currentPage == 0) R.string.reference_editorial
                                                 else R.string.reference_minimal),
