@@ -37,8 +37,8 @@ private val ORBIT_GEOMETRY_6 = listOf(
     OrbitPoint(-58f, 29f), OrbitPoint(-58f, -29f)
 )
 
-// Partial rows of the 12/15 grids have a displaced centroid. Translate the
-// complete set uniformly: app order and pairwise touch-target distances survive.
+// Partial 15-grid selections have a slightly displaced vertical centroid.
+// Translate uniformly to preserve app ordering and icon spacing.
 private fun centerOrbit(points: List<OrbitPoint>): List<OrbitPoint> {
     val centerX = points.map { it.x.toDouble() }.average().toFloat()
     val centerY = points.map { it.y.toDouble() }.average().toFloat()
@@ -66,9 +66,24 @@ fun orbitPositions(count: Int): List<OrbitPoint> = when (val size = count.coerce
     6 -> ORBIT_GEOMETRY_6
     7 -> listOf(OrbitPoint(0f, 0f)) + ORBIT_GEOMETRY_6
     8 -> ORBIT_GEOMETRY_8
-    in 9..11 -> centerOrbit(ORBIT_GEOMETRY_12.take(size))
+    9 -> ORBIT_GEOMETRY_8 + OrbitPoint(0f, 0f)
+    10 -> listOf(
+        OrbitPoint(-87f, -58f), OrbitPoint(-29f, -58f),
+        OrbitPoint(29f, -58f), OrbitPoint(87f, -58f),
+        OrbitPoint(-29f, 0f), OrbitPoint(29f, 0f),
+        OrbitPoint(-87f, 58f), OrbitPoint(-29f, 58f),
+        OrbitPoint(29f, 58f), OrbitPoint(87f, 58f)
+    )
+    11 -> listOf(
+        OrbitPoint(-87f, -58f), OrbitPoint(-29f, -58f),
+        OrbitPoint(29f, -58f), OrbitPoint(87f, -58f),
+        OrbitPoint(-58f, 0f), OrbitPoint(0f, 0f), OrbitPoint(58f, 0f),
+        OrbitPoint(-87f, 58f), OrbitPoint(-29f, 58f),
+        OrbitPoint(29f, 58f), OrbitPoint(87f, 58f)
+    )
     12 -> ORBIT_GEOMETRY_12
-    in 13..14 -> centerOrbit(ORBIT_GEOMETRY_15.take(size))
+    13 -> centerOrbit(ORBIT_GEOMETRY_15.filterIndexed { index, _ -> index != 6 && index != 9 })
+    14 -> centerOrbit(ORBIT_GEOMETRY_15.filterIndexed { index, _ -> index != 11 })
     else -> ORBIT_GEOMETRY_15
 }
 
