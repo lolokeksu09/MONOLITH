@@ -4,6 +4,19 @@ Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, rec
 
 **Current signed candidate:** [`v0.19.0-beta.414`](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.19.0-beta.414), from main commit `cf4086c3f0b4a36c0e12af28880262a094ee8ec4`. [Android CI #414](https://github.com/lolokeksu09/MONOLITH/actions/runs/43075481033) completed successfully with pinned production signing. **No physical-device acceptance evidence is recorded yet.** Run all applicable historical checks for this exact signed candidate; record the installed version, certificate continuity, firmware, date and observed result.
 
+## 0.20 candidate — catalog responsiveness and Orbit dismissal (not device-tested)
+
+**Exact candidate:** [PR #43](https://github.com/lolokeksu09/MONOLITH/pull/43); requirements in [PLAN_0.20.md](PLAN_0.20.md). These are open physical checks; do not mark pass based on CI.
+
+- [ ] Search a large installed-app list in both RU and EN with Top and Bottom search. Confirm keyboard input stays responsive and the filtered result matches the settled query. Record actual observed latency if available; do not infer FPS from architecture.
+- [ ] Rapidly edit queries and switch A–Z / Z–A / frequent / recent / installation sorting; confirm no stale old results appear and no false `No applications found` state appears while still calculating.
+- [ ] Hide an app from its action sheet and immediately inspect the drawer: that hidden ID must not reappear while a previous background result completes. Repeat after refresh/reboot; test unhide.
+- [ ] Search for an impossible app, use the visible Clear search action, verify the full list returns and focus/IME behave in Top and Bottom layouts. Verify clear icon remains usable.
+- [ ] Expand Orbit, tap an empty scene area to dismiss, and separately verify that icon taps, icon long-press, system media controls, swipe navigation and explicit Close work. A tap outside the **closed** 48dp center trigger must not open Orbit.
+- [ ] Repeat expanded Orbit with a single centrally placed icon, then with 8 / 12 / 15 icons, to ensure the background action does not block shortcuts.
+- [ ] Test TalkBack reading order for background dismiss and empty-search clear, enlarged fonts, reduced motion, safe drawing insets and IME visibility.
+- [ ] Before marking installed-update acceptance, install a **permanently signed** candidate over the previously signed `dev.monolith.launcher` without uninstalling. Verify the pinned certificate, saved settings, favorites and stock-HOME recovery.
+
 ## 0.19 signed beta — not device-tested
 
 Apply these checks to the exact signed [v0.19.0-beta.414](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.19.0-beta.414) build merged through [PR #41](https://github.com/lolokeksu09/MONOLITH/pull/41). Do not mark complete based on CI or successful signing alone.
