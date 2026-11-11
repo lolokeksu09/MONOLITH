@@ -1,9 +1,11 @@
 # MONOLITH 0.19 / Interaction-first beta patch
 
-Status: **implementation candidate in PR #41; no signed release and no installed-device acceptance yet**.  
+Status: **PR #41 merged, signed beta [v0.19.0-beta.414](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.19.0-beta.414) published; installed-device acceptance remains open**.  
 Base: signed beta [v0.18.0-beta.400](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.18.0-beta.400).  
 Direction: [PRODUCT_DIRECTION.md](PRODUCT_DIRECTION.md) (P0/P1/P2 priorities).  
 Scope: specific, testable code changes, not every suggested idea in the direction document.
+
+**Delivery evidence:** merge commit `cf4086c3f0b4a36c0e12af28880262a094ee8ec4` on `main`; [CI run #414](https://github.com/lolokeksu09/MONOLITH/actions/runs/43075481033) completed successfully and published `MONOLITH-0.19.0-beta.414-signed.apk` after verifying the pinned production certificate. APK SHA-256: `e729700df3b59ebb04035f7019442626445867ea7a8cc460d596e0bac8cc97f7`. This does not establish physical HOME/IME/motion/TalkBack validation or install-over success on the user's phone.
 
 ## Goal and design decision
 

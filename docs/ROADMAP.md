@@ -1,6 +1,6 @@
 # MONOLITH roadmap
 
-Updated 2026-11-11. **Current signed beta: [v0.18.0-beta.400](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.18.0-beta.400)**, produced from main commit `cdbda9baa68946ffbba22e300e3997c8ca887866` by successful [Android CI #400](https://github.com/lolokeksu09/MONOLITH/actions/runs/43060986709). The pinned signing certificate was verified and the release asset was published. **Physical Lenovo Legion Y70 / Motorola Android 16 acceptance remains open.** See [product direction](PRODUCT_DIRECTION.md) for proposed—not shipped—improvements.
+Updated 2026-11-11. **Current signed beta: [v0.19.0-beta.414](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.19.0-beta.414)** from main commit `cf4086c3f0b4a36c0e12af28880262a094ee8ec4`; [Android CI #414](https://github.com/lolokeksu09/MONOLITH/actions/runs/43075481033) succeeded, pinned signing certificate verified and production APK published. **Physical Lenovo Legion Y70 / Motorola Android 16 acceptance remains open.** See [product direction](PRODUCT_DIRECTION.md) for unresolved measurements and future proposals.
 
 ## Implemented
 
@@ -56,7 +56,7 @@ The authoritative scope, REQ-ID registry, decisions and evidence states live in 
 
 ## Next work — verification first
 
-1. **P0 device reliability:** test the exact `v0.18.0-beta.400` signed APK on Lenovo Legion Y70 / Motorola Android 16; record install-over continuity, app launch, saved data, HOME role and stock-launcher recovery. Follow [device acceptance](DEVICE_ACCEPTANCE.md).
+1. **P0 device reliability:** test the exact `v0.19.0-beta.414` signed APK on Lenovo Legion Y70 / Motorola Android 16; record install-over continuity, app launch, saved data, HOME role and stock-launcher recovery. Follow [device acceptance](DEVICE_ACCEPTANCE.md).
 2. **P0 visual reference acceptance:** compare Minimal, Orbit open/close, Editorial and All Apps against the supplied clip on the actual device; record screenshots/short videos and conditions before proposing further code changes.
 3. **P1 interaction ergonomics:** investigate one-handed use, drawer search placement and extra Orbit actions; only change behavior if device evidence supports it.
 4. **P1 motion/performance:** measure cold-start/icon readiness, interrupted animations, scrolling and reduced-motion behavior. Do not claim FPS improvements without measurements.
@@ -64,9 +64,9 @@ The authoritative scope, REQ-ID registry, decisions and evidence states live in 
 
 The detailed rationale, scope boundaries and acceptance criteria are in [product direction](PRODUCT_DIRECTION.md). Proposed work above is **not implemented or guaranteed**.
 
-## 0.19 interaction patch — implemented on candidate branch, not released
+## Delivered in 0.19 interaction beta (PR #41)
 
-[PR #41](https://github.com/lolokeksu09/MONOLITH/pull/41) is the implementation candidate for bounded requirements in [PLAN_0.19.md](PLAN_0.19.md). These statements describe branch code, **not** physical acceptance or a signed production update:
+[PR #41](https://github.com/lolokeksu09/MONOLITH/pull/41) merged the bounded requirements in [PLAN_0.19.md](PLAN_0.19.md). The [signed 0.19 prerelease](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.19.0-beta.414) passed CI and signing verification; **these delivery checks are not physical acceptance**:
 
 1. Limit Orbit's tap/hold trigger to its actual 48dp center, keeping a centered app reachable and preventing a 304dp invisible touch region from swallowing interaction.
 2. Add an explicit optional drawer search position (Top / Bottom), persistent without altering old defaults or saved data; keep IME Search action and safe drawing/IME insets.
@@ -74,7 +74,7 @@ The detailed rationale, scope boundaries and acceptance criteria are in [product
 4. Give an empty Editorial shortcut list a real All Apps recovery action.
 5. Preserve existing icon appearances, offline operation, hidden apps, favorites, permanent signing identity and original HOME fallback.
 
-The 0.18 signed prerelease remains the published baseline until 0.19 is merged and deliberately released. CI and device checks for the new candidate must be tracked separately.
+0.19 is published as `v0.19.0-beta.414`. On-device install-over, TalkBack, IME, animation, stock HOME recovery and visual comparison remain unchecked. No stable 1.0 claim.
 
 ## Stable release gate
 

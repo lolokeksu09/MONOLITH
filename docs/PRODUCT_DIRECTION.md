@@ -2,7 +2,7 @@
 
 **Status:** product direction and proposed next work, not an implementation commitment or a release announcement.  
 **Updated:** 2026-11-11.  
-**Current shipped baseline:** signed beta [v0.18.0-beta.400](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.18.0-beta.400), from `main` commit `cdbda9baa68946ffbba22e300e3997c8ca887866`. CI passed; physical Lenovo Legion Y70 / Motorola Android 16 acceptance remains unrecorded.
+**Current shipped baseline:** signed beta [v0.19.0-beta.414](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.19.0-beta.414), from `main` commit `cf4086c3f0b4a36c0e12af28880262a094ee8ec4`. [Android CI #414](https://github.com/lolokeksu09/MONOLITH/actions/runs/43075481033) passed and pinned production signing was verified. Physical Lenovo Legion Y70 / Motorola Android 16 acceptance remains unrecorded.
 
 ## Product thesis
 
@@ -31,9 +31,9 @@ The following is implemented in the signed 0.18 beta candidate (see [changelog](
 
 **Delivery record:** [PR #39](https://github.com/lolokeksu09/MONOLITH/pull/39) merged into `main`; [Android CI run #400](https://github.com/lolokeksu09/MONOLITH/actions/runs/43060986709) completed successfully and published `v0.18.0-beta.400`. The permanent-key certificate check passed. On-device install-over, real animations, gestures and launcher recovery still need evidence in [device acceptance](DEVICE_ACCEPTANCE.md).
 
-## 0.19 development response to this direction (not in a signed release)
+## 0.19 shipped beta response to this direction — device acceptance pending
 
-[PR #41](https://github.com/lolokeksu09/MONOLITH/pull/41) implements a **bounded patch** responding to the priorities below, rather than treating every proposed direction as already approved:
+[PR #41](https://github.com/lolokeksu09/MONOLITH/pull/41) merged a **bounded patch** responding to the priorities below. Signed beta [v0.19.0-beta.414](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.19.0-beta.414) is published; these changes do not imply that every proposed direction is implemented or physically validated:
 
 - P0 interaction reliability: replace the wide invisible Orbit clickable surface with an explicit 48dp central trigger; preserve access to a central app icon and collapse Orbit before opening app actions.
 - P1 ergonomics: add opt-in Bottom drawer search, retain Top for existing users and store the choice without changing old preference keys; add IME layout/search affordances.
@@ -41,7 +41,7 @@ The following is implemented in the signed 0.18 beta candidate (see [changelog](
 - P2 utility: make the Editorial empty-shortcuts state navigate to a real All Apps screen, rather than present dead space.
 - Maintain RU/EN labels, local-only data, permanent signing identity and original fallback to stock HOME.
 
-The [0.19 requirement matrix](PLAN_0.19.md) gives exact code paths and test conditions. **No physical performance data, visual comparison pass, production signed 0.19 APK or stable-readiness is asserted.** The last *published* version remains 0.18 until a separately verified release.
+The [0.19 requirement matrix](PLAN_0.19.md) gives exact code paths and test conditions. **Signed 0.19 publication and CI pass are verified. On-device performance, full visual comparison, TalkBack and stable 1.0 readiness are not verified.**
 
 ## Proposed priorities (not shipped)
 

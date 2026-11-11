@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.19.0-beta — Interaction-first patch candidate (not released)
+## 0.19.0-beta — Interaction-first patch
 - Limits the central Orbit opening control to a real 48dp touch target instead of a 304dp invisible interactive region; keeps the central shortcut tappable when one app is visible.
 - Closes Orbit before presenting a real application's long-press action sheet, while letting that sheet handle Android Back.
 - Adds opt-in bottom drawer search for one-handed use; old installs retain Top without migration. Position is saved in the existing settings store.
@@ -9,7 +9,9 @@
 - Adds a working All Apps action when the Editorial shortcut list is empty.
 - Removes duplicated icon accessibility text from app grid artwork, keeping the real app-name label.
 - Adds targeted preference, route, and Compose UI regression checks.
-- Based on [product direction](PRODUCT_DIRECTION.md) and [implementation contract](PLAN_0.19.md). No performance/FPS, physical-device, signed release or stable-readiness claim.
+- Based on [product direction](PRODUCT_DIRECTION.md) and [implementation contract](PLAN_0.19.md). No performance/FPS, physical-device or stable-readiness claim.
+- [PR #41](https://github.com/lolokeksu09/MONOLITH/pull/41) merged into `main` as `cf4086c3f0b4a36c0e12af28880262a094ee8ec4` on 2026-11-11. [Android CI #414](https://github.com/lolokeksu09/MONOLITH/actions/runs/43075481033) completed successfully and the pinned permanent signing certificate was verified.
+- Published signed prerelease [v0.19.0-beta.414](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.19.0-beta.414) with production package `dev.monolith.launcher`. APK `MONOLITH-0.19.0-beta.414-signed.apk`, SHA-256 `e729700df3b59ebb04035f7019442626445867ea7a8cc460d596e0bac8cc97f7`. Physical install-over and device experience remain unverified.
 
 
 ## 0.18.0-beta — Reference polish
