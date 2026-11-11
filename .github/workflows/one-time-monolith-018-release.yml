@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   dispatch:
-    if: ${{ github.repository == 'lolokeksu09/MONOLITH' && github.event.head_commit.message == 'ops: dispatch signed MONOLITH 0.18 release (approved)' }}
+    if: "${{ github.repository == 'lolokeksu09/MONOLITH' && github.event.head_commit.message == 'ops: dispatch signed MONOLITH 0.18 release (approved)' }}"
     runs-on: ubuntu-latest
     steps:
       - name: Confirm pinned main and version
