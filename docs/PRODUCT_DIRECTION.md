@@ -43,6 +43,12 @@ The following is implemented in the signed 0.18 beta candidate (see [changelog](
 
 The [0.19 requirement matrix](PLAN_0.19.md) gives exact code paths and test conditions. **Signed 0.19 publication and CI pass are verified. On-device performance, full visual comparison, TalkBack and stable 1.0 readiness are not verified.**
 
+## 0.20 candidate — response to P0/P1 reliability and motion concerns
+
+[PR #43](https://github.com/lolokeksu09/MONOLITH/pull/43) builds on 0.19, specifically avoiding further decorative features. Its current scope is an off-main-thread, cancellable drawer catalog calculation that rejects stale hidden-app/search/sort output; a clearable no-results state; and one-tap dismissal of the **expanded** Orbit without hijacking real icon/media actions. See [PLAN_0.20.md](PLAN_0.20.md) for the tests and outstanding hardware scenarios.
+
+This section describes a code candidate, **not** a 0.20 signed release or Lenovo device approval. Remaining proposals below are still proposals unless explicitly delivered by a separately verified change.
+
 ## Proposed priorities (not shipped)
 
 | Priority | Question / proposed work | Acceptance evidence | Decision state |

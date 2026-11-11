@@ -21,6 +21,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -315,6 +316,23 @@ private fun MinimalScene(
     )
 
     Box(Modifier.fillMaxSize().background(Ink)) {
+        if (orbitOpen) {
+            val dismissLabel = stringResource(R.string.reference_dismiss_orbit)
+            // Full-screen dismiss layer sits BEHIND media controls and shortcuts,
+            // preserving their own click actions and swipe gestures. It only
+            // exists while expanded; the closed HOME stays non-interactive
+            // outside the explicit 48dp center trigger.
+            Box(
+                modifier = Modifier.fillMaxSize()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClickLabel = dismissLabel,
+                        onClick = onToggleOrbit
+                    )
+                    .semantics { contentDescription = dismissLabel }
+            )
+        }
         Column(
             modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()
                 .padding(start = 28.dp, top = 43.dp, end = 20.dp)

@@ -6,6 +6,9 @@ Native, offline-first AMOLED Android HOME launcher written in Kotlin + Jetpack C
 
 ## Single Reference HOME
 
+**0.20 development candidate (not released):** drawer app filtering and locale-aware sorting now run in a cancellable background calculation, with request-identity guards so hidden or stale app results are not shown while processing. Search has an explicit empty-results clear action, and a tap on free space closes an *expanded* Orbit without making the closed HOME a giant invisible button. See [0.20 implementation and acceptance plan](docs/PLAN_0.20.md). Signed 0.19 remains the current installable beta until a separate 0.20 release is verified.
+
+
 **0.19 / Interaction-first (merged and signed beta):** the central Orbit trigger is a real 48dp target instead of a 304dp invisible button; app shortcuts remain interactive, including one centered app. Drawer search can optionally move to the bottom for one-handed use, with the existing Top default and stored settings intact. Navigation returns through nested Settings, Editorial recovers from an empty shortcut list, and keyboard/semantic behavior is more predictable. [PR #41](https://github.com/lolokeksu09/MONOLITH/pull/41) merged, with targeted Compose/Robolectric tests. See [0.19 implementation and device acceptance criteria](docs/PLAN_0.19.md). Device gestures, TalkBack, speed and visual fidelity have **not** been accepted.
 
 

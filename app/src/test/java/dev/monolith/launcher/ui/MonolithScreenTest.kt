@@ -154,6 +154,46 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun tappingEmptyBackgroundClosesExpandedOrbit() {
+        launchMonolith()
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications collapsed"
+            )
+        ).performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithContentDescription("Dismiss expanded orbit").performClick()
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNode(
+                    SemanticsMatcher.expectValue(
+                        SemanticsProperties.StateDescription, "Orbit applications collapsed"
+                    )
+                ).assertExists()
+            }.isSuccess
+        }
+    }
+
+    @Test
+    fun noSearchResultsHaveAccessibleClearAction() {
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNode(hasSetTextAction()).performTextInput("unlikely-zz9")
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNodeWithText("No applications found").assertExists()
+            }.isSuccess
+        }
+        composeRule.onNodeWithText("Clear search").performClick()
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNodeWithText("Alpha").assertExists()
+                composeRule.onNodeWithText("Beta").assertExists()
+            }.isSuccess
+        }
+    }
+
+    @Test
     fun drawerListsInstalledApps() {
         launchMonolith()
         composeRule.onNodeWithText("ALL APPS ↑").performClick()

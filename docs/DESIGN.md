@@ -64,6 +64,18 @@ The [product direction](PRODUCT_DIRECTION.md) defines proposed priorities and di
 
 Avoid neon, glass cards, generic premium dashboard components, fake playback status and visual additions that lack a clear interaction purpose.
 
+## 0.20 interaction rules — background work without visual chrome
+
+0.20 is a continuation of the existing black Reference system, not a new aesthetic:
+
+- **Catalog:** app filtering and locale-aware sorting run on a cancellable background worker, with strict request-identity matching. A previously computed app set never leaks into a new hidden-app/search/sort state.
+- **Pending state:** show concise supporting copy rather than inventing a zero result count, spinner-heavy cards or decorative placeholder grids.
+- **No matches:** keep real query-clear actions; a failed search must be recoverable without navigating away.
+- **Orbit:** only an expanded cluster has a tappable background dismissal. The invisible closed 304dp host remains non-interactive; the 48dp trigger and real shortcuts keep their established hit areas.
+- **Depth:** dismissal surface sits behind real application icons and media controls, so illustration and navigation are not disabled to create a modal effect.
+
+No claim of faster measured FPS, improved battery use or completed hardware QA until the [physical checklist](DEVICE_ACCEPTANCE.md) is run on the Lenovo Legion Y70.
+
 ## 0.19 interaction-focused signed beta (physical acceptance pending)
 
 The 0.19 changes apply the [product direction](PRODUCT_DIRECTION.md) to concrete UI surfaces without introducing a new theme or a permanent icon grid:

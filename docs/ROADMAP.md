@@ -76,6 +76,17 @@ The detailed rationale, scope boundaries and acceptance criteria are in [product
 
 0.19 is published as `v0.19.0-beta.414`. On-device install-over, TalkBack, IME, animation, stock HOME recovery and visual comparison remain unchecked. No stable 1.0 claim.
 
+## 0.20 performance and interaction candidate (PR #43; not released)
+
+[PR #43](https://github.com/lolokeksu09/MONOLITH/pull/43) follows [PRODUCT_DIRECTION.md](PRODUCT_DIRECTION.md) on reliability and responsiveness:
+
+1. Move the drawer's Unicode filtering/sorting onto a cancellable background task.
+2. Gate results by exact request identity, especially when an installed app becomes hidden or search/sort changes; show a neutral pending state rather than stale results.
+3. Make an empty search easy to recover from through a separately accessible clear action.
+4. Allow an expanded Orbit to close by tapping empty background while preserving actual media/icon controls and swipe actions.
+
+This work is tracked by [PLAN_0.20.md](PLAN_0.20.md). **Signed v0.19.0-beta.414 remains the latest published version** until an independently checked production 0.20 release. Physical app-catalog responsiveness, gesture, TalkBack and HOME recovery checks remain open.
+
 ## Stable release gate
 
 All CI checks plus physical-device behavior, update-signing continuity and a recovery path to stock HOME must pass before 1.0 stable.

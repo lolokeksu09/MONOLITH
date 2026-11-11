@@ -54,6 +54,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -75,6 +76,10 @@ import androidx.compose.ui.unit.sp
 import dev.monolith.launcher.R
 import dev.monolith.launcher.data.AppIconStyle
 import dev.monolith.launcher.data.DrawerSearchPosition
+import dev.monolith.launcher.data.DrawerProjectionRequest
+import dev.monolith.launcher.data.DrawerProjectionResult
+import dev.monolith.launcher.data.projectDrawerApps
+import dev.monolith.launcher.data.matchingDrawerApps
 import dev.monolith.launcher.data.AppSort
 import dev.monolith.launcher.data.LaunchableApp
 import dev.monolith.launcher.data.LaunchStats
@@ -82,12 +87,13 @@ import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.chooseReferenceApps
 import dev.monolith.launcher.data.filterApps
 import dev.monolith.launcher.data.filterHiddenApps
-import dev.monolith.launcher.data.effectiveDrawerQuery
-import dev.monolith.launcher.data.sortApps
 import dev.monolith.launcher.data.ORBIT_CAPACITY
 import dev.monolith.launcher.data.moveOrbitFavorite
 import dev.monolith.launcher.data.toggleOrbitFavorite
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.util.Locale
 
 private val Background = Color.Black
 private val Foreground = Color(0xFFF4F3F0)
@@ -133,13 +139,31 @@ fun MonolithScreen(
     var debouncedQuery by rememberSaveable { mutableStateOf("") }
     var orbitQuery by rememberSaveable { mutableStateOf("") }
     var selectedApp by remember { mutableStateOf<LaunchableApp?>(null) }
-    val visibleApps = remember(apps, hiddenApps, debouncedQuery, preferences, launchStats) {
-        sortApps(
-            filterApps(filterHiddenApps(apps, hiddenApps),
-                effectiveDrawerQuery(debouncedQuery, preferences.showDrawerSearch)),
-            preferences.appSort, launchStats
+    // Unicode collation and full-catalog sorting happen away from the UI thread.
+    // The retained result from a previous effect is never displayed when the
+    // request changes (especially after an app becomes hidden).
+    val locale = Locale.getDefault()
+    val drawerRequest = remember(
+        apps, hiddenApps, debouncedQuery, preferences.showDrawerSearch,
+        preferences.appSort, launchStats, locale
+    ) {
+        DrawerProjectionRequest(
+            apps = apps,
+            hiddenIds = hiddenApps,
+            settledQuery = debouncedQuery,
+            searchEnabled = preferences.showDrawerSearch,
+            sort = preferences.appSort,
+            stats = launchStats,
+            locale = locale
         )
     }
+    val drawerResult by produceState<DrawerProjectionResult?>(null, drawerRequest) {
+        val matched = withContext(Dispatchers.Default) {
+            projectDrawerApps(drawerRequest)
+        }
+        value = DrawerProjectionResult(drawerRequest, matched)
+    }
+    val visibleApps = matchingDrawerApps(drawerRequest, drawerResult)
     val referenceApps = remember(
         apps, hiddenApps, launchStats, orbitFavorites, preferences.orbitDensity
     ) {
@@ -206,7 +230,7 @@ fun MonolithScreen(
                 )
                 Screen.ALL_APPS -> {
                     val gridState = rememberLazyGridState()
-                    LaunchedEffect(debouncedQuery, preferences.appSort, preferences.drawerColumns) {
+                    LaunchedEffect(drawerRequest, preferences.drawerColumns) {
                         gridState.scrollToItem(0)
                     }
                     Column(
@@ -275,8 +299,11 @@ fun MonolithScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(stringResource(R.string.apps_count, visibleApps.size),
-                                color = Muted, fontSize = 11.sp)
+                            Text(
+                                if (visibleApps == null) stringResource(R.string.drawer_updating)
+                                else stringResource(R.string.apps_count, visibleApps.size),
+                                color = Muted, fontSize = 11.sp
+                            )
                             SortPicker(preferences.appSort) {
                                 onPreferencesChange(preferences.copy(appSort = it))
                             }
@@ -298,8 +325,22 @@ fun MonolithScreen(
                                 }
                                 Spacer(Modifier.weight(1f))
                             }
+                            visibleApps == null -> {
+                                // A result is pending. Never show an old filtered list
+                                // or misreport a still-processing query as no results.
+                                Spacer(Modifier.weight(1f))
+                            }
                             visibleApps.isEmpty() -> {
                                 Text(stringResource(R.string.no_results), color = Muted)
+                                if (preferences.showDrawerSearch && query.isNotBlank()) {
+                                    TextButton(
+                                        onClick = { query = "" },
+                                        modifier = Modifier.heightIn(min = 48.dp)
+                                    ) {
+                                        Text(stringResource(R.string.drawer_clear_search),
+                                            color = Foreground)
+                                    }
+                                }
                                 Spacer(Modifier.weight(1f))
                             }
                             else -> LazyVerticalGrid(
