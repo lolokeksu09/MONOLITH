@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.20.0-beta — Responsive catalog and Orbit interaction candidate (not released)
+- Moves drawer filtering and locale-aware sorting off the Compose UI thread to a cancellable background projection.
+- Rejects older completed projections after a search, sort, hidden-app or app-catalog change; prevents transient display of newly hidden apps.
+- Distinguishes pending data from a completed empty result without fabricating a zero-app count. Adds a visible 48dp Clear search action on the empty-results screen.
+- Enables tapping free background space to dismiss expanded Orbit without obstructing real app shortcuts, media controls or swipe navigation. Closed HOME retains its explicit 48dp opening target.
+- Adds JVM request-generation/privacy tests and Robolectric Compose UI tests, RU/EN labels and specific [device acceptance checks](PLAN_0.20.md).
+- No new permissions, themes, tracking, preference migration or identity/signing change. No FPS/device validation or signed release claim.
+
+
 ## 0.19.0-beta — Interaction-first patch
 - Limits the central Orbit opening control to a real 48dp touch target instead of a 304dp invisible interactive region; keeps the central shortcut tappable when one app is visible.
 - Closes Orbit before presenting a real application's long-press action sheet, while letting that sheet handle Android Back.
