@@ -38,6 +38,12 @@ android {
     }
 
     buildTypes {
+        // A separately installable preview: never overwrite the owner's
+        // permanently signed production launcher during visual QA.
+        debug {
+            applicationIdSuffix = ".preview"
+            versionNameSuffix = "-preview"
+        }
         release {
             isMinifyEnabled = false
             if (monolithKeystore != null && monolithSigningPassword != null) {
@@ -49,6 +55,10 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+    // Robolectric unit tests need merged resources (manifest, drawables, strings).
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
     }
     buildFeatures { compose = true }
 }
@@ -70,4 +80,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.2")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20240303")
+    // Compose UI tests run as local unit tests under Robolectric; no emulator is needed.
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    testImplementation("org.robolectric:robolectric:4.15.1")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

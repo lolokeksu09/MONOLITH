@@ -81,8 +81,9 @@ import dev.monolith.launcher.data.sortApps
 import dev.monolith.launcher.data.ORBIT_CAPACITY
 import dev.monolith.launcher.data.moveOrbitFavorite
 import dev.monolith.launcher.data.toggleOrbitFavorite
+import kotlinx.coroutines.delay
 
-private val Background = Color(0xFF050505)
+private val Background = Color.Black
 private val Foreground = Color(0xFFF4F3F0)
 private val Muted = Color(0xFFA7A6A4)
 private val Panel = Color(0xFF101010)
@@ -114,12 +115,13 @@ fun MonolithScreen(
 ) {
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
     var query by rememberSaveable { mutableStateOf("") }
+    var debouncedQuery by rememberSaveable { mutableStateOf("") }
     var orbitQuery by rememberSaveable { mutableStateOf("") }
     var selectedApp by remember { mutableStateOf<LaunchableApp?>(null) }
-    val visibleApps = remember(apps, hiddenApps, query, preferences, launchStats) {
+    val visibleApps = remember(apps, hiddenApps, debouncedQuery, preferences, launchStats) {
         sortApps(
             filterApps(filterHiddenApps(apps, hiddenApps),
-                effectiveDrawerQuery(query, preferences.showDrawerSearch)),
+                effectiveDrawerQuery(debouncedQuery, preferences.showDrawerSearch)),
             preferences.appSort, launchStats
         )
     }
@@ -151,6 +153,16 @@ fun MonolithScreen(
     LaunchedEffect(preferences.showDrawerSearch) {
         if (!preferences.showDrawerSearch) query = ""
     }
+    // Only nonblank input is debounced. Clearing search must restore the full
+    // catalog immediately; sorting still runs on the UI thread after settling.
+    LaunchedEffect(query) {
+        if (query.isBlank()) {
+            debouncedQuery = ""
+        } else {
+            delay(180)
+            debouncedQuery = query
+        }
+    }
     BackHandler(enabled = screen != Screen.HOME) {
         screen = Screen.HOME
         query = ""
@@ -179,7 +191,7 @@ fun MonolithScreen(
                 )
                 Screen.ALL_APPS -> {
                     val gridState = rememberLazyGridState()
-                    LaunchedEffect(query, preferences.appSort, preferences.drawerColumns) {
+                    LaunchedEffect(debouncedQuery, preferences.appSort, preferences.drawerColumns) {
                         gridState.scrollToItem(0)
                     }
                     Column(
@@ -218,8 +230,6 @@ fun MonolithScreen(
                                 )
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("MONOLITH / 03", color = Muted, fontSize = 9.sp,
-                                    letterSpacing = 1.5.sp)
                                 Text(stringResource(R.string.drawer_title), fontSize = 20.sp,
                                     fontWeight = FontWeight.Medium, letterSpacing = .2.sp)
                             }

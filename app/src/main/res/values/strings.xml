@@ -40,11 +40,12 @@
     <string name="reference_good_morning">GOOD MORNING</string>
     <string name="reference_hold_hint">TAP / HOLD TO OPEN</string>
     <string name="reference_legacy_data_note">Classic desktop, Dock, folders, widgets and home-layout import were removed. Old local data is not deleted during the update.</string>
-    <string name="reference_media">MEDIA CONTROLS</string>
-    <string name="reference_media_hint">System media keys · status unknown</string>
+    <string name="reference_media">MEDIA</string>
+    <string name="reference_media_hint">System media keys · playback status unavailable</string>
     <string name="reference_minimal">←  MINIMAL</string>
     <string name="reference_only_description">Reference is now the only home screen. Swipe between the two pages or open All Apps.</string>
     <string name="reference_orbit_toggle">Show or hide orbit applications</string>
+    <string name="reference_page_state">Screen %1$d of %2$d</string>
     <string name="reference_orbit_collapsed">Orbit applications collapsed</string>
     <string name="reference_orbit_expanded">Orbit applications expanded</string>
     <string name="reference_quick_apps">QUICK ACCESS</string>

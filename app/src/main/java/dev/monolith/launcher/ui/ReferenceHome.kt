@@ -68,6 +68,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -144,6 +145,7 @@ fun ReferenceHome(
         orbitOpen = false
         onAllApps()
     }
+    val pageState = stringResource(R.string.reference_page_state, page + 1, 2)
 
     Box(
         Modifier.fillMaxSize().background(Ink)
@@ -213,14 +215,14 @@ fun ReferenceHome(
 
         TextButton(
             onClick = onSettings,
-            modifier = Modifier.align(Alignment.TopEnd).padding(top = 20.dp, end = 17.dp)
+            modifier = Modifier.align(Alignment.TopEnd).padding(top = 16.dp, end = 12.dp)
                 .size(48.dp)
         ) {
             Icon(
                 painterResource(R.drawable.ic_settings),
                 contentDescription = stringResource(R.string.settings),
-                tint = Soft,
-                modifier = Modifier.size(20.dp)
+                tint = Soft.copy(alpha = .72f),
+                modifier = Modifier.size(18.dp)
             )
         }
 
@@ -242,7 +244,12 @@ fun ReferenceHome(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = { orbitOpen = false; page = 1-page }) {
+                TextButton(
+                    onClick = { orbitOpen = false; page = 1-page },
+                    modifier = Modifier.semantics {
+                        stateDescription = pageState
+                    }
+                ) {
                     Crossfade(
                         targetState = page,
                         animationSpec = tween(
@@ -252,8 +259,10 @@ fun ReferenceHome(
                         label = "Reference page indicator"
                     ) { currentPage ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            // Purely visual dots; the announced state lives on the button.
                             Text(if (currentPage == 0) "●  ○" else "○  ●",
-                                color = Soft, fontSize = 12.sp)
+                                color = Soft, fontSize = 12.sp,
+                                modifier = Modifier.clearAndSetSemantics { })
                             Spacer(Modifier.width(9.dp))
                             Text(stringResource(if (currentPage == 0) R.string.reference_editorial
                                                 else R.string.reference_minimal),
@@ -305,11 +314,8 @@ private fun MinimalScene(
     Box(Modifier.fillMaxSize().background(Ink)) {
         Column(
             modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()
-                .padding(start = 29.dp, top = 40.dp, end = 24.dp)
+                .padding(start = 28.dp, top = 43.dp, end = 20.dp)
         ) {
-            Text("●   MONOLITH    /    01",
-                color = Soft, fontSize = 10.sp, letterSpacing = 1.3.sp)
-            Spacer(Modifier.height(23.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -552,8 +558,8 @@ private fun EditorialScene(
         Box(Modifier.fillMaxSize().background(
             Brush.horizontalGradient(
                 0f to Ink.copy(alpha = .99f),
-                .48f to Ink.copy(alpha = .68f),
-                1f to Color.Transparent
+                .43f to Ink.copy(alpha = .76f),
+                1f to Ink.copy(alpha = .05f)
             )
         ))
         Box(Modifier.fillMaxSize().background(
@@ -567,15 +573,12 @@ private fun EditorialScene(
         Column(
             modifier = Modifier.align(Alignment.TopStart).padding(start = 28.dp, top = 44.dp)
         ) {
-            Text("MONOLITH   /   02", color = Soft,
-                fontSize = 10.sp, letterSpacing = 1.4.sp)
-            Spacer(Modifier.height(26.dp))
             Text(
                 now.format(DateTimeFormatter.ofPattern("dd MMMM yyyy", locale)),
                 color = Soft, fontSize = 11.sp, maxLines = 2
             )
             Spacer(Modifier.height(14.dp))
-            Text("────────────────", color = Dim, fontSize = 9.sp)
+            Box(Modifier.width(48.dp).height(1.dp).background(Dim))
         }
 
         Column(
