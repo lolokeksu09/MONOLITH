@@ -204,12 +204,15 @@ fun ReferenceHome(
                     motionDuration = motionDuration,
                     onToggleOrbit = { orbitOpen = !orbitOpen },
                     onLaunch = openApp,
-                    onActions = onAppActions,
+                    onActions = { app ->
+                        orbitOpen = false
+                        onAppActions(app)
+                    },
                     onPlayPause = { sendMediaKey(context, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) },
                     onNext = { sendMediaKey(context, KeyEvent.KEYCODE_MEDIA_NEXT) }
                 )
             } else {
-                EditorialScene(now, apps, iconStyle, openApp, onAppActions)
+                EditorialScene(now, apps, iconStyle, openApp, onAppActions, openDrawer)
             }
         }
 
@@ -370,29 +373,41 @@ private fun MinimalScene(
         ) {
             val orbitScale = minOf(1f, (maxWidth.value - 28f) / 295f).coerceAtLeast(.92f)
             Box(
-                modifier = Modifier.size(304.dp)
-                    .semantics { stateDescription = orbitStateDescription }
-                    .combinedClickable(
-                        onClick = onToggleOrbit,
-                        onLongClick = { if (!orbitOpen) onToggleOrbit() },
-                        onClickLabel = stringResource(R.string.reference_orbit_toggle),
-                        onLongClickLabel = stringResource(R.string.reference_orbit_toggle)
-                    ),
+                modifier = Modifier.size(304.dp),
                 contentAlignment = Alignment.Center
             ) {
+                // The 304dp host positions icons; it is not a giant invisible
+                // click target. The central button is exactly 48dp instead.
                 OrbitCluster(
                     apps, iconStyle, orbitOpen, orbitScale, orbitProgress, onLaunch, onActions
                 )
-                Canvas(
-                    Modifier.size(36.dp).graphicsLayer {
-                        alpha = (1f - orbitProgress * 1.6f).coerceIn(0f, 1f)
-                        scaleX = 1f + orbitProgress * .18f
-                        scaleY = scaleX
+                // Do not block a single app at (0, 0) once the Orbit opens.
+                // During collapse, wait until the center indicator is visible.
+                if (!orbitOpen && orbitProgress <= .62f) {
+                    Box(
+                        modifier = Modifier.size(48.dp)
+                            .semantics { stateDescription = orbitStateDescription }
+                            .combinedClickable(
+                                onClick = onToggleOrbit,
+                                onLongClick = onToggleOrbit,
+                                onClickLabel = stringResource(R.string.reference_orbit_toggle),
+                                onLongClickLabel = stringResource(R.string.reference_orbit_toggle)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Canvas(
+                            Modifier.size(36.dp).graphicsLayer {
+                                alpha = (1f - orbitProgress * 1.6f).coerceIn(0f, 1f)
+                                scaleX = 1f + orbitProgress * .18f
+                                scaleY = scaleX
+                            }
+                        ) {
+                            drawCircle(Dim.copy(alpha = .72f),
+                                radius = size.minDimension * .27f,
+                                style = Stroke(width = 1.dp.toPx()))
+                            drawCircle(Soft.copy(alpha = .85f), radius = 2.dp.toPx())
+                        }
                     }
-                ) {
-                    drawCircle(Dim.copy(alpha = .72f),
-                        radius = size.minDimension * .27f, style = Stroke(width = 1.dp.toPx()))
-                    drawCircle(Soft.copy(alpha = .85f), radius = 2.dp.toPx())
                 }
             }
             AnimatedVisibility(
@@ -408,7 +423,9 @@ private fun MinimalScene(
                 ))
             ) {
                 Row(
-                    modifier = Modifier.clickable(onClick = onToggleOrbit)
+                    modifier = Modifier.semantics {
+                        stateDescription = orbitStateDescription
+                    }.clickable(onClick = onToggleOrbit)
                         .height(48.dp).padding(horizontal = 14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -543,7 +560,8 @@ private fun EditorialScene(
     apps: List<LaunchableApp>,
     iconStyle: AppIconStyle,
     onLaunch: (LaunchableApp) -> Unit,
-    onActions: (LaunchableApp) -> Unit
+    onActions: (LaunchableApp) -> Unit,
+    onAllApps: () -> Unit
 ) {
     val locale = Locale.getDefault()
     val dayShort = now.format(DateTimeFormatter.ofPattern("EEE", locale)).uppercase(locale)
@@ -605,13 +623,25 @@ private fun EditorialScene(
             Text(stringResource(R.string.reference_quick_apps), fontSize = 10.sp,
                 color = Soft, letterSpacing = 1.8.sp)
             Spacer(Modifier.height(13.dp))
-            apps.take(8).chunked(4).forEach { rowApps ->
-                Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                    rowApps.forEach { app ->
-                        EditorialShortcut(app, iconStyle, onLaunch, onActions)
-                    }
+            if (apps.isEmpty()) {
+                Text(stringResource(R.string.reference_no_quick_apps),
+                    color = Soft, fontSize = 12.sp)
+                TextButton(
+                    onClick = onAllApps,
+                    modifier = Modifier.height(48.dp)
+                ) {
+                    Text(stringResource(R.string.reference_browse_all_apps),
+                        color = Paper, fontSize = 12.sp)
                 }
-                Spacer(Modifier.height(9.dp))
+            } else {
+                apps.take(8).chunked(4).forEach { rowApps ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+                        rowApps.forEach { app ->
+                            EditorialShortcut(app, iconStyle, onLaunch, onActions)
+                        }
+                    }
+                    Spacer(Modifier.height(9.dp))
+                }
             }
             Spacer(Modifier.height(8.dp))
             Text(
