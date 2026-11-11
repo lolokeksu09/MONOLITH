@@ -64,7 +64,7 @@ The [product direction](PRODUCT_DIRECTION.md) defines proposed priorities and di
 
 Avoid neon, glass cards, generic premium dashboard components, fake playback status and visual additions that lack a clear interaction purpose.
 
-## 0.19 interaction-focused candidate (physical acceptance pending)
+## 0.19 interaction-focused signed beta (physical acceptance pending)
 
 The 0.19 changes apply the [product direction](PRODUCT_DIRECTION.md) to concrete UI surfaces without introducing a new theme or a permanent icon grid:
 
@@ -74,4 +74,4 @@ The 0.19 changes apply the [product direction](PRODUCT_DIRECTION.md) to concrete
 - **Editorial utility:** where no shortcuts exist, one compact working All Apps action replaces a dead empty list. No fake songs, weather, app counts or background services are added.
 - **Accessibility:** avoid redundant icon-image labels when the app tile already presents its name, retain 48dp controls and document TalkBack/reduced-motion device checks.
 
-No new color palette, ornamental glass, neon or decorative card system is introduced. This remains a code/CI candidate; on-device screenshots, motion and layout evidence are still required in [device acceptance](DEVICE_ACCEPTANCE.md).
+No new color palette, ornamental glass, neon or decorative card system is introduced. Signed beta [v0.19.0-beta.414](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.19.0-beta.414) passed CI and pinned-certificate verification. On-device screenshots, motion, reach, accessibility and layout evidence are still required in [device acceptance](DEVICE_ACCEPTANCE.md).
