@@ -5,6 +5,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -58,6 +61,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.selected
@@ -65,10 +69,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.monolith.launcher.R
 import dev.monolith.launcher.data.AppIconStyle
+import dev.monolith.launcher.data.DrawerSearchPosition
 import dev.monolith.launcher.data.AppSort
 import dev.monolith.launcher.data.LaunchableApp
 import dev.monolith.launcher.data.LaunchStats
@@ -88,7 +94,15 @@ private val Foreground = Color(0xFFF4F3F0)
 private val Muted = Color(0xFFA7A6A4)
 private val Panel = Color(0xFF101010)
 
-private enum class Screen { HOME, ALL_APPS, SETTINGS, ORBIT_APPS, HIDDEN_APPS }
+internal enum class Screen { HOME, ALL_APPS, SETTINGS, ORBIT_APPS, HIDDEN_APPS }
+
+/** Return to the parent settings screen instead of unexpectedly jumping HOME. */
+internal fun destinationOnBack(screen: Screen, settingsOrigin: Screen): Screen = when (screen) {
+    Screen.ORBIT_APPS, Screen.HIDDEN_APPS -> Screen.SETTINGS
+    Screen.SETTINGS -> if (settingsOrigin == Screen.ALL_APPS) Screen.ALL_APPS else Screen.HOME
+    Screen.ALL_APPS -> Screen.HOME
+    Screen.HOME -> Screen.HOME
+}
 
 /** Reference HOME remains the only desktop. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -114,6 +128,7 @@ fun MonolithScreen(
     onClearLaunchHistory: () -> Unit
 ) {
     var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
+    var settingsOrigin by rememberSaveable { mutableStateOf(Screen.HOME) }
     var query by rememberSaveable { mutableStateOf("") }
     var debouncedQuery by rememberSaveable { mutableStateOf("") }
     var orbitQuery by rememberSaveable { mutableStateOf("") }
@@ -163,10 +178,10 @@ fun MonolithScreen(
             debouncedQuery = query
         }
     }
-    BackHandler(enabled = screen != Screen.HOME) {
-        screen = Screen.HOME
-        query = ""
-        selectedApp = null
+    // A visible action sheet owns Back until it is dismissed.
+    BackHandler(enabled = screen != Screen.HOME && selectedApp == null) {
+        screen = destinationOnBack(screen, settingsOrigin)
+        if (screen == Screen.HOME) query = ""
     }
 
     MaterialTheme(colorScheme = darkColorScheme(
@@ -186,7 +201,7 @@ fun MonolithScreen(
                     onLaunch = launchAndReturnHome,
                     onAppActions = { selectedApp = it },
                     onAllApps = { screen = Screen.ALL_APPS; query = "" },
-                    onSettings = { screen = Screen.SETTINGS },
+                    onSettings = { settingsOrigin = Screen.HOME; screen = Screen.SETTINGS },
                     onMakeDefaultHome = onMakeDefaultHome
                 )
                 Screen.ALL_APPS -> {
@@ -196,8 +211,9 @@ fun MonolithScreen(
                     }
                     Column(
                         modifier = Modifier.fillMaxSize()
-                            .windowInsetsPadding(WindowInsets.safeDrawing)
                             .background(Color.Black)
+                            .windowInsetsPadding(WindowInsets.safeDrawing)
+                            .imePadding()
                             .padding(horizontal = 20.dp, vertical = 12.dp)
                     ) {
                         Row(
@@ -234,7 +250,10 @@ fun MonolithScreen(
                                     fontWeight = FontWeight.Medium, letterSpacing = .2.sp)
                             }
                             TextButton(
-                                onClick = { screen = Screen.SETTINGS },
+                                onClick = {
+                                    settingsOrigin = Screen.ALL_APPS
+                                    screen = Screen.SETTINGS
+                                },
                                 modifier = Modifier.size(48.dp)
                             ) {
                                 Icon(
@@ -245,39 +264,10 @@ fun MonolithScreen(
                             }
                         }
                         Spacer(Modifier.height(9.dp))
-                        if (preferences.showDrawerSearch) {
-                            TextField(
-                                value = query,
-                                onValueChange = { query = it },
-                                label = { Text(stringResource(R.string.drawer_search_label)) },
-                                placeholder = { Text(stringResource(R.string.drawer_search_placeholder)) },
-                                leadingIcon = {
-                                    Icon(painterResource(R.drawable.ic_search),
-                                        contentDescription = null, modifier = Modifier.size(20.dp))
-                                },
-                                trailingIcon = if (query.isEmpty()) null else ({
-                                    TextButton(onClick = { query = "" }, modifier = Modifier.size(48.dp)) {
-                                        Icon(
-                                            painterResource(R.drawable.ic_close),
-                                            contentDescription = stringResource(R.string.drawer_clear_search),
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-                                colors = TextFieldDefaults.colors(
-                                    focusedTextColor = Foreground,
-                                    unfocusedTextColor = Foreground,
-                                    focusedLabelColor = Foreground,
-                                    unfocusedLabelColor = Muted,
-                                    focusedContainerColor = Panel,
-                                    unfocusedContainerColor = Panel,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent
-                                )
-                            )
+                        val bottomSearch = preferences.drawerSearchPosition ==
+                            DrawerSearchPosition.BOTTOM
+                        if (preferences.showDrawerSearch && !bottomSearch) {
+                            DrawerSearchField(query = query, onQueryChange = { query = it })
                         }
                         Spacer(Modifier.height(9.dp))
                         Row(
@@ -329,6 +319,10 @@ fun MonolithScreen(
                                     )
                                 }
                             }
+                        }
+                        if (preferences.showDrawerSearch && bottomSearch) {
+                            Spacer(Modifier.height(9.dp))
+                            DrawerSearchField(query = query, onQueryChange = { query = it })
                         }
                     }
                 }
@@ -391,6 +385,32 @@ fun MonolithScreen(
                         Text(stringResource(R.string.drawer_search_toggle), modifier = Modifier.weight(1f))
                         Switch(checked = preferences.showDrawerSearch,
                             onCheckedChange = { onPreferencesChange(preferences.copy(showDrawerSearch = it)) })
+                    }
+                    if (preferences.showDrawerSearch) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(stringResource(R.string.drawer_search_position),
+                            color = Muted, fontSize = 12.sp)
+                        Spacer(Modifier.height(7.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            DrawerSearchPosition.entries.forEach { position ->
+                                ChoiceButton(
+                                    modifier = Modifier.weight(1f),
+                                    selected = preferences.drawerSearchPosition == position,
+                                    label = stringResource(
+                                        if (position == DrawerSearchPosition.TOP)
+                                            R.string.drawer_search_top
+                                        else R.string.drawer_search_bottom
+                                    ),
+                                    onClick = {
+                                        onPreferencesChange(
+                                            preferences.copy(drawerSearchPosition = position)
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                        Text(stringResource(R.string.drawer_search_position_hint),
+                            color = Muted, fontSize = 11.sp, lineHeight = 15.sp)
                     }
                     Spacer(Modifier.height(20.dp))
                     Text(stringResource(R.string.drawer_columns), color = Muted)
@@ -572,6 +592,48 @@ fun MonolithScreen(
 }
 
 @Composable
+private fun DrawerSearchField(
+    query: String,
+    onQueryChange: (String) -> Unit
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    TextField(
+        value = query,
+        onValueChange = onQueryChange,
+        label = { Text(stringResource(R.string.drawer_search_label)) },
+        placeholder = { Text(stringResource(R.string.drawer_search_placeholder)) },
+        leadingIcon = {
+            Icon(painterResource(R.drawable.ic_search),
+                contentDescription = null, modifier = Modifier.size(20.dp))
+        },
+        trailingIcon = if (query.isEmpty()) null else ({
+            TextButton(onClick = { onQueryChange("") }, modifier = Modifier.size(48.dp)) {
+                Icon(
+                    painterResource(R.drawable.ic_close),
+                    contentDescription = stringResource(R.string.drawer_clear_search),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }),
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+        colors = TextFieldDefaults.colors(
+            focusedTextColor = Foreground,
+            unfocusedTextColor = Foreground,
+            focusedLabelColor = Foreground,
+            unfocusedLabelColor = Muted,
+            focusedContainerColor = Panel,
+            unfocusedContainerColor = Panel,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent
+        )
+    )
+}
+
+@Composable
 private fun ChoiceButton(
     modifier: Modifier = Modifier,
     selected: Boolean,
@@ -613,7 +675,7 @@ private fun DrawerAppTile(
             if (bitmap != null) {
                 Image(
                     bitmap.asImageBitmap(),
-                    contentDescription = app.label,
+                    contentDescription = null,
                     modifier = Modifier.size(42.dp)
                 )
             } else {
