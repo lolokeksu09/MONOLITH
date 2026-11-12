@@ -83,5 +83,11 @@
     <string name="reference_selected_count">Выбрано: %1$d из %2$d</string>
     <string name="reference_add">Добавить</string>
     <string name="reference_remove">Убрать</string>
+    <string name="reference_pin_orbit">Закрепить в Orbit</string>
+    <string name="reference_unpin_orbit">Убрать из Orbit</string>
+    <string name="reference_orbit_full">Orbit заполнен (%1$d/%2$d). Сначала уберите закрепление.</string>
+    <string name="reference_pinned_only">Только закреплённые</string>
+    <string name="reference_show_all_apps">Все приложения</string>
+    <string name="reference_no_pinned_apps">Закреплённых приложений пока нет</string>
     <string name="reference_done">Готово</string>
 </resources>
