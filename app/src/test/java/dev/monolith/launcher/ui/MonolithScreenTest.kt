@@ -345,6 +345,21 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun orbitManagerCanClearSearchAndRestorePinnedAndAvailableLists() {
+        currentFavorites.value = listOf(appBeta.id)
+        launchMonolith(apps = listOf(appAlpha, appBeta))
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        composeRule.onNodeWithText("Customize orbit apps").performScrollTo().performClick()
+        composeRule.onNode(hasSetTextAction()).performTextInput("not-an-installed-app")
+
+        composeRule.onNodeWithText("No applications found").assertExists()
+        composeRule.onNodeWithContentDescription("Clear search").performClick()
+        composeRule.onNodeWithText("Pinned (1)").assertExists()
+        composeRule.onNodeWithText("Available (1)").assertExists()
+        assertEquals(listOf(appBeta.id), currentFavorites.value)
+    }
+
+    @Test
     fun precisionSettingsHaveSectionsAndPreserveDrawerBackOrigin() {
         launchMonolith()
         composeRule.onNodeWithText("ALL APPS ↑").performClick()
