@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -11,6 +12,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performScrollTo
 import dev.monolith.launcher.data.AppIconStyle
 import dev.monolith.launcher.data.LaunchableApp
@@ -40,6 +43,7 @@ class MonolithScreenTest {
     private val appAlpha = LaunchableApp("pkg/alpha", "Alpha", "pkg", "alpha")
     private val appBeta = LaunchableApp("pkg/beta", "Beta", "pkg", "beta")
     private val currentPreferences = mutableStateOf(LauncherPreferences())
+    private val currentFavorites = mutableStateOf<List<String>>(emptyList())
 
     private fun launchMonolith(
         apps: List<LaunchableApp> = listOf(appAlpha, appBeta),
@@ -57,7 +61,7 @@ class MonolithScreenTest {
                 homeRequestGeneration = 0,
                 launchStats = emptyMap(),
                 hiddenApps = hiddenApps,
-                orbitFavorites = emptyList(),
+                orbitFavorites = currentFavorites.value,
                 loading = loading,
                 loadError = loadError,
                 isDefaultHome = true,
@@ -65,7 +69,7 @@ class MonolithScreenTest {
                 onMakeDefaultHome = {},
                 onLaunch = {},
                 onAppInfo = {},
-                onOrbitFavoritesChange = {},
+                onOrbitFavoritesChange = { currentFavorites.value = it },
                 onPreferencesChange = onPreferencesChange,
                 onHideApp = {},
                 onUnhideApp = {},
@@ -223,6 +227,53 @@ class MonolithScreenTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Alpha").assertIsDisplayed()
         composeRule.onNodeWithText("Beta").assertIsDisplayed()
+    }
+
+    @Test
+    fun longPressAppCanPinAndUnpinWithoutOpeningSettings() {
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Alpha").performTouchInput { longClick() }
+        composeRule.onNodeWithText("Pin to Orbit").performClick()
+        composeRule.waitForIdle()
+
+        assertEquals(listOf(appAlpha.id), currentFavorites.value)
+        composeRule.onNodeWithText("Remove from Orbit").performClick()
+        composeRule.waitForIdle()
+        assertTrue(currentFavorites.value.isEmpty())
+        composeRule.onNodeWithText("Pin to Orbit").assertExists()
+    }
+
+    @Test
+    fun orbitCustomizerFiltersPinnedAppsWithoutChangingSavedOrder() {
+        currentFavorites.value = listOf(appBeta.id)
+        launchMonolith()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        composeRule.onNodeWithText("Customize orbit apps").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Alpha").assertExists()
+        composeRule.onNodeWithText("Beta").assertExists()
+
+        composeRule.onNodeWithText("Pinned only").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Beta").assertExists()
+        composeRule.onNodeWithText("Alpha").assertDoesNotExist()
+        composeRule.onNodeWithText("All applications").performClick()
+        composeRule.onNodeWithText("Alpha").assertExists()
+        assertEquals(listOf(appBeta.id), currentFavorites.value)
+    }
+
+    @Test
+    fun fullOrbitDoesNotAllowSilentExtraPin() {
+        currentFavorites.value = (1..15).map { "pkg/app-$it" }
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Alpha").performTouchInput { longClick() }
+
+        composeRule.onNodeWithText("Pin to Orbit").assertIsNotEnabled()
+        composeRule.onNodeWithText("Orbit is full (15/15). Remove a pin first.").assertExists()
+        assertEquals(15, currentFavorites.value.size)
     }
 
     @Test

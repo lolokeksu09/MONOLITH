@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.23.0-beta — Quick Orbit management (candidate)
+- App context sheet (opened by long-press in All Apps, Orbit, or quick access) now offers **Pin to Orbit / Remove from Orbit** without visiting Settings. Updates use the existing `toggleOrbitFavorite` and `onOrbitFavoritesChange` callback, preserving saved favorites and order.
+- The 15-favorite limit is explicit: additional pins are disabled and show an explanatory label rather than silently doing nothing. Removing a favorite remains available at full capacity.
+- Orbit customizer adds a **Pinned only / All applications** filter, preserving existing favorites order and search, with an empty-state explanation when no apps are pinned.
+- RU/EN strings and UI regression tests cover pin/unpin, pinned-only filtering, the full-limit state, and persistent state updates.
+- **Locked app icon contract unchanged:** original Android app artwork, 0.21 icon sizes/positioning, Original/Mono/INK preferences, no extra icon framing or artwork edits.
+- No new permissions, services, network, analytics, database migrations, signing or application identity changes. Android CI and physical Lenovo Y70 checks remain separate acceptance gates.
+
+
 ## 0.22.0-beta — Restore app icon presentation from 0.21 (follow-up)
 - Restore original `9d58c01c` (`0.21.0-beta`) application icon tiles: original 44dp artwork in a 51dp transparent host with no extra matte background or outline.
 - Restore compact 304dp Orbit icon host and the original 0.21 icon spacing. Preserve the existing 48dp app hit targets, original 38dp artwork and centered ring/dot indicator.

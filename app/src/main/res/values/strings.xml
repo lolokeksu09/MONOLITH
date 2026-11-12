@@ -83,5 +83,11 @@
     <string name="reference_selected_count">Selected: %1$d of %2$d</string>
     <string name="reference_add">Add</string>
     <string name="reference_remove">Remove</string>
+    <string name="reference_pin_orbit">Pin to Orbit</string>
+    <string name="reference_unpin_orbit">Remove from Orbit</string>
+    <string name="reference_orbit_full">Orbit is full (%1$d/%2$d). Remove a pin first.</string>
+    <string name="reference_pinned_only">Pinned only</string>
+    <string name="reference_show_all_apps">All applications</string>
+    <string name="reference_no_pinned_apps">No pinned applications yet</string>
     <string name="reference_done">Done</string>
 </resources>
