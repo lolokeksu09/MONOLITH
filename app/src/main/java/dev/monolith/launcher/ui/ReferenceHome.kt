@@ -57,6 +57,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -367,16 +368,28 @@ private fun MinimalScene(
             }
         }
 
-        VerticalRailText(
-            text = now.format(DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())) +
-                "   /   " + now.format(DateTimeFormatter.ofPattern("EEE", Locale.getDefault()))
-                    .uppercase(Locale.getDefault()),
-            modifier = Modifier.align(Alignment.CenterStart)
-                .offset(y = 128.dp).padding(start = 16.dp),
-            fontSize = 16.sp,
-            color = Paper,
-            letterSpacing = .7.sp
-        )
+        // One optical timepiece instead of a duplicated rotated clock.
+        Column(
+            modifier = Modifier.align(Alignment.TopStart)
+                .padding(start = 29.dp, top = 150.dp, end = 24.dp)
+        ) {
+            Text(
+                "MONOLITH", color = Hint, fontSize = 11.sp,
+                fontWeight = FontWeight.Medium, letterSpacing = 2.4.sp
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                now.format(DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())),
+                color = Paper, fontSize = 78.sp, lineHeight = 84.sp,
+                fontWeight = FontWeight.Light, letterSpacing = (-3.8).sp,
+                maxLines = 1
+            )
+            Text(
+                now.format(DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.getDefault())),
+                color = Soft, fontSize = 13.sp, lineHeight = 19.sp,
+                maxLines = 1, overflow = TextOverflow.Ellipsis
+            )
+        }
         VerticalRailText(
             text = stringResource(R.string.reference_hold_hint),
             modifier = Modifier.align(Alignment.CenterStart)
@@ -390,13 +403,43 @@ private fun MinimalScene(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            val orbitScale = minOf(1f, (maxWidth.value - 28f) / 295f).coerceAtLeast(.92f)
+            // The wider optical field does not intercept clicks. App targets and
+            // the collapsed center control remain independently accessible.
+            val orbitScale = minOf(1f, (maxWidth.value - 24f) / 352f)
+                .coerceAtLeast(.78f) * 1.16f
             Box(
-                modifier = Modifier.size(304.dp),
+                modifier = Modifier.size(352.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // The 304dp host positions icons; it is not a giant invisible
-                // click target. The central button is exactly 48dp instead.
+                Canvas(
+                    Modifier.size(178.dp).graphicsLayer {
+                        alpha = (1f - orbitProgress * 1.4f).coerceIn(0f, 1f)
+                    }
+                ) {
+                    val center = Offset(size.width / 2f, size.height / 2f)
+                    val radius = size.minDimension * .44f
+                    drawCircle(
+                        Paper.copy(alpha = .23f), radius = radius, center = center,
+                        style = Stroke(width = .9.dp.toPx())
+                    )
+                    drawCircle(
+                        Paper.copy(alpha = .11f), radius = radius * .77f, center = center,
+                        style = Stroke(width = .75.dp.toPx())
+                    )
+                    val tick = 8.dp.toPx()
+                    drawLine(
+                        Paper.copy(alpha = .64f),
+                        Offset(center.x, center.y - radius - tick),
+                        Offset(center.x, center.y - radius + tick),
+                        strokeWidth = 1.2.dp.toPx()
+                    )
+                    drawLine(
+                        Paper.copy(alpha = .64f),
+                        Offset(center.x, center.y + radius - tick),
+                        Offset(center.x, center.y + radius + tick),
+                        strokeWidth = 1.2.dp.toPx()
+                    )
+                }
                 OrbitCluster(
                     apps, iconStyle, orbitOpen, orbitScale, orbitProgress, onLaunch, onActions
                 )
@@ -459,6 +502,28 @@ private fun MinimalScene(
                         stringResource(R.string.reference_close_orbit),
                         color = Soft, fontSize = 11.sp, letterSpacing = 1.sp
                     )
+                }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = !orbitOpen && apps.isNotEmpty(),
+            modifier = Modifier.align(Alignment.BottomCenter)
+                .padding(bottom = 169.dp),
+            enter = fadeIn(tween(if (motionDuration == 0) 0 else 160)),
+            exit = fadeOut(tween(if (motionDuration == 0) 0 else 120))
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    stringResource(R.string.reference_quick_apps),
+                    color = Soft, fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium, letterSpacing = 1.5.sp
+                )
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(22.dp)) {
+                    apps.take(4).forEach { app ->
+                        EditorialShortcut(app, iconStyle, onLaunch, onActions)
+                    }
                 }
             }
         }
