@@ -91,6 +91,10 @@ class MonolithScreenTest {
             .fetchSemanticsNode().boundsInRoot.width
         assertTrue("The optical dial must not expand the 48dp tap target",
             width <= settingsWidth * 1.5f)
+        center.performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("MONOLITH").assertDoesNotExist()
+        composeRule.onNodeWithText("QUICK ACCESS").assertDoesNotExist()
     }
 
     @Test
