@@ -75,6 +75,25 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun precisionHomeShowsTimepieceDockAndSmallOrbitHitTarget() {
+        launchMonolith(apps = listOf(appAlpha, appBeta))
+        composeRule.onNodeWithText("MONOLITH").assertExists()
+        composeRule.onNodeWithText("QUICK ACCESS").assertExists()
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+        composeRule.onNodeWithContentDescription("Alpha").assertExists()
+        val center = composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications collapsed"
+            )
+        )
+        val width = center.fetchSemanticsNode().boundsInRoot.width
+        val settingsWidth = composeRule.onNodeWithContentDescription("Settings")
+            .fetchSemanticsNode().boundsInRoot.width
+        assertTrue("The optical dial must not expand the 48dp tap target",
+            width <= settingsWidth * 1.5f)
+    }
+
+    @Test
     fun orbitTriggerOnlyOccupiesCentralTouchTarget() {
         launchMonolith(apps = listOf(appAlpha))
         val collapsed = composeRule.onNode(
