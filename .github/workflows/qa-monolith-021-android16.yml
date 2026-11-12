@@ -1,4 +1,4 @@
-name: MONOLITH 0.21 disposable Android 16 emulator QA
+name: MONOLITH 0.21 Android 16 UI and INK regression QA
 on:
   push:
     branches:
