@@ -2,6 +2,16 @@
 
 Source direction: the user-provided @ithemedesign TikTok video, not a copied paid theme.
 
+## Permanent native application icon contract (user decision, 2026-11-12)
+
+**Installed app icons are not MONOLITH design assets.** Keep the visual artwork supplied by the Android application: its original logo, colour, transparency, silhouette and optical proportions. MONOLITH may arrange icons, but must not redraw or redesign them while improving the launcher.
+
+- Source is the app's own activity icon from `PackageManager.getActivityIcon`; `AppIconStyle.ORIGINAL` is the default and remains unmodified. Never substitute third-party logos, icon packs, generic symbols, monochrome recolouring, shadows, masks, decorative plates or frames as an unsolicited visual improvement.
+- The **approved 0.21 rendering baseline** is locked: All Apps has a transparent 51dp host with original 44dp artwork; Orbit uses source artwork at 38dp inside an independent 48dp touch target, with the compact 304dp placement and the existing original indicator. UI design around the icons can improve, but the artwork and this presentation must not silently change.
+- Previously existing `Mono` and `INK` preference modes remain available **only as deliberate user-selected alternatives**. Neither mode may be applied automatically, including during upgrades. Do not delete existing preference state.
+- Never add new borders or colour backgrounds to All Apps/Orbit icons. Do not extend legacy Editorial chrome. Any deviation requires **separate explicit approval**, review and an updated test baseline.
+- The repository-level [engineering contract](../AGENTS.md) governs future changes. The executable `scripts/check_native_icon_fidelity.py` guard runs as a mandatory CI step; neither an attractive mockup nor a generic premium redesign overrides it.
+
 ## Design tokens
 
 - **Ink** `#000000` — AMOLED landing and drawer.

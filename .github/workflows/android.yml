@@ -29,6 +29,8 @@ jobs:
           "$SDKMANAGER" --install "platforms;android-36" "build-tools;35.0.0"
       - name: Validate Termux signing script syntax
         run: bash -n scripts/setup-signing-termux.sh
+      - name: Enforce unmodified native Android app icons
+        run: python3 scripts/check_native_icon_fidelity.py
       - name: Unit tests, Android Lint, debug APK
         run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
       - name: Verify release signing using a disposable CI-only key
