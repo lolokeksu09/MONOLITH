@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.24.0-beta — Orbit organization and safer history management (candidate)
+
+- Split the Orbit app manager into **Pinned** (saved order) and **Available** sections with explicit counts. Existing **Pinned only / All applications** filtering and search remain intact.
+- Replace unexplained miniature arrow controls with 48dp accessible move-up/down actions, localized per-app spoken labels and clearly disabled boundary actions. Pinned item order still writes through the existing `moveOrbitFavorite` path; no storage migration.
+- Add a proper search-clear action and IME Search handling in Orbit customization; clearing the query restores both groups without changing saved favorites.
+- Add a confirmation before deleting launcher-local launch history: cancel leaves data untouched, confirm calls the existing clear callback exactly once. The dialog clearly distinguishes launch history from saved shortcuts and settings.
+- RU/EN localization and Robolectric tests for reordering, visible grouping, search recovery, cancel and confirm.
+- **Strict icon policy preserved:** no changes to `AppIconCache`, app icons, All Apps icon tiles, Orbit artwork or color modes. No new permission, network, app identity, preference migration or signing key.
+- Exact-commit CI and Android emulator screenshots required before the signed release; physical Lenovo Legion Y70 acceptance remains outstanding.
+
+
 ## 0.23.0-beta — Quick Orbit management (candidate)
 - App context sheet (opened by long-press in All Apps, Orbit, or quick access) now offers **Pin to Orbit / Remove from Orbit** without visiting Settings. Updates use the existing `toggleOrbitFavorite` and `onOrbitFavoritesChange` callback, preserving saved favorites and order.
 - The 15-favorite limit is explicit: additional pins are disabled and show an explanatory label rather than silently doing nothing. Removing a favorite remains available at full capacity.
