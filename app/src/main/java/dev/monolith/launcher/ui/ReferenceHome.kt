@@ -66,7 +66,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -76,8 +75,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -369,12 +366,16 @@ private fun MinimalScene(
         }
 
         // One optical timepiece instead of a duplicated rotated clock.
-        Column(
+        AnimatedVisibility(
+            visible = !orbitOpen,
             modifier = Modifier.align(Alignment.TopStart)
-                .padding(start = 29.dp, top = 150.dp, end = 24.dp)
+                .padding(start = 29.dp, top = 150.dp, end = 24.dp),
+            enter = fadeIn(tween(if (motionDuration == 0) 0 else 180)),
+            exit = fadeOut(tween(if (motionDuration == 0) 0 else 140))
         ) {
-            Text(
-                "MONOLITH", color = Hint, fontSize = 11.sp,
+            Column {
+                Text(
+                    "MONOLITH", color = Hint, fontSize = 11.sp,
                 fontWeight = FontWeight.Medium, letterSpacing = 2.4.sp
             )
             Spacer(Modifier.height(10.dp))
@@ -388,16 +389,9 @@ private fun MinimalScene(
                 now.format(DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.getDefault())),
                 color = Soft, fontSize = 13.sp, lineHeight = 19.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis
-            )
+                )
+            }
         }
-        VerticalRailText(
-            text = stringResource(R.string.reference_hold_hint),
-            modifier = Modifier.align(Alignment.CenterStart)
-                .offset(y = (-105).dp).padding(start = 18.dp),
-            color = Hint,
-            fontSize = 11.sp,
-            letterSpacing = .7.sp
-        )
 
         BoxWithConstraints(
             modifier = Modifier.fillMaxSize(),
@@ -545,41 +539,6 @@ private fun MinimalScene(
                 .padding(start = 30.dp, bottom = 102.dp),
             fontSize = 12.sp, color = Hint, letterSpacing = .4.sp
         )
-    }
-}
-
-@Composable
-private fun VerticalRailText(
-    text: String,
-    modifier: Modifier,
-    color: Color,
-    fontSize: TextUnit,
-    letterSpacing: TextUnit
-) {
-    Layout(
-        content = {
-            Text(
-                text = text,
-                color = color,
-                fontSize = fontSize,
-                letterSpacing = letterSpacing,
-                maxLines = 1,
-                softWrap = false
-            )
-        },
-        modifier = modifier
-    ) { measurables, _ ->
-        val placeable = measurables.single().measure(Constraints())
-        val rotatedWidth = placeable.height
-        val rotatedHeight = placeable.width
-        layout(rotatedWidth, rotatedHeight) {
-            placeable.placeWithLayer(
-                x = (rotatedWidth - placeable.width) / 2,
-                y = (rotatedHeight - placeable.height) / 2
-            ) {
-                rotationZ = -90f
-            }
-        }
     }
 }
 
