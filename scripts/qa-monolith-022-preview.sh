@@ -25,8 +25,8 @@ adb shell wm size 1080x2400
 adb shell wm density 420
 adb shell settings put system accelerometer_rotation 0 || true
 adb install -r "$APK"
-adb shell dumpsys package dev.monolith.launcher.preview.preview | grep -E 'versionCode=|versionName=' | head -3 >> "$OUT/report.txt"
-if ! adb shell dumpsys package dev.monolith.launcher.preview.preview | grep -Fq 'versionName=0.22.0-beta-preview'; then
+adb shell dumpsys package dev.monolith.launcher.preview | grep -E 'versionCode=|versionName=' | head -3 >> "$OUT/report.txt"
+if ! adb shell dumpsys package dev.monolith.launcher.preview | grep -Fq 'versionName=0.22.0-beta-preview'; then
   echo 'FAIL: 0.22 Preview not installed' >> "$OUT/report.txt"
   exit 1
 fi
