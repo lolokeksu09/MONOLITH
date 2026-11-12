@@ -143,6 +143,7 @@ fun MonolithScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var debouncedQuery by rememberSaveable { mutableStateOf("") }
     var orbitQuery by rememberSaveable { mutableStateOf("") }
+    var orbitPinnedOnly by rememberSaveable { mutableStateOf(false) }
     var selectedApp by remember { mutableStateOf<LaunchableApp?>(null) }
     // Unicode collation and full-catalog sorting happen away from the UI thread.
     // The retained result from a previous effect is never displayed when the
@@ -557,16 +558,45 @@ fun MonolithScreen(
                     val listed = remember(available, byId, orbitFavorites) {
                         orbitFavorites.mapNotNull(byId::get) + available.filterNot { it.id in orbitFavorites }
                     }
-                    val filtered = remember(listed, orbitQuery) { filterApps(listed, orbitQuery) }
+                    val filtered = remember(listed, orbitQuery, orbitPinnedOnly, orbitFavorites) {
+                        val candidates = if (orbitPinnedOnly) {
+                            listed.filter { it.id in orbitFavorites }
+                        } else {
+                            listed
+                        }
+                        filterApps(candidates, orbitQuery)
+                    }
                     Column(
                         modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)
                             .padding(horizontal = 20.dp, vertical = 14.dp)
                     ) {
                         Text(stringResource(R.string.reference_customize_orbit),
                             fontSize = 26.sp, fontWeight = FontWeight.SemiBold)
-                        Text(stringResource(R.string.reference_selected_count, orbitFavorites.size, ORBIT_CAPACITY),
-                            color = Muted, fontSize = 13.sp)
-                        Spacer(Modifier.height(14.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                stringResource(
+                                    R.string.reference_selected_count, orbitFavorites.size, ORBIT_CAPACITY
+                                ),
+                                color = Muted, fontSize = 13.sp
+                            )
+                            TextButton(
+                                enabled = orbitFavorites.isNotEmpty() || orbitPinnedOnly,
+                                onClick = { orbitPinnedOnly = !orbitPinnedOnly }
+                            ) {
+                                Text(
+                                    stringResource(
+                                        if (orbitPinnedOnly) R.string.reference_show_all_apps
+                                        else R.string.reference_pinned_only
+                                    ),
+                                    fontSize = 12.sp, maxLines = 1
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(12.dp))
                         TextField(
                             value = orbitQuery,
                             onValueChange = { orbitQuery = it },
@@ -585,6 +615,19 @@ fun MonolithScreen(
                         )
                         Spacer(Modifier.height(9.dp))
                         LazyColumn(Modifier.weight(1f)) {
+                            if (filtered.isEmpty()) {
+                                item {
+                                    Text(
+                                        stringResource(
+                                            if (orbitPinnedOnly && orbitFavorites.isEmpty())
+                                                R.string.reference_no_pinned_apps
+                                            else R.string.no_results
+                                        ),
+                                        color = Muted, fontSize = 13.sp,
+                                        modifier = Modifier.padding(vertical = 16.dp)
+                                    )
+                                }
+                            }
                             items(filtered, key = { it.id }) { app ->
                                 val selected = app.id in orbitFavorites
                                 Row(
@@ -668,6 +711,30 @@ fun MonolithScreen(
                     TextButton(onClick = { launchAndReturnHome(app) }) {
                         Text(stringResource(R.string.open_app))
                     }
+                    val pinnedToOrbit = app.id in orbitFavorites
+                    TextButton(
+                        enabled = pinnedToOrbit || orbitFavorites.size < ORBIT_CAPACITY,
+                        onClick = {
+                            onOrbitFavoritesChange(toggleOrbitFavorite(orbitFavorites, app.id))
+                        }
+                    ) {
+                        Text(
+                            stringResource(
+                                if (pinnedToOrbit) R.string.reference_unpin_orbit
+                                else R.string.reference_pin_orbit
+                            )
+                        )
+                    }
+                    Text(
+                        stringResource(
+                            if (!pinnedToOrbit && orbitFavorites.size == ORBIT_CAPACITY)
+                                R.string.reference_orbit_full
+                            else R.string.reference_selected_count,
+                            orbitFavorites.size, ORBIT_CAPACITY
+                        ),
+                        modifier = Modifier.padding(start = 12.dp),
+                        color = Muted, fontSize = 11.sp
+                    )
                     TextButton(onClick = { selectedApp = null; onAppInfo(app) }) {
                         Text(stringResource(R.string.app_info))
                     }
