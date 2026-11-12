@@ -71,7 +71,7 @@
     <string name="reference_play_pause">Передать системному плееру команду воспроизведения или паузы</string>
     <string name="reference_next_track">Передать системному плееру команду следующей композиции</string>
     <string name="reference_dismiss_orbit">Закрыть раскрытый круг приложений</string>
-    <string name="reference_close_orbit">Закрыть приложения</string>
+    <string name="reference_close_orbit">Свернуть круг</string>
     <string name="reference_customize_orbit">Настроить круг приложений</string>
     <string name="reference_customize_hint">Выбери до 15 приложений и их порядок. Остальные места заполняются часто запускаемыми программами.</string>
     <string name="reference_selected_count">Выбрано: %1$d из %2$d</string>
