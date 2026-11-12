@@ -1,0 +1,43 @@
+name: MONOLITH 0.23 signed Android 16 Orbit quick-pin QA
+on:
+  push:
+    branches:
+      - qa/023-signed-quick-pin-android16-20261112
+    paths:
+      - '.github/workflows/qa-023-signed-android16.yml'
+permissions:
+  contents: read
+jobs:
+  android16:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable emulator KVM acceleration
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install signed 0.22 then 0.23; test long-press and pinned-only filter
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          cores: 2
+          ram-size: 2048M
+          disk-size: 6000M
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: bash scripts/qa-monolith-023-signed.sh
+      - name: Upload screenshots, UI hierarchies and crash evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MONOLITH-023-signed-Android16-Orbit-evidence
+          path: qa-results-023/
+          if-no-files-found: warn
+          retention-days: 10
