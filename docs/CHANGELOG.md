@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.22.0-beta — Orbit icon simplification (follow-up)
+- Remove the additional decorative concentric rings and cardinal tick marks introduced around the collapsed Orbit icon in 0.22. Keep only the original small ring and center dot, the 48dp touch target, the enlarged application layout, and the functional quick-launch dock.
+- No change to Orbit opening, closing, app hit targets, animations, app data, theme settings, signing, permissions or Android HOME behavior.
+
 ## 0.22.0-beta — Distinctive MONOLITH home and app library
 - Replace the duplicated small rotated time readout on the Minimal HOME with a clear 78sp live timepiece, localized long date and subtle MONOLITH wordmark. Preserve the slim interaction rail and AMOLED black background.
 - Add a restrained precision dial to the collapsed Orbit, an explicit "OPEN ORBIT" label, and a quick-launch row showing up to four actual apps. The new shortcuts use the existing launch/long-press actions; the 48dp center hit target and wallpaper-safe empty-space dismissal remain unchanged.
