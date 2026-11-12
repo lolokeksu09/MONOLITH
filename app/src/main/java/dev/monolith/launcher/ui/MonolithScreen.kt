@@ -274,9 +274,19 @@ fun MonolithScreen(
                                     tint = Foreground
                                 )
                             }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(stringResource(R.string.drawer_title), fontSize = 23.sp,
-                                    fontWeight = FontWeight.SemiBold, letterSpacing = (-.35).sp)
+                            Column(
+                                modifier = Modifier.weight(1f).padding(start = 10.dp),
+                                horizontalAlignment = Alignment.Start
+                            ) {
+                                Text(
+                                    "MONOLITH", color = Muted, fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium, letterSpacing = 2.sp
+                                )
+                                Text(
+                                    stringResource(R.string.drawer_title),
+                                    fontSize = 32.sp, fontWeight = FontWeight.SemiBold,
+                                    letterSpacing = (-.8).sp, lineHeight = 38.sp
+                                )
                             }
                             TextButton(
                                 onClick = {
@@ -292,7 +302,9 @@ fun MonolithScreen(
                                 )
                             }
                         }
-                        Spacer(Modifier.height(9.dp))
+                        Spacer(Modifier.height(10.dp))
+                        Box(Modifier.fillMaxWidth().height(1.dp).background(Outline))
+                        Spacer(Modifier.height(17.dp))
                         val bottomSearch = preferences.drawerSearchPosition ==
                             DrawerSearchPosition.BOTTOM
                         if (preferences.showDrawerSearch && !bottomSearch) {
@@ -360,6 +372,7 @@ fun MonolithScreen(
                                     DrawerAppTile(
                                         app = app,
                                         iconStyle = preferences.appIconStyle,
+                                        columns = preferences.drawerColumns,
                                         onLaunch = { launchAndReturnHome(app) },
                                         onActions = { selectedApp = app }
                                     )
@@ -392,17 +405,14 @@ fun MonolithScreen(
                         Spacer(Modifier.width(3.dp))
                         Text(
                             stringResource(R.string.settings),
-                            fontSize = 28.sp,
+                            fontSize = 34.sp,
                             fontWeight = FontWeight.SemiBold,
-                            letterSpacing = (-.6).sp
+                            letterSpacing = (-1).sp
                         )
                     }
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        stringResource(R.string.reference_only_description),
-                        color = Muted, fontSize = 13.sp, lineHeight = 19.sp
-                    )
-                    Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(24.dp))
+                    // The controls explain themselves; the previous tutorial
+                    // paragraph created noise on every visit to Settings.
                     SettingsSectionHeading(stringResource(R.string.settings_section_appearance))
                     Text(stringResource(R.string.appearance_title), color = Muted, fontSize = 13.sp)
                     Spacer(Modifier.height(8.dp))
@@ -773,12 +783,24 @@ private fun ChoiceButton(
 private fun DrawerAppTile(
     app: LaunchableApp,
     iconStyle: AppIconStyle,
+    columns: Int,
     onLaunch: () -> Unit,
     onActions: () -> Unit
 ) {
     val bitmap = rememberAppIcon(app, iconStyle)
+    val frame = when {
+        columns >= 6 -> 43.dp
+        columns == 5 -> 49.dp
+        else -> 59.dp
+    }
+    val artwork = when {
+        columns >= 6 -> 33.dp
+        columns == 5 -> 37.dp
+        else -> 43.dp
+    }
+    val frameShape = RoundedCornerShape(17.dp)
     Column(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp).combinedClickable(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 101.dp).combinedClickable(
             onClickLabel = stringResource(R.string.open_app),
             onLongClickLabel = stringResource(R.string.app_actions),
             onClick = onLaunch,
@@ -786,18 +808,26 @@ private fun DrawerAppTile(
         ).padding(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(Modifier.size(51.dp), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier.size(frame)
+                .background(Panel, frameShape)
+                .border(.6.dp, Outline, frameShape),
+            contentAlignment = Alignment.Center
+        ) {
             if (bitmap != null) {
                 Image(
                     bitmap.asImageBitmap(),
                     contentDescription = null,
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(artwork)
                 )
             } else {
-                Text(app.label.take(1), fontSize = 24.sp, color = Foreground)
+                Text(
+                    app.label.take(1).uppercase(), fontSize = 22.sp,
+                    fontWeight = FontWeight.Medium, color = Foreground
+                )
             }
         }
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(9.dp))
         Text(
             app.label,
             color = Foreground,
@@ -815,7 +845,11 @@ private fun DrawerAppTile(
 private fun SortPicker(selected: AppSort, onChange: (AppSort) -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box {
-        TextButton(onClick = { open = true }) {
+        TextButton(
+            onClick = { open = true },
+            modifier = Modifier.border(.7.dp, Outline, RoundedCornerShape(13.dp))
+                .heightIn(min = 46.dp)
+        ) {
             Icon(
                 painterResource(R.drawable.ic_sort),
                 contentDescription = null,
