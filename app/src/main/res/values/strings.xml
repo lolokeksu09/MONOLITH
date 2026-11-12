@@ -89,5 +89,13 @@
     <string name="reference_pinned_only">Pinned only</string>
     <string name="reference_show_all_apps">All applications</string>
     <string name="reference_no_pinned_apps">No pinned applications yet</string>
+    <string name="history_clear_title">Clear launch history?</string>
+    <string name="history_clear_explanation">This deletes MONOLITH launch counts and recent-launch history. Pinned apps and settings stay unchanged.</string>
+    <string name="history_clear_confirm">Clear history</string>
+    <string name="cancel">Cancel</string>
+    <string name="reference_pinned_header">Pinned (%1$d)</string>
+    <string name="reference_available_header">Available (%1$d)</string>
+    <string name="reference_move_up">Move %1$s up</string>
+    <string name="reference_move_down">Move %1$s down</string>
     <string name="reference_done">Done</string>
 </resources>
