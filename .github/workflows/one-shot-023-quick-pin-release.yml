@@ -1,0 +1,29 @@
+name: MONOLITH 0.23 one-time permanent-signed release dispatch
+on:
+  push:
+    branches:
+      - ops/dispatch-023-orbit-quick-pin-20261112
+permissions:
+  contents: read
+  actions: write
+jobs:
+  dispatch:
+    if: "${{ github.repository == 'lolokeksu09/MONOLITH' && github.event.head_commit.message == 'ops: dispatch verified MONOLITH 0.23 quick Orbit release' }}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify main is the exact CI-tested Orbit enhancement
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO="$GITHUB_REPOSITORY"
+          EXPECTED_MAIN='cb20572700ba391112a0c651e0e427a9231dc77d'
+          test "$(gh api "repos/$REPO/commits/main" --jq '.sha')" = "$EXPECTED_MAIN"
+          VERSION="$(gh api "repos/$REPO/contents/gradle.properties?ref=main" --jq '.content' | base64 --decode | sed -n 's/^monolithVersionName=//p')"
+          test "$VERSION" = '0.23.0-beta'
+          test "$(gh api "repos/$REPO/actions/runs/43209162489" --jq '.conclusion')" = success
+      - name: Dispatch existing pinned-certificate release on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run android.yml -R "$GITHUB_REPOSITORY" --ref main
