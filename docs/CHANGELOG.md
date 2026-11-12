@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.21.0-beta — Precision visual refinement (candidate)
+- Refine the existing AMOLED Reference HOME instead of introducing a new theme: brighter secondary typography and hints, a more legible vertical clock, a clearer central Orbit trigger and better-weighted 38dp Orbit app artwork inside unchanged 48dp hit targets.
+- Improve Editorial shortcut icon legibility while retaining the offline rock artwork and original scene structure.
+- Rework Settings into four intentional sections (Appearance, Orbit, App drawer and Management) with a consistent control style and an explicit Back action respecting the current navigation origin.
+- Improve the All Apps header, four-column grid rhythm, app labels and search field silhouette; keep saved column count, sort logic and search position unchanged.
+- Localize concise RU/EN descriptions; keep the accurate INK/Original fallback, search defaults, launch-statistics limitations and preservation of saved data.
+- Add a Robolectric Compose regression for Settings sections and Back to All Apps. No permission, network, app ID, signing key, HOME gesture, persistence schema or media behavior changes.
+- **Verification pending:** exact-head CI, preview APK, physical Lenovo Legion Y70 screenshot/motion/contrast acceptance. Static inspection of the user's 2026-11-12 video is not a device performance test. No stable 1.0 claim.
+
+
 ## Unreleased — Orbit action label clarification
 - The expanded Orbit close action now reads “Collapse orbit” / “Свернуть круг” instead of “Close apps” / “Закрыть приложения”, which could wrongly suggest stopping running apps. This is a text-only UI clarification; the click handler, navigation, application lifecycle, accessibility dismiss description, settings, signing identity and permissions are unchanged.
 - Verified against the actual `ReferenceHome.kt` onToggleOrbit handler. This entry is **not included in published signed `v0.20.0-beta.428`**; no new APK has been published for this change.

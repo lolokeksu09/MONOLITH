@@ -237,6 +237,21 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun precisionSettingsHaveSectionsAndPreserveDrawerBackOrigin() {
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Appearance").assertExists()
+        composeRule.onNodeWithText("Orbit").assertExists()
+        composeRule.onNodeWithText("App drawer").assertExists()
+        composeRule.onNodeWithText("Management").assertExists()
+        composeRule.onNodeWithContentDescription("Back").performClick()
+        composeRule.onNodeWithText("Apps").assertIsDisplayed()
+    }
+
+    @Test
     fun settingsIconModeSelectionIsAnnouncedAndReported() {
         val received = mutableListOf<LauncherPreferences>()
         launchMonolith(onPreferencesChange = {
