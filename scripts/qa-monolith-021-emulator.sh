@@ -136,4 +136,51 @@ fi
 sleep 2
 capture '08_editorial'
 
-echo 'DONE: inspect screenshots, XML, report and crash-excerpts before claiming UI success' >> "$OUT/report.txt"
+
+# Second acceptance pass: verify actual All Apps -> Settings -> Back navigation.
+adb shell am force-stop dev.monolith.launcher || true
+adb shell am start -n dev.monolith.launcher/.MainActivity >/dev/null
+sleep 2
+tap_label 'ALL APPS'
+sleep 2
+capture '09_drawer_before_settings'
+tap_label 'Settings'
+sleep 2
+capture '10_settings_from_drawer'
+tap_label 'INK'
+sleep 1
+capture '11_settings_ink_selected'
+tap_label 'Back'
+sleep 2
+capture '12_drawer_after_settings'
+python3 - "$OUT/12_drawer_after_settings.xml" <<'PY'
+import sys,xml.etree.ElementTree as ET
+root=ET.parse(sys.argv[1]).getroot()
+labels=[' '.join([n.get('text',''),n.get('content-desc','')]) for n in root.iter('node')]
+if not any('Search applications' in label for label in labels):
+  raise SystemExit('FAIL: Back from Settings did not restore the All Apps search field')
+print('PASS: Back from Settings returned to All Apps')
+PY
+echo 'PASS: Settings Back from All Apps returned to the drawer' >> "$OUT/report.txt"
+
+# Check that selected monochrome INK renders on HOME and in the drawer.
+adb shell am force-stop dev.monolith.launcher || true
+adb shell am start -n dev.monolith.launcher/.MainActivity >/dev/null
+sleep 2
+adb shell input tap 540 1200
+sleep 1
+capture '13_home_orbit_ink'
+tap_label 'ALL APPS'
+sleep 2
+capture '14_drawer_ink'
+
+# Larger Android font: observe instead of claiming layout acceptance.
+adb shell settings put system font_scale 1.3
+adb shell am force-stop dev.monolith.launcher || true
+adb shell am start -n dev.monolith.launcher/.MainActivity >/dev/null
+sleep 2
+tap_label 'Settings'
+sleep 2
+capture '15_settings_large_font'
+adb shell settings put system font_scale 1.0
+echo 'DONE: screenshots, labels and logs captured; manually assess scaling and quality' >> "$OUT/report.txt"
