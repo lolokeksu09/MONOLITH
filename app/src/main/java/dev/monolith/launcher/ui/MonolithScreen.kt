@@ -554,6 +554,7 @@ fun MonolithScreen(
                     )
                 }
                 Screen.ORBIT_APPS -> {
+                    val keyboardController = LocalSoftwareKeyboardController.current
                     val available = remember(apps, hiddenApps) {
                         filterHiddenApps(apps, hiddenApps).sortedBy { it.label.lowercase() }
                     }
@@ -608,7 +609,22 @@ fun MonolithScreen(
                             leadingIcon = {
                                 Icon(painterResource(R.drawable.ic_search), contentDescription = null)
                             },
-                            singleLine = true, shape = RoundedCornerShape(12.dp),
+                            trailingIcon = if (orbitQuery.isEmpty()) null else ({
+                                TextButton(
+                                    onClick = { orbitQuery = "" },
+                                    modifier = Modifier.size(48.dp)
+                                ) {
+                                    Icon(
+                                        painterResource(R.drawable.ic_close),
+                                        contentDescription = stringResource(R.string.drawer_clear_search),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                            keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
+                            shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth(),
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Panel, unfocusedContainerColor = Panel,
