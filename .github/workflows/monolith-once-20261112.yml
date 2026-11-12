@@ -7,7 +7,7 @@ on:
 permissions: {}
 jobs:
   dispatch-existing-signed-release:
-    if: github.repository == 'lolokeksu09/MONOLITH' && github.ref == 'refs/heads/main' && github.event.head_commit.message == 'chore: request one-shot signed MONOLITH 0.20 update'
+    if: "${{ github.repository == 'lolokeksu09/MONOLITH' && github.ref == 'refs/heads/main' && github.event.head_commit.message == 'chore: activate one-shot MONOLITH signed update' }}"
     runs-on: ubuntu-latest
     permissions:
       actions: write
