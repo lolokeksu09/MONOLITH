@@ -57,7 +57,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -397,48 +396,19 @@ private fun MinimalScene(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            // The wider optical field does not intercept clicks. App targets and
-            // the collapsed center control remain independently accessible.
+            // The larger Orbit layout keeps its existing 48dp app and trigger targets.
+            // Extra rings and tick marks are intentionally absent.
             val orbitScale = minOf(1f, (maxWidth.value - 24f) / 352f)
                 .coerceAtLeast(.78f) * 1.16f
             Box(
                 modifier = Modifier.size(352.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Canvas(
-                    Modifier.size(178.dp).graphicsLayer {
-                        alpha = (1f - orbitProgress * 1.4f).coerceIn(0f, 1f)
-                    }
-                ) {
-                    val center = Offset(size.width / 2f, size.height / 2f)
-                    val radius = size.minDimension * .44f
-                    drawCircle(
-                        Paper.copy(alpha = .23f), radius = radius, center = center,
-                        style = Stroke(width = .9.dp.toPx())
-                    )
-                    drawCircle(
-                        Paper.copy(alpha = .11f), radius = radius * .77f, center = center,
-                        style = Stroke(width = .75.dp.toPx())
-                    )
-                    val tick = 8.dp.toPx()
-                    drawLine(
-                        Paper.copy(alpha = .64f),
-                        Offset(center.x, center.y - radius - tick),
-                        Offset(center.x, center.y - radius + tick),
-                        strokeWidth = 1.2.dp.toPx()
-                    )
-                    drawLine(
-                        Paper.copy(alpha = .64f),
-                        Offset(center.x, center.y + radius - tick),
-                        Offset(center.x, center.y + radius + tick),
-                        strokeWidth = 1.2.dp.toPx()
-                    )
-                }
                 OrbitCluster(
                     apps, iconStyle, orbitOpen, orbitScale, orbitProgress, onLaunch, onActions
                 )
-                // A quiet label makes the small, accessible 48dp trigger
-                // discoverable without turning the whole dial into a button.
+                // A quiet label makes the small, accessible 48dp trigger discoverable
+                // without expanding its hit box.
                 if (!orbitOpen) {
                     Text(
                         stringResource(R.string.reference_open_orbit),
