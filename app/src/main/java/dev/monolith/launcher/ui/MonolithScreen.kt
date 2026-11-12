@@ -37,6 +37,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -69,6 +70,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -144,6 +146,7 @@ fun MonolithScreen(
     var debouncedQuery by rememberSaveable { mutableStateOf("") }
     var orbitQuery by rememberSaveable { mutableStateOf("") }
     var orbitPinnedOnly by rememberSaveable { mutableStateOf(false) }
+    var confirmClearLaunchHistory by rememberSaveable { mutableStateOf(false) }
     var selectedApp by remember { mutableStateOf<LaunchableApp?>(null) }
     // Unicode collation and full-catalog sorting happen away from the UI thread.
     // The retained result from a previous effect is never displayed when the
@@ -532,7 +535,7 @@ fun MonolithScreen(
                     Spacer(Modifier.height(10.dp))
                     SettingsAction(
                         title = stringResource(R.string.clear_launches),
-                        onClick = onClearLaunchHistory
+                        onClick = { confirmClearLaunchHistory = true }
                     )
                     Spacer(Modifier.height(14.dp))
                     if (!isDefaultHome) {
@@ -614,6 +617,8 @@ fun MonolithScreen(
                             )
                         )
                         Spacer(Modifier.height(9.dp))
+                        val pinnedVisible = filtered.filter { it.id in orbitFavorites }
+                        val availableVisible = filtered.filterNot { it.id in orbitFavorites }
                         LazyColumn(Modifier.weight(1f)) {
                             if (filtered.isEmpty()) {
                                 item {
@@ -628,31 +633,53 @@ fun MonolithScreen(
                                     )
                                 }
                             }
-                            items(filtered, key = { it.id }) { app ->
-                                val selected = app.id in orbitFavorites
-                                Row(
-                                    Modifier.fillMaxWidth().heightIn(min = 56.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(app.label, modifier = Modifier.weight(1f),
-                                        color = Foreground, fontSize = 13.sp,
-                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    if (selected && orbitQuery.isBlank()) {
-                                        TextButton(
-                                            onClick = { onOrbitFavoritesChange(moveOrbitFavorite(orbitFavorites, app.id, -1)) },
-                                            enabled = orbitFavorites.indexOf(app.id) > 0
-                                        ) { Text("↑", fontSize = 17.sp) }
-                                        TextButton(
-                                            onClick = { onOrbitFavoritesChange(moveOrbitFavorite(orbitFavorites, app.id, 1)) },
-                                            enabled = orbitFavorites.indexOf(app.id) < orbitFavorites.lastIndex
-                                        ) { Text("↓", fontSize = 17.sp) }
-                                    }
-                                    TextButton(
-                                        enabled = selected || orbitFavorites.size < ORBIT_CAPACITY,
-                                        onClick = { onOrbitFavoritesChange(toggleOrbitFavorite(orbitFavorites, app.id)) }
-                                    ) {
-                                        Text(stringResource(if(selected) R.string.reference_remove else R.string.reference_add))
-                                    }
+                            if (pinnedVisible.isNotEmpty()) {
+                                item {
+                                    OrbitManagerSectionLabel(
+                                        stringResource(R.string.reference_pinned_header, pinnedVisible.size)
+                                    )
+                                }
+                                items(pinnedVisible, key = { it.id }) { app ->
+                                    val position = orbitFavorites.indexOf(app.id)
+                                    OrbitManagerRow(
+                                        app = app,
+                                        pinnedIndex = position,
+                                        pinnedCount = orbitFavorites.size,
+                                        canAdd = false,
+                                        allowReorder = orbitQuery.isBlank(),
+                                        onMove = { delta ->
+                                            onOrbitFavoritesChange(
+                                                moveOrbitFavorite(orbitFavorites, app.id, delta)
+                                            )
+                                        },
+                                        onToggle = {
+                                            onOrbitFavoritesChange(
+                                                toggleOrbitFavorite(orbitFavorites, app.id)
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                            if (availableVisible.isNotEmpty()) {
+                                item {
+                                    OrbitManagerSectionLabel(
+                                        stringResource(R.string.reference_available_header, availableVisible.size)
+                                    )
+                                }
+                                items(availableVisible, key = { it.id }) { app ->
+                                    OrbitManagerRow(
+                                        app = app,
+                                        pinnedIndex = -1,
+                                        pinnedCount = orbitFavorites.size,
+                                        canAdd = orbitFavorites.size < ORBIT_CAPACITY,
+                                        allowReorder = false,
+                                        onMove = {},
+                                        onToggle = {
+                                            onOrbitFavoritesChange(
+                                                toggleOrbitFavorite(orbitFavorites, app.id)
+                                            )
+                                        }
+                                    )
                                 }
                             }
                         }
@@ -700,6 +727,35 @@ fun MonolithScreen(
                     }
                 }
             }
+        }
+
+        if (confirmClearLaunchHistory) {
+            AlertDialog(
+                onDismissRequest = { confirmClearLaunchHistory = false },
+                title = { Text(stringResource(R.string.history_clear_title)) },
+                text = { Text(stringResource(R.string.history_clear_explanation)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            confirmClearLaunchHistory = false
+                            onClearLaunchHistory()
+                        }
+                    ) {
+                        Text(
+                            stringResource(R.string.history_clear_confirm),
+                            color = Color(0xFFE9A19A)
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { confirmClearLaunchHistory = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                },
+                containerColor = Panel,
+                titleContentColor = Foreground,
+                textContentColor = Muted
+            )
         }
 
         selectedApp?.let { app ->
@@ -787,6 +843,88 @@ private fun DrawerSearchField(
             unfocusedIndicatorColor = Color.Transparent
         )
     )
+}
+
+@Composable
+private fun OrbitManagerSectionLabel(title: String) {
+    Text(
+        title,
+        color = Muted,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Medium,
+        letterSpacing = .5.sp,
+        modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 5.dp)
+    )
+}
+
+@Composable
+private fun OrbitManagerRow(
+    app: LaunchableApp,
+    pinnedIndex: Int,
+    pinnedCount: Int,
+    canAdd: Boolean,
+    allowReorder: Boolean,
+    onMove: (Int) -> Unit,
+    onToggle: () -> Unit
+) {
+    val pinned = pinnedIndex >= 0
+    val moveUpLabel = stringResource(R.string.reference_move_up, app.label)
+    val moveDownLabel = stringResource(R.string.reference_move_down, app.label)
+    Row(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (pinned) {
+            Text(
+                (pinnedIndex + 1).toString().padStart(2, '0'),
+                modifier = Modifier.width(29.dp),
+                color = Muted, fontSize = 12.sp
+            )
+        }
+        Text(
+            app.label,
+            modifier = Modifier.weight(1f),
+            color = Foreground,
+            fontSize = 14.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        if (pinned && allowReorder) {
+            TextButton(
+                onClick = { onMove(-1) },
+                enabled = pinnedIndex > 0,
+                modifier = Modifier.size(48.dp).semantics {
+                    contentDescription = moveUpLabel
+                },
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Text("↑", fontSize = 18.sp)
+            }
+            TextButton(
+                onClick = { onMove(1) },
+                enabled = pinnedIndex < pinnedCount - 1,
+                modifier = Modifier.size(48.dp).semantics {
+                    contentDescription = moveDownLabel
+                },
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Text("↓", fontSize = 18.sp)
+            }
+        }
+        TextButton(
+            enabled = pinned || canAdd,
+            onClick = onToggle,
+            modifier = Modifier.heightIn(min = 48.dp),
+            contentPadding = PaddingValues(horizontal = 7.dp)
+        ) {
+            Text(
+                stringResource(
+                    if (pinned) R.string.reference_remove else R.string.reference_add
+                ),
+                fontSize = 13.sp
+            )
+        }
+    }
 }
 
 @Composable
