@@ -1,0 +1,31 @@
+name: MONOLITH 0.21 one-time release request
+on:
+  push:
+    branches: [ops/dispatch-021-precision-20261112]
+permissions:
+  contents: read
+  actions: write
+jobs:
+  dispatch:
+    if: "${{ github.repository == 'lolokeksu09/MONOLITH' && github.event.head_commit.message == 'ops: request signed MONOLITH 0.21 Precision update' }}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require exact merged source, verified CI and 0.21 baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO="$GITHUB_REPOSITORY"
+          EXPECTED_MAIN='9d58c01c82adcc9c79bb5b0fe67863cc308773e0'
+          ACTUAL_MAIN="$(gh api "repos/$REPO/commits/main" --jq '.sha')"
+          test "$ACTUAL_MAIN" = "$EXPECTED_MAIN"
+          VERSION="$(gh api "repos/$REPO/contents/gradle.properties?ref=main" --jq '.content' | base64 --decode | sed -n 's/^monolithVersionName=//p')"
+          test "$VERSION" = '0.21.0-beta'
+          CI_RESULT="$(gh api "repos/$REPO/actions/runs/43172880474" --jq '.conclusion')"
+          test "$CI_RESULT" = 'success'
+      - name: Dispatch existing protected main production signing workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: gh workflow run android.yml -R "$GITHUB_REPOSITORY" --ref main
