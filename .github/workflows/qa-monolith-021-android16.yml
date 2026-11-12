@@ -1,0 +1,47 @@
+name: MONOLITH 0.21 disposable Android 16 emulator QA
+on:
+  push:
+    branches:
+      - qa/021-android16-emulator-20261112
+    paths:
+      - .github/workflows/qa-monolith-021-android16.yml
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-signed-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out QA script (never changes production)
+        uses: actions/checkout@v4
+      - name: Enable emulator KVM acceleration where available
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+      - name: Install Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install MONOLITH and inspect actual Android 16 UI
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          cores: 2
+          ram-size: 2048M
+          disk-size: 6000M
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: bash scripts/qa-monolith-021-emulator.sh
+      - name: Upload APK UI screenshots, UI hierarchy and crash evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MONOLITH-021-Android16-emulator-evidence
+          path: qa-results/
+          if-no-files-found: warn
+          retention-days: 10
