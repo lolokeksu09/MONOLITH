@@ -1,0 +1,43 @@
+name: MONOLITH 0.22 signed upgrade and final Android 16 visual QA
+on:
+  push:
+    branches:
+      - qa/022-signed-release-android16-20261112
+    paths:
+      - '.github/workflows/qa-monolith-022-signed-android16.yml'
+permissions:
+  contents: read
+jobs:
+  signed-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable emulator acceleration where possible
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install 0.21 then upgrade to signed 0.22 and inspect screens
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          cores: 2
+          ram-size: 2048M
+          disk-size: 6000M
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: bash scripts/qa-monolith-022-signed.sh
+      - name: Publish screenshots, UI layout and Android logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MONOLITH-022-signed-Android16-evidence
+          path: qa-results/
+          if-no-files-found: warn
+          retention-days: 10
