@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.22.0-beta — Distinctive MONOLITH home and app library
+- Replace the duplicated small rotated time readout on the Minimal HOME with a clear 78sp live timepiece, localized long date and subtle MONOLITH wordmark. Preserve the slim interaction rail and AMOLED black background.
+- Add a restrained precision dial to the collapsed Orbit, an explicit "OPEN ORBIT" label, and a quick-launch row showing up to four actual apps. The new shortcuts use the existing launch/long-press actions; the 48dp center hit target and wallpaper-safe empty-space dismissal remain unchanged.
+- Increase the **visual** Orbit field and icon spacing while retaining the tested 8/12/15 geometry, 48dp independent app touch targets, original app ordering and reduced-motion respect.
+- Give All Apps a left-aligned typographic masthead, hairline divider, slightly elevated sorting control, and adaptive matte icon trays. The tray scales for the existing user-selectable 3–6 column modes.
+- Reduce persistent explanatory copy in Settings and enlarge its primary title. Existing settings data, navigation contracts, search behavior and icons remain intact.
+- Add a Robolectric regression verifying the timepiece, dock, explicit Orbit cue, and unchanged center-hit-target bounds.
+- No app ID or signing key change; no network, background data collection, permissions, or preference migration. **Device screenshot inspection and install-over remain release gates, not assumptions.**
+
+
 ## 0.21.0-beta — Precision visual refinement (candidate)
 - Refine the existing AMOLED Reference HOME instead of introducing a new theme: brighter secondary typography and hints, a more legible vertical clock, a clearer central Orbit trigger and better-weighted 38dp Orbit app artwork inside unchanged 48dp hit targets.
 - Improve Editorial shortcut icon legibility while retaining the offline rock artwork and original scene structure.
