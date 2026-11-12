@@ -396,12 +396,10 @@ private fun MinimalScene(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            // The larger Orbit layout keeps its existing 48dp app and trigger targets.
-            // Extra rings and tick marks are intentionally absent.
-            val orbitScale = minOf(1f, (maxWidth.value - 24f) / 352f)
-                .coerceAtLeast(.78f) * 1.16f
+            // Original 0.21 icon spacing and size; keep the 48dp hit targets.
+            val orbitScale = minOf(1f, (maxWidth.value - 28f) / 295f).coerceAtLeast(.92f)
             Box(
-                modifier = Modifier.size(352.dp),
+                modifier = Modifier.size(304.dp),
                 contentAlignment = Alignment.Center
             ) {
                 OrbitCluster(

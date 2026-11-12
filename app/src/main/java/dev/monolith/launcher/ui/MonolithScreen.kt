@@ -372,7 +372,6 @@ fun MonolithScreen(
                                     DrawerAppTile(
                                         app = app,
                                         iconStyle = preferences.appIconStyle,
-                                        columns = preferences.drawerColumns,
                                         onLaunch = { launchAndReturnHome(app) },
                                         onActions = { selectedApp = app }
                                     )
@@ -786,24 +785,12 @@ private fun ChoiceButton(
 private fun DrawerAppTile(
     app: LaunchableApp,
     iconStyle: AppIconStyle,
-    columns: Int,
     onLaunch: () -> Unit,
     onActions: () -> Unit
 ) {
     val bitmap = rememberAppIcon(app, iconStyle)
-    val frame = when {
-        columns >= 6 -> 43.dp
-        columns == 5 -> 49.dp
-        else -> 59.dp
-    }
-    val artwork = when {
-        columns >= 6 -> 33.dp
-        columns == 5 -> 37.dp
-        else -> 43.dp
-    }
-    val frameShape = RoundedCornerShape(17.dp)
     Column(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 101.dp).combinedClickable(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp).combinedClickable(
             onClickLabel = stringResource(R.string.open_app),
             onLongClickLabel = stringResource(R.string.app_actions),
             onClick = onLaunch,
@@ -811,26 +798,18 @@ private fun DrawerAppTile(
         ).padding(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            Modifier.size(frame)
-                .background(Panel, frameShape)
-                .border(.6.dp, Outline, frameShape),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(Modifier.size(51.dp), contentAlignment = Alignment.Center) {
             if (bitmap != null) {
                 Image(
                     bitmap.asImageBitmap(),
                     contentDescription = null,
-                    modifier = Modifier.size(artwork)
+                    modifier = Modifier.size(44.dp)
                 )
             } else {
-                Text(
-                    app.label.take(1).uppercase(), fontSize = 22.sp,
-                    fontWeight = FontWeight.Medium, color = Foreground
-                )
+                Text(app.label.take(1), fontSize = 24.sp, color = Foreground)
             }
         }
-        Spacer(Modifier.height(9.dp))
+        Spacer(Modifier.height(6.dp))
         Text(
             app.label,
             color = Foreground,

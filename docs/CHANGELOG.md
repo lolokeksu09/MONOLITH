@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.22.0-beta — Restore app icon presentation from 0.21 (follow-up)
+- Restore original `9d58c01c` (`0.21.0-beta`) application icon tiles: original 44dp artwork in a 51dp transparent host with no extra matte background or outline.
+- Restore compact 304dp Orbit icon host and the original 0.21 icon spacing. Preserve the existing 48dp app hit targets, original 38dp artwork and centered ring/dot indicator.
+- Keep the new 0.22 large clock, date, quick-launch dock, left-aligned All Apps masthead, navigation and settings; do not roll back unrelated features.
+- No new permission, preferences migration, app identity, signing, search/sort, or HOME behavior change.
+
+
 ## 0.22.0-beta — Orbit icon simplification (follow-up)
 - Remove the additional decorative concentric rings and cardinal tick marks introduced around the collapsed Orbit icon in 0.22. Keep only the original small ring and center dot, the 48dp touch target, the enlarged application layout, and the functional quick-launch dock.
 - No change to Orbit opening, closing, app hit targets, animations, app data, theme settings, signing, permissions or Android HOME behavior.
