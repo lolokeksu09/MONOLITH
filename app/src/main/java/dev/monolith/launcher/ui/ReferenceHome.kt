@@ -93,10 +93,10 @@ import kotlinx.coroutines.delay
 
 private val Ink = Color.Black
 private val Paper = Color(0xFFF4F3F0)
-private val Soft = Color(0xFFA7A6A4)
-private val Dim = Color(0xFF555557)
-private val Hint = Color(0xFF767678)
-private val Accent = Color(0xFFC9C5BB)
+private val Soft = Color(0xFFB8B6B1)
+private val Dim = Color(0xFF686662)
+private val Hint = Color(0xFF999792)
+private val Accent = Color(0xFFE1DDD5)
 
 @Composable
 fun ReferenceHome(
@@ -343,12 +343,13 @@ private fun MinimalScene(
             ) {
                 Column(Modifier.weight(1f).padding(end = 8.dp)) {
                     Text(stringResource(R.string.reference_media), color = Paper,
-                        fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        fontSize = 12.sp, fontWeight = FontWeight.Medium,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
                         stringResource(R.string.reference_media_hint),
                         color = Soft,
-                        fontSize = 10.sp,
-                        lineHeight = 12.sp,
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -372,17 +373,17 @@ private fun MinimalScene(
                     .uppercase(Locale.getDefault()),
             modifier = Modifier.align(Alignment.CenterStart)
                 .offset(y = 128.dp).padding(start = 16.dp),
-            fontSize = 15.sp,
+            fontSize = 16.sp,
             color = Paper,
-            letterSpacing = 1.sp
+            letterSpacing = .7.sp
         )
         VerticalRailText(
             text = stringResource(R.string.reference_hold_hint),
             modifier = Modifier.align(Alignment.CenterStart)
                 .offset(y = (-105).dp).padding(start = 18.dp),
             color = Hint,
-            fontSize = 10.sp,
-            letterSpacing = 1.1.sp
+            fontSize = 11.sp,
+            letterSpacing = .7.sp
         )
 
         BoxWithConstraints(
@@ -414,16 +415,16 @@ private fun MinimalScene(
                         contentAlignment = Alignment.Center
                     ) {
                         Canvas(
-                            Modifier.size(36.dp).graphicsLayer {
+                            Modifier.size(42.dp).graphicsLayer {
                                 alpha = (1f - orbitProgress * 1.6f).coerceIn(0f, 1f)
                                 scaleX = 1f + orbitProgress * .18f
                                 scaleY = scaleX
                             }
                         ) {
                             drawCircle(Dim.copy(alpha = .72f),
-                                radius = size.minDimension * .27f,
-                                style = Stroke(width = 1.dp.toPx()))
-                            drawCircle(Soft.copy(alpha = .85f), radius = 2.dp.toPx())
+                                radius = size.minDimension * .28f,
+                                style = Stroke(width = 1.2.dp.toPx()))
+                            drawCircle(Paper.copy(alpha = .93f), radius = 2.2.dp.toPx())
                         }
                     }
                 }
@@ -466,7 +467,7 @@ private fun MinimalScene(
             stringResource(R.string.reference_swipe_hint),
             modifier = Modifier.align(Alignment.BottomStart)
                 .padding(start = 30.dp, bottom = 102.dp),
-            fontSize = 11.sp, color = Hint, letterSpacing = .7.sp
+            fontSize = 12.sp, color = Hint, letterSpacing = .4.sp
         )
     }
 }
@@ -548,7 +549,7 @@ private fun OrbitCluster(
         ) {
             if (bitmap != null) {
                 Image(bitmap.asImageBitmap(), contentDescription = null,
-                    modifier = Modifier.size(34.dp))
+                    modifier = Modifier.size(38.dp))
             } else {
                 Text(app.label.take(1), fontSize = 18.sp, color = Paper)
             }
@@ -567,7 +568,7 @@ private fun MediaControl(iconRes: Int, description: String, onClick: () -> Unit)
             painterResource(iconRes),
             contentDescription = null,
             tint = Paper,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(22.dp)
         )
     }
 }
@@ -695,14 +696,14 @@ private fun EditorialShortcut(
         contentAlignment = Alignment.Center
     ) {
         Box(
-            modifier = Modifier.size(40.dp)
-                .border(.6.dp, Paper.copy(alpha = .20f), CircleShape)
+            modifier = Modifier.size(42.dp)
+                .border(.7.dp, Paper.copy(alpha = .30f), CircleShape)
                 .background(Ink.copy(alpha = .22f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             if (bitmap != null) {
                 Image(bitmap.asImageBitmap(), contentDescription = null,
-                    modifier = Modifier.size(25.dp))
+                    modifier = Modifier.size(29.dp))
             } else {
                 Text(app.label.take(1), color = Paper, fontSize = 14.sp,
                     fontWeight = FontWeight.Medium)
