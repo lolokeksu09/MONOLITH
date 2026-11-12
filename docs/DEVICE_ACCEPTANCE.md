@@ -4,6 +4,8 @@ Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, rec
 
 **Current signed candidate:** [v0.20.0-beta.428](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.20.0-beta.428), from source commit `4cd84776b511e7bdf7f3b0838ebb90e7553f128a`. [Signed-release CI #428](https://github.com/lolokeksu09/MONOLITH/actions/runs/43082198569) completed successfully with pinned production signing. **No physical-device acceptance evidence is recorded yet.** Run applicable historical checks for this exact signed APK; record the installed version, certificate continuity, firmware, date and observed result.
 
+**2026-11-12 screenshot-only checkpoint:** Four user-provided images show collapsed/expanded Orbit, All Apps and Settings. See [the screenshot QA evidence record](QA_0.20_SCREENSHOT_2026-11-12.md). This is a **partial visual rendering observation, not a hardware QA pass**: installed release identity, gestures, install-over, HOME recovery, TalkBack and actual responsiveness remain unverified. **All device-test checkboxes below remain open.**
+
 ## 0.20 signed beta — catalog responsiveness and Orbit dismissal (not device-tested)
 
 **Exact signed candidate:** [v0.20.0-beta.428](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.20.0-beta.428), built from merged [PR #43](https://github.com/lolokeksu09/MONOLITH/pull/43); requirements in [PLAN_0.20.md](PLAN_0.20.md). All hardware checks below remain open, regardless of CI success.
