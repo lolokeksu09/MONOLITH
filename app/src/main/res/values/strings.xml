@@ -77,6 +77,7 @@
     <string name="reference_next_track">Send next track to the system media session</string>
     <string name="reference_dismiss_orbit">Dismiss expanded orbit</string>
     <string name="reference_close_orbit">Collapse orbit</string>
+    <string name="reference_open_orbit">OPEN ORBIT</string>
     <string name="reference_customize_orbit">Customize orbit apps</string>
     <string name="reference_customize_hint">Pin up to 15 apps in your order. Remaining slots use frequently opened apps.</string>
     <string name="reference_selected_count">Selected: %1$d of %2$d</string>
