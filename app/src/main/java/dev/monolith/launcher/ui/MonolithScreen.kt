@@ -1,7 +1,10 @@
 package dev.monolith.launcher.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -58,6 +61,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -97,8 +101,9 @@ import java.util.Locale
 
 private val Background = Color.Black
 private val Foreground = Color(0xFFF4F3F0)
-private val Muted = Color(0xFFA7A6A4)
-private val Panel = Color(0xFF101010)
+private val Muted = Color(0xFFB8B6B1)
+private val Panel = Color(0xFF161615)
+private val Outline = Color(0xFF383835)
 
 internal enum class Screen { HOME, ALL_APPS, SETTINGS, ORBIT_APPS, HIDDEN_APPS }
 
@@ -270,8 +275,8 @@ fun MonolithScreen(
                                 )
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(stringResource(R.string.drawer_title), fontSize = 20.sp,
-                                    fontWeight = FontWeight.Medium, letterSpacing = .2.sp)
+                                Text(stringResource(R.string.drawer_title), fontSize = 23.sp,
+                                    fontWeight = FontWeight.SemiBold, letterSpacing = (-.35).sp)
                             }
                             TextButton(
                                 onClick = {
@@ -302,7 +307,7 @@ fun MonolithScreen(
                             Text(
                                 if (visibleApps == null) stringResource(R.string.drawer_updating)
                                 else stringResource(R.string.apps_count, visibleApps.size),
-                                color = Muted, fontSize = 11.sp
+                                color = Muted, fontSize = 12.sp
                             )
                             SortPicker(preferences.appSort) {
                                 onPreferencesChange(preferences.copy(appSort = it))
@@ -347,9 +352,9 @@ fun MonolithScreen(
                                 state = gridState,
                                 columns = GridCells.Fixed(preferences.drawerColumns),
                                 modifier = Modifier.fillMaxWidth().weight(1f),
-                                contentPadding = PaddingValues(vertical = 14.dp),
-                                horizontalArrangement = Arrangement.spacedBy(7.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                                contentPadding = PaddingValues(top = 19.dp, bottom = 20.dp),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalArrangement = Arrangement.spacedBy(19.dp)
                             ) {
                                 items(visibleApps, key = { it.id }) { app ->
                                     DrawerAppTile(
@@ -372,11 +377,34 @@ fun MonolithScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(22.dp)
                 ) {
-                    Text(stringResource(R.string.settings), fontSize = 29.sp, fontWeight = FontWeight.SemiBold)
-                    Spacer(Modifier.height(10.dp))
-                    Text(stringResource(R.string.reference_only_description), color = Muted, fontSize = 13.sp)
-                    Spacer(Modifier.height(22.dp))
-                    Text(stringResource(R.string.appearance_title), color = Muted, fontSize = 12.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TextButton(
+                            onClick = { screen = destinationOnBack(Screen.SETTINGS, settingsOrigin) },
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                painterResource(R.drawable.ic_arrow_back),
+                                contentDescription = stringResource(R.string.settings_back),
+                                tint = Foreground,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                        Spacer(Modifier.width(3.dp))
+                        Text(
+                            stringResource(R.string.settings),
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = (-.6).sp
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        stringResource(R.string.reference_only_description),
+                        color = Muted, fontSize = 13.sp, lineHeight = 19.sp
+                    )
+                    Spacer(Modifier.height(20.dp))
+                    SettingsSectionHeading(stringResource(R.string.settings_section_appearance))
+                    Text(stringResource(R.string.appearance_title), color = Muted, fontSize = 13.sp)
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         AppIconStyle.entries.forEach { style ->
@@ -390,10 +418,11 @@ fun MonolithScreen(
                             )
                         }
                     }
-                    Text(stringResource(R.string.appearance_hint), fontSize = 11.sp,
-                        lineHeight = 15.sp, color = Muted)
-                    Spacer(Modifier.height(20.dp))
-                    Text(stringResource(R.string.orbit_density), color = Muted, fontSize = 12.sp)
+                    Text(stringResource(R.string.appearance_hint), fontSize = 12.sp,
+                        lineHeight = 17.sp, color = Muted)
+                    Spacer(Modifier.height(24.dp))
+                    SettingsSectionHeading(stringResource(R.string.settings_section_orbit))
+                    Text(stringResource(R.string.orbit_density), color = Muted, fontSize = 13.sp)
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf(8, 12, 15).forEach { density ->
@@ -407,17 +436,18 @@ fun MonolithScreen(
                             )
                         }
                     }
-                    Text(stringResource(R.string.orbit_density_hint), fontSize = 11.sp,
-                        lineHeight = 15.sp, color = Muted)
+                    Text(stringResource(R.string.orbit_density_hint), fontSize = 12.sp,
+                        lineHeight = 17.sp, color = Muted)
                     Spacer(Modifier.height(20.dp))
-                    OutlinedButton(onClick = { orbitQuery = ""; screen = Screen.ORBIT_APPS },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp)) {
-                        Text(stringResource(R.string.reference_customize_orbit))
-                    }
+                    SettingsAction(
+                        title = stringResource(R.string.reference_customize_orbit),
+                        onClick = { orbitQuery = ""; screen = Screen.ORBIT_APPS }
+                    )
                     Spacer(Modifier.height(6.dp))
                     Text(stringResource(R.string.reference_customize_hint),
-                        fontSize = 12.sp, color = Muted)
-                    Spacer(Modifier.height(20.dp))
+                        fontSize = 12.sp, lineHeight = 17.sp, color = Muted)
+                    Spacer(Modifier.height(24.dp))
+                    SettingsSectionHeading(stringResource(R.string.settings_section_catalog))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -454,7 +484,7 @@ fun MonolithScreen(
                             color = Muted, fontSize = 11.sp, lineHeight = 15.sp)
                     }
                     Spacer(Modifier.height(20.dp))
-                    Text(stringResource(R.string.drawer_columns), color = Muted)
+                    Text(stringResource(R.string.drawer_columns), color = Muted, fontSize = 13.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         (3..6).forEach { columns ->
                             ChoiceButton(
@@ -478,28 +508,34 @@ fun MonolithScreen(
                             onPreferencesChange(preferences.copy(appSort = it))
                         }
                     }
-                    Text(stringResource(R.string.tracked_launches_only), fontSize = 12.sp, color = Muted)
-                    Spacer(Modifier.height(22.dp))
-                    OutlinedButton(onClick = { screen = Screen.HIDDEN_APPS }, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.manage_hidden_apps, hiddenApps.size))
-                    }
+                    Text(stringResource(R.string.tracked_launches_only),
+                        fontSize = 12.sp, lineHeight = 17.sp, color = Muted)
+                    Spacer(Modifier.height(24.dp))
+                    SettingsSectionHeading(stringResource(R.string.settings_section_system))
+                    SettingsAction(
+                        title = stringResource(R.string.manage_hidden_apps, hiddenApps.size),
+                        onClick = { screen = Screen.HIDDEN_APPS }
+                    )
                     Spacer(Modifier.height(10.dp))
-                    OutlinedButton(onClick = onClearLaunchHistory, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.clear_launches))
-                    }
+                    SettingsAction(
+                        title = stringResource(R.string.clear_launches),
+                        onClick = onClearLaunchHistory
+                    )
                     Spacer(Modifier.height(14.dp))
                     if (!isDefaultHome) {
-                        OutlinedButton(onClick = onMakeDefaultHome, modifier = Modifier.fillMaxWidth()) {
-                            Text(stringResource(R.string.make_default))
-                        }
+                        SettingsAction(
+                            title = stringResource(R.string.make_default),
+                            onClick = onMakeDefaultHome
+                        )
                     }
                     Spacer(Modifier.height(17.dp))
                     Text(stringResource(R.string.reference_legacy_data_note),
                         fontSize = 11.sp, color = Muted)
                     Spacer(Modifier.height(20.dp))
-                    OutlinedButton(onClick = { screen = Screen.HOME }, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.back_home))
-                    }
+                    SettingsAction(
+                        title = stringResource(R.string.back_home),
+                        onClick = { screen = Screen.HOME }
+                    )
                 }
                 Screen.ORBIT_APPS -> {
                     val available = remember(apps, hiddenApps) {
@@ -659,8 +695,8 @@ private fun DrawerSearchField(
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp),
         colors = TextFieldDefaults.colors(
             focusedTextColor = Foreground,
             unfocusedTextColor = Foreground,
@@ -675,22 +711,60 @@ private fun DrawerSearchField(
 }
 
 @Composable
+private fun SettingsSectionHeading(title: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 13.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            title, color = Foreground, fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold, letterSpacing = (-.15).sp
+        )
+        Spacer(Modifier.width(16.dp))
+        Box(Modifier.weight(1f).height(1.dp).background(Outline))
+    }
+}
+
+@Composable
+private fun SettingsAction(title: String, onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+        shape = RoundedCornerShape(14.dp),
+        border = BorderStroke(1.dp, Outline),
+        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+            containerColor = Panel, contentColor = Foreground
+        ),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(title, fontSize = 13.sp, fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center)
+    }
+}
+
+@Composable
 private fun ChoiceButton(
     modifier: Modifier = Modifier,
     selected: Boolean,
     label: String,
     onClick: () -> Unit
 ) {
-    val buttonModifier = modifier.heightIn(min = 48.dp).semantics { this.selected = selected }
-    val contentPadding = PaddingValues(horizontal = 4.dp)
-    if (selected) {
-        Button(onClick = onClick, modifier = buttonModifier, contentPadding = contentPadding) {
-            Text(label, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-    } else {
-        OutlinedButton(onClick = onClick, modifier = buttonModifier, contentPadding = contentPadding) {
-            Text(label, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
+    val shape = RoundedCornerShape(14.dp)
+    Box(
+        modifier = modifier.heightIn(min = 50.dp)
+            .clip(shape)
+            .background(if (selected) Foreground else Panel)
+            .border(1.dp, if (selected) Foreground else Outline, shape)
+            .clickable(onClick = onClick)
+            .semantics { this.selected = selected },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            label, color = if (selected) Background else Foreground,
+            fontSize = 13.sp, fontWeight = FontWeight.Medium,
+            maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
     }
 }
 
@@ -704,7 +778,7 @@ private fun DrawerAppTile(
 ) {
     val bitmap = rememberAppIcon(app, iconStyle)
     Column(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 88.dp).combinedClickable(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp).combinedClickable(
             onClickLabel = stringResource(R.string.open_app),
             onLongClickLabel = stringResource(R.string.app_actions),
             onClick = onLaunch,
@@ -717,7 +791,7 @@ private fun DrawerAppTile(
                 Image(
                     bitmap.asImageBitmap(),
                     contentDescription = null,
-                    modifier = Modifier.size(42.dp)
+                    modifier = Modifier.size(44.dp)
                 )
             } else {
                 Text(app.label.take(1), fontSize = 24.sp, color = Foreground)
@@ -727,8 +801,8 @@ private fun DrawerAppTile(
         Text(
             app.label,
             color = Foreground,
-            fontSize = 12.sp,
-            lineHeight = 14.sp,
+            fontSize = 13.sp,
+            lineHeight = 16.sp,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
@@ -751,7 +825,10 @@ private fun SortPicker(selected: AppSort, onChange: (AppSort) -> Unit) {
             Spacer(Modifier.width(7.dp))
             Text(stringResource(sortLabel(selected)), fontSize = 12.sp, maxLines = 1)
         }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+        DropdownMenu(
+            expanded = open, onDismissRequest = { open = false },
+            containerColor = Panel
+        ) {
             AppSort.entries.forEach { choice ->
                 DropdownMenuItem(
                     text = { Text(stringResource(sortLabel(choice))) },
