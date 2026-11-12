@@ -428,6 +428,7 @@ fun MonolithScreen(
                             )
                         }
                     }
+                    Spacer(Modifier.height(10.dp))
                     Text(stringResource(R.string.appearance_hint), fontSize = 12.sp,
                         lineHeight = 17.sp, color = Muted)
                     Spacer(Modifier.height(24.dp))
@@ -446,6 +447,7 @@ fun MonolithScreen(
                             )
                         }
                     }
+                    Spacer(Modifier.height(10.dp))
                     Text(stringResource(R.string.orbit_density_hint), fontSize = 12.sp,
                         lineHeight = 17.sp, color = Muted)
                     Spacer(Modifier.height(20.dp))
@@ -490,6 +492,7 @@ fun MonolithScreen(
                                 )
                             }
                         }
+                        Spacer(Modifier.height(10.dp))
                         Text(stringResource(R.string.drawer_search_position_hint),
                             color = Muted, fontSize = 11.sp, lineHeight = 15.sp)
                     }
