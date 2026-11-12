@@ -1,4 +1,4 @@
-name: MONOLITH 0.22 preview visual QA Android 16
+name: MONOLITH 0.22 preview visual QA Android 16 (corrected package)
 on:
   push:
     branches:
