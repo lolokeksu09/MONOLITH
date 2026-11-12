@@ -42,6 +42,7 @@ class MonolithScreenTest {
 
     private val appAlpha = LaunchableApp("pkg/alpha", "Alpha", "pkg", "alpha")
     private val appBeta = LaunchableApp("pkg/beta", "Beta", "pkg", "beta")
+    private val appGamma = LaunchableApp("pkg/gamma", "Gamma", "pkg", "gamma")
     private val currentPreferences = mutableStateOf(LauncherPreferences())
     private val currentFavorites = mutableStateOf<List<String>>(emptyList())
 
@@ -52,7 +53,8 @@ class MonolithScreenTest {
         hiddenApps: Set<String> = emptySet(),
         onRetry: () -> Unit = {},
         onPreferencesChange: (LauncherPreferences) -> Unit =
-            { currentPreferences.value = it }
+            { currentPreferences.value = it },
+        onClearLaunchHistory: () -> Unit = {}
     ) {
         composeRule.setContent {
             MonolithScreen(
@@ -73,7 +75,7 @@ class MonolithScreenTest {
                 onPreferencesChange = onPreferencesChange,
                 onHideApp = {},
                 onUnhideApp = {},
-                onClearLaunchHistory = {}
+                onClearLaunchHistory = onClearLaunchHistory
             )
         }
     }
@@ -308,6 +310,38 @@ class MonolithScreenTest {
         }
         composeRule.onNodeWithText("Alpha").assertIsDisplayed()
         composeRule.onNodeWithText("Beta").assertIsDisplayed()
+    }
+
+    @Test
+    fun clearingLaunchHistoryRequiresExplicitConfirmation() {
+        var clearCount = 0
+        launchMonolith(onClearLaunchHistory = { clearCount++ })
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        composeRule.onNodeWithText("Clear launch history").performScrollTo().performClick()
+        composeRule.onNodeWithText("Clear launch history?").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Cancel").performClick()
+        assertEquals(0, clearCount)
+        composeRule.onNodeWithText("Clear launch history").performClick()
+        composeRule.onNodeWithText("Clear history").performClick()
+        composeRule.waitForIdle()
+        assertEquals(1, clearCount)
+        composeRule.onNodeWithText("Clear launch history?").assertDoesNotExist()
+    }
+
+    @Test
+    fun orbitManagerSeparatesPinnedAndOtherAppsAndAllowsAccessibleReorder() {
+        currentFavorites.value = listOf(appAlpha.id, appBeta.id)
+        launchMonolith(apps = listOf(appAlpha, appBeta, appGamma))
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        composeRule.onNodeWithText("Customize orbit apps").performScrollTo().performClick()
+
+        composeRule.onNodeWithText("Pinned (2)").assertExists()
+        composeRule.onNodeWithText("Available (1)").assertExists()
+        composeRule.onNodeWithContentDescription("Move Beta up").performClick()
+        composeRule.waitForIdle()
+        assertEquals(listOf(appBeta.id, appAlpha.id), currentFavorites.value)
+        composeRule.onNodeWithContentDescription("Move Beta up").assertIsNotEnabled()
     }
 
     @Test
