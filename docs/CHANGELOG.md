@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — Orbit action label clarification
+- The expanded Orbit close action now reads “Collapse orbit” / “Свернуть круг” instead of “Close apps” / “Закрыть приложения”, which could wrongly suggest stopping running apps. This is a text-only UI clarification; the click handler, navigation, application lifecycle, accessibility dismiss description, settings, signing identity and permissions are unchanged.
+- Verified against the actual `ReferenceHome.kt` onToggleOrbit handler. This entry is **not included in published signed `v0.20.0-beta.428`**; no new APK has been published for this change.
+
 ## 0.20.0-beta — Responsive catalog and Orbit interaction
 - Moves drawer filtering and locale-aware sorting off the Compose UI thread to a cancellable background projection.
 - Rejects older completed projections after a search, sort, hidden-app or app-catalog change; prevents transient display of newly hidden apps.
