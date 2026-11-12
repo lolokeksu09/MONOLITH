@@ -443,6 +443,17 @@ private fun MinimalScene(
                 OrbitCluster(
                     apps, iconStyle, orbitOpen, orbitScale, orbitProgress, onLaunch, onActions
                 )
+                // A quiet label makes the small, accessible 48dp trigger
+                // discoverable without turning the whole dial into a button.
+                if (!orbitOpen) {
+                    Text(
+                        stringResource(R.string.reference_open_orbit),
+                        modifier = Modifier.align(Alignment.Center).offset(y = 110.dp),
+                        color = Soft, fontSize = 11.sp,
+                        letterSpacing = 1.5.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
                 // Do not block a single app at (0, 0) once the Orbit opens.
                 // During collapse, wait until the center indicator is visible.
                 if (!orbitOpen && orbitProgress <= .62f) {
