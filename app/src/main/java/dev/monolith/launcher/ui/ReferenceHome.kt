@@ -93,7 +93,6 @@ private val Paper = Color(0xFFF4F3F0)
 private val Soft = Color(0xFFB8B6B1)
 private val Dim = Color(0xFF686662)
 private val Hint = Color(0xFF999792)
-private val Accent = Color(0xFFE1DDD5)
 
 @Composable
 fun ReferenceHome(
@@ -229,7 +228,7 @@ fun ReferenceHome(
 
         Column(
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                .padding(start = 24.dp, end = 24.dp, bottom = 10.dp),
+                .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (loadError) {
@@ -278,7 +277,7 @@ fun ReferenceHome(
             }
             if (!isDefaultHome) {
                 TextButton(onClick = onMakeDefaultHome) {
-                    Text(stringResource(R.string.make_default), color = Accent, fontSize = 12.sp)
+                    Text(stringResource(R.string.make_default), color = Soft, fontSize = 11.sp)
                 }
             }
         }
@@ -312,7 +311,9 @@ private fun MinimalScene(
         else R.string.reference_orbit_collapsed
     )
 
-    Box(Modifier.fillMaxSize().background(Ink)) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(Ink)) {
+        // Avoid overlap between central Orbit and quick apps on compact screens.
+        val quickAppsBottom = if (maxHeight < 760.dp) 169.dp else 215.dp
         if (orbitOpen) {
             val dismissLabel = stringResource(R.string.reference_dismiss_orbit)
             // Full-screen dismiss layer sits BEHIND media controls and shortcuts,
@@ -332,7 +333,7 @@ private fun MinimalScene(
         }
         Column(
             modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()
-                .padding(start = 28.dp, top = 43.dp, end = 20.dp)
+                .padding(start = 28.dp, top = 32.dp, end = 20.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -368,7 +369,7 @@ private fun MinimalScene(
         AnimatedVisibility(
             visible = !orbitOpen,
             modifier = Modifier.align(Alignment.TopStart)
-                .padding(start = 29.dp, top = 150.dp, end = 24.dp),
+                .padding(start = 29.dp, top = 142.dp, end = 24.dp),
             enter = fadeIn(tween(if (motionDuration == 0) 0 else 180)),
             exit = fadeOut(tween(if (motionDuration == 0) 0 else 140))
         ) {
@@ -410,7 +411,7 @@ private fun MinimalScene(
                 if (!orbitOpen) {
                     Text(
                         stringResource(R.string.reference_open_orbit),
-                        modifier = Modifier.align(Alignment.Center).offset(y = 110.dp),
+                        modifier = Modifier.align(Alignment.Center).offset(y = 38.dp),
                         color = Soft, fontSize = 11.sp,
                         letterSpacing = 1.5.sp,
                         fontWeight = FontWeight.Medium
@@ -482,7 +483,7 @@ private fun MinimalScene(
         AnimatedVisibility(
             visible = !orbitOpen && apps.isNotEmpty(),
             modifier = Modifier.align(Alignment.BottomCenter)
-                .padding(bottom = 169.dp),
+                .padding(bottom = quickAppsBottom),
             enter = fadeIn(tween(if (motionDuration == 0) 0 else 160)),
             exit = fadeOut(tween(if (motionDuration == 0) 0 else 120))
         ) {
@@ -501,12 +502,6 @@ private fun MinimalScene(
             }
         }
 
-        Text(
-            stringResource(R.string.reference_swipe_hint),
-            modifier = Modifier.align(Alignment.BottomStart)
-                .padding(start = 30.dp, bottom = 102.dp),
-            fontSize = 12.sp, color = Hint, letterSpacing = .4.sp
-        )
     }
 }
 
@@ -640,7 +635,7 @@ private fun EditorialScene(
 
         Column(
             modifier = Modifier.align(Alignment.BottomStart)
-                .padding(start = 28.dp, bottom = 114.dp)
+                .padding(start = 28.dp, bottom = 144.dp)
         ) {
             Text(stringResource(R.string.reference_quick_apps), fontSize = 10.sp,
                 color = Soft, letterSpacing = 1.8.sp)

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — handheld visual hierarchy pass
+
+- Tighten All Apps header and grid spacing without altering 0.21 icon artwork, icon dimensions, hit targets, search, or sorting logic.
+- Reduce Settings vertical noise: compact selectors and typography, flat native action rows with 48dp minimum targets, shortened RU/EN hints.
+- Bring the collapsed Orbit label back next to its explicit central trigger; lift quick access on tall screens while preserving compact-screen spacing; remove duplicated swipe instruction but retain the accessible page switch, All Apps, HOME role action, and gesture behavior.
+- Lift Editorial shortcuts slightly without changing its rock asset, artwork, or navigation.
+- No changes to package identity, signing, persisted settings, permissions, Android launcher role, or app-owned icons. Physical Lenovo acceptance remains pending.
+
+
 ## 0.24.0-beta — Orbit organization and safer history management (candidate)
 
 - Split the Orbit app manager into **Pinned** (saved order) and **Available** sections with explicit counts. Existing **Pinned only / All applications** filtering and search remain intact.

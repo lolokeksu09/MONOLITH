@@ -6,7 +6,7 @@
     <string name="app_info_unavailable">Настройки приложения недоступны</string>
     <string name="apps_count">Приложений: %1$d</string>
     <string name="appearance_title">Вид иконок приложений</string>
-    <string name="appearance_hint">Original — исходные иконки; Mono — серые; INK — системные монохромные, иначе Original.</string>
+    <string name="appearance_hint">Original — исходные; Mono — серые; INK — системные или исходные.</string>
     <string name="back_home">На рабочий стол</string>
     <string name="catalog_failed">Не удалось загрузить список приложений</string>
     <string name="catalog_stale_retry">Не удалось обновить список. Показаны ранее загруженные приложения. Повторить.</string>
@@ -21,7 +21,7 @@
     <string name="drawer_search_position">Расположение строки поиска</string>
     <string name="drawer_search_top">Сверху</string>
     <string name="drawer_search_bottom">Снизу</string>
-    <string name="drawer_search_position_hint">Поиск снизу удобнее одной рукой. По умолчанию он сверху.</string>
+    <string name="drawer_search_position_hint">Снизу удобнее одной рукой.</string>
     <string name="drawer_title">Приложения</string>
     <string name="hidden_apps_description">Скрытые приложения остаются установленными. Верните приложение кнопкой «Показать».</string>
     <string name="hidden_apps_title">Скрытые приложения</string>
@@ -37,7 +37,7 @@
     <string name="no_results">Приложения не найдены</string>
     <string name="open_app">Открыть приложение</string>
     <string name="orbit_density">Приложений в круге</string>
-    <string name="orbit_density_hint">Выберите 8, 12 или 15. Избранное и его порядок сохраняются.</string>
+    <string name="orbit_density_hint">Избранное и порядок сохраняются.</string>
     <string name="reference_all_apps">ПРИЛОЖЕНИЯ  ↑</string>
     <string name="reference_editorial">ЭКРАН  →</string>
     <string name="reference_good_afternoon">ДОБРЫЙ ДЕНЬ</string>
