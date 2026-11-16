@@ -412,7 +412,7 @@ fun MonolithScreen(
                             letterSpacing = (-1).sp
                         )
                     }
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(18.dp))
                     // The controls explain themselves; the previous tutorial
                     // paragraph created noise on every visit to Settings.
                     SettingsSectionHeading(stringResource(R.string.settings_section_appearance))
@@ -433,7 +433,7 @@ fun MonolithScreen(
                     Spacer(Modifier.height(8.dp))
                     Text(stringResource(R.string.appearance_hint), fontSize = 12.sp,
                         lineHeight = 17.sp, color = Muted)
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(18.dp))
                     SettingsSectionHeading(stringResource(R.string.settings_section_orbit))
                     Text(stringResource(R.string.orbit_density), color = Muted, fontSize = 13.sp)
                     Spacer(Modifier.height(8.dp))
@@ -457,7 +457,7 @@ fun MonolithScreen(
                         title = stringResource(R.string.reference_customize_orbit),
                         onClick = { orbitQuery = ""; screen = Screen.ORBIT_APPS }
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(18.dp))
                     SettingsSectionHeading(stringResource(R.string.settings_section_catalog))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -469,10 +469,10 @@ fun MonolithScreen(
                             onCheckedChange = { onPreferencesChange(preferences.copy(showDrawerSearch = it)) })
                     }
                     if (preferences.showDrawerSearch) {
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(10.dp))
                         Text(stringResource(R.string.drawer_search_position),
                             color = Muted, fontSize = 12.sp)
-                        Spacer(Modifier.height(7.dp))
+                        Spacer(Modifier.height(6.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             DrawerSearchPosition.entries.forEach { position ->
                                 ChoiceButton(
@@ -509,7 +509,7 @@ fun MonolithScreen(
                             )
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(14.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -522,7 +522,7 @@ fun MonolithScreen(
                     }
                     Text(stringResource(R.string.tracked_launches_only),
                         fontSize = 12.sp, lineHeight = 17.sp, color = Muted)
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(18.dp))
                     SettingsSectionHeading(stringResource(R.string.settings_section_system))
                     SettingsAction(
                         title = stringResource(R.string.manage_hidden_apps, hiddenApps.size),
@@ -533,14 +533,14 @@ fun MonolithScreen(
                         title = stringResource(R.string.clear_launches),
                         onClick = { confirmClearLaunchHistory = true }
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(10.dp))
                     if (!isDefaultHome) {
                         SettingsAction(
                             title = stringResource(R.string.make_default),
                             onClick = onMakeDefaultHome
                         )
                     }
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(14.dp))
                     Text(stringResource(R.string.reference_legacy_data_note),
                         fontSize = 11.sp, color = Muted)
                     Spacer(Modifier.height(16.dp))
