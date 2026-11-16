@@ -343,14 +343,6 @@ private fun MinimalScene(
                     Text(stringResource(R.string.reference_media), color = Paper,
                         fontSize = 12.sp, fontWeight = FontWeight.Medium,
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(
-                        stringResource(R.string.reference_media_hint),
-                        color = Soft,
-                        fontSize = 11.sp,
-                        lineHeight = 15.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
                 }
                 MediaControl(
                     R.drawable.ic_play_arrow,

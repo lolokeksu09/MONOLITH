@@ -21,6 +21,7 @@ import dev.monolith.launcher.data.LaunchableApp
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.DrawerSearchPosition
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -87,6 +88,7 @@ class MonolithScreenTest {
         composeRule.onNodeWithText("MONOLITH").assertExists()
         composeRule.onNodeWithText("QUICK ACCESS").assertExists()
         composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+        composeRule.onNodeWithText("System playback controls").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("Alpha").assertExists()
         val center = composeRule.onNode(
             SemanticsMatcher.expectValue(
@@ -286,6 +288,24 @@ class MonolithScreenTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Alpha").assertDoesNotExist()
         composeRule.onNodeWithText("Beta").assertIsDisplayed()
+    }
+
+    @Test
+    fun changingQueryHidesEarlierCatalogWhileDebouncing() {
+        assertTrue(drawerQueryIsSettling("Bet", "Al", searchEnabled = true))
+        assertTrue(drawerQueryIsSettling("", "Al", searchEnabled = true))
+        assertFalse(drawerQueryIsSettling("Bet", "Bet", searchEnabled = true))
+        assertFalse(drawerQueryIsSettling("Bet", "Al", searchEnabled = false))
+
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNode(hasSetTextAction()).performTextInput("Bet")
+        composeRule.onNodeWithText("Alpha").assertDoesNotExist()
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNodeWithText("Beta").assertExists()
+            }.isSuccess
+        }
     }
 
     @Test

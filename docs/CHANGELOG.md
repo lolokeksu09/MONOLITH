@@ -2,6 +2,10 @@
 
 ## Unreleased — handheld visual hierarchy pass
 
+- Prevent stale app results during the 180ms search debounce, while preserving immediate clear and the background projection.
+- Group Settings radio choices for screen readers; announce compact-grid app names once and preserve complete accessible labels.
+- Remove the redundant technical subtitle beneath media controls on Minimal HOME; keep real media-key actions.
+
 - Make 5/6-column All Apps labels compact and single-line with ellipsis rather than splitting words; preserve full accessible app names and two-line labels for 3/4 columns.
 - Constrain the sort selector width so translated labels cannot crowd out the app count, and give Settings choices explicit radio-button semantics.
 

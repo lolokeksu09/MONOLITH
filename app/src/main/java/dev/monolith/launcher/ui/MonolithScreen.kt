@@ -35,6 +35,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -72,6 +73,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -109,6 +111,16 @@ private val Panel = Color(0xFF161615)
 private val Outline = Color(0xFF383835)
 
 internal enum class Screen { HOME, ALL_APPS, SETTINGS, ORBIT_APPS, HIDDEN_APPS }
+
+/**
+ * While the input is debouncing, never render a catalog calculated for another query.
+ * The blank-query path still clears immediately without waiting for debounce.
+ */
+internal fun drawerQueryIsSettling(
+    query: String,
+    settledQuery: String,
+    searchEnabled: Boolean
+): Boolean = searchEnabled && query != settledQuery
 
 /** Return to the parent settings screen instead of unexpectedly jumping HOME. */
 internal fun destinationOnBack(screen: Screen, settingsOrigin: Screen): Screen = when (screen) {
@@ -173,7 +185,9 @@ fun MonolithScreen(
         }
         value = DrawerProjectionResult(drawerRequest, matched)
     }
-    val visibleApps = matchingDrawerApps(drawerRequest, drawerResult)
+    val visibleApps = if (drawerQueryIsSettling(
+            query, debouncedQuery, preferences.showDrawerSearch
+        )) null else matchingDrawerApps(drawerRequest, drawerResult)
     val referenceApps = remember(
         apps, hiddenApps, launchStats, orbitFavorites, preferences.orbitDensity
     ) {
@@ -203,7 +217,7 @@ fun MonolithScreen(
         if (!preferences.showDrawerSearch) query = ""
     }
     // Only nonblank input is debounced. Clearing search must restore the full
-    // catalog immediately; sorting still runs on the UI thread after settling.
+    // catalog immediately; filtering and sorting run off the UI thread.
     LaunchedEffect(query) {
         if (query.isBlank()) {
             debouncedQuery = ""
@@ -423,7 +437,8 @@ fun MonolithScreen(
                     SettingsSectionHeading(stringResource(R.string.settings_section_appearance))
                     Text(stringResource(R.string.appearance_title), color = Muted, fontSize = 13.sp)
                     Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(modifier = Modifier.selectableGroup(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         AppIconStyle.entries.forEach { style ->
                             ChoiceButton(
                                 modifier = Modifier.weight(1f),
@@ -442,7 +457,8 @@ fun MonolithScreen(
                     SettingsSectionHeading(stringResource(R.string.settings_section_orbit))
                     Text(stringResource(R.string.orbit_density), color = Muted, fontSize = 13.sp)
                     Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(modifier = Modifier.selectableGroup(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         listOf(8, 12, 15).forEach { density ->
                             ChoiceButton(
                                 modifier = Modifier.weight(1f),
@@ -478,7 +494,8 @@ fun MonolithScreen(
                         Text(stringResource(R.string.drawer_search_position),
                             color = Muted, fontSize = 12.sp)
                         Spacer(Modifier.height(6.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(modifier = Modifier.selectableGroup(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             DrawerSearchPosition.entries.forEach { position ->
                                 ChoiceButton(
                                     modifier = Modifier.weight(1f),
@@ -502,7 +519,8 @@ fun MonolithScreen(
                     }
                     Spacer(Modifier.height(16.dp))
                     Text(stringResource(R.string.drawer_columns), color = Muted, fontSize = 13.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(modifier = Modifier.selectableGroup(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         (3..6).forEach { columns ->
                             ChoiceButton(
                                 modifier = Modifier.weight(1f),
@@ -1022,7 +1040,9 @@ private fun DrawerAppTile(
     Column(
         modifier = Modifier.fillMaxWidth()
             .heightIn(min = if (compactLabels) 84.dp else 96.dp)
-            .semantics { contentDescription = app.label }
+            .then(if (compactLabels) Modifier.semantics {
+                contentDescription = app.label
+            } else Modifier)
             .combinedClickable(
             onClickLabel = stringResource(R.string.open_app),
             onLongClickLabel = stringResource(R.string.app_actions),
@@ -1053,6 +1073,7 @@ private fun DrawerAppTile(
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
             modifier = Modifier.heightIn(min = if (compactLabels) 16.dp else 28.dp)
+                .then(if (compactLabels) Modifier.clearAndSetSemantics { } else Modifier)
         )
     }
 }
