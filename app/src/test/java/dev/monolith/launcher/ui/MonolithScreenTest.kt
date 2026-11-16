@@ -1,6 +1,7 @@
 package dev.monolith.launcher.ui
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
@@ -398,6 +399,29 @@ class MonolithScreenTest {
                 and hasText("INK")
         ).assertExists()
         assertEquals(AppIconStyle.INK, received.last().appIconStyle)
+    }
+
+    @Test
+    fun denseDrawerKeepsFullLongAppNameForAccessibility() {
+        val longName = "Interactive live wallpapers"
+        currentPreferences.value = LauncherPreferences(drawerColumns = 5)
+        launchMonolith(
+            apps = listOf(LaunchableApp("pkg/long", longName, "pkg", "long"))
+        )
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithContentDescription(longName).assertExists()
+    }
+
+    @Test
+    fun settingsChoicesExposeRadioSelectionSemantics() {
+        launchMonolith()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton)
+                and SemanticsMatcher.expectValue(SemanticsProperties.Selected, false)
+                and hasText("INK")
+        ).assertExists()
     }
 
     @Test

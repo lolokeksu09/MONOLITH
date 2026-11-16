@@ -2,6 +2,9 @@
 
 ## Unreleased — handheld visual hierarchy pass
 
+- Make 5/6-column All Apps labels compact and single-line with ellipsis rather than splitting words; preserve full accessible app names and two-line labels for 3/4 columns.
+- Constrain the sort selector width so translated labels cannot crowd out the app count, and give Settings choices explicit radio-button semantics.
+
 - Tighten All Apps header and grid spacing without altering 0.21 icon artwork, icon dimensions, hit targets, search, or sorting logic.
 - Reduce Settings vertical noise: compact selectors and typography, flat native action rows with 48dp minimum targets, shortened RU/EN hints.
 - Bring the collapsed Orbit label back next to its explicit central trigger; lift quick access on tall screens while preserving compact-screen spacing; remove duplicated swipe instruction but retain the accessible page switch, All Apps, HOME role action, and gesture behavior.

@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,6 +34,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -70,7 +72,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -322,7 +324,9 @@ fun MonolithScreen(
                             Text(
                                 if (visibleApps == null) stringResource(R.string.drawer_updating)
                                 else stringResource(R.string.apps_count, visibleApps.size),
-                                color = Muted, fontSize = 12.sp
+                                modifier = Modifier.weight(1f).padding(end = 8.dp),
+                                color = Muted, fontSize = 12.sp,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis
                             )
                             SortPicker(preferences.appSort) {
                                 onPreferencesChange(preferences.copy(appSort = it))
@@ -375,6 +379,7 @@ fun MonolithScreen(
                                     DrawerAppTile(
                                         app = app,
                                         iconStyle = preferences.appIconStyle,
+                                        compactLabels = preferences.drawerColumns >= 5,
                                         onLaunch = { launchAndReturnHome(app) },
                                         onActions = { selectedApp = app }
                                     )
@@ -992,8 +997,7 @@ private fun ChoiceButton(
             .clip(shape)
             .background(if (selected) Foreground else Panel)
             .border(1.dp, if (selected) Foreground else Outline, shape)
-            .clickable(onClick = onClick)
-            .semantics { this.selected = selected },
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -1010,12 +1014,16 @@ private fun ChoiceButton(
 private fun DrawerAppTile(
     app: LaunchableApp,
     iconStyle: AppIconStyle,
+    compactLabels: Boolean,
     onLaunch: () -> Unit,
     onActions: () -> Unit
 ) {
     val bitmap = rememberAppIcon(app, iconStyle)
     Column(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp).combinedClickable(
+        modifier = Modifier.fillMaxWidth()
+            .heightIn(min = if (compactLabels) 84.dp else 96.dp)
+            .semantics { contentDescription = app.label }
+            .combinedClickable(
             onClickLabel = stringResource(R.string.open_app),
             onLongClickLabel = stringResource(R.string.app_actions),
             onClick = onLaunch,
@@ -1038,12 +1046,13 @@ private fun DrawerAppTile(
         Text(
             app.label,
             color = Foreground,
-            fontSize = 13.sp,
+            fontSize = if (compactLabels) 12.sp else 13.sp,
             lineHeight = 16.sp,
-            maxLines = 2,
+            // Dense 5/6-column grids should not split long words mid-letter.
+            maxLines = if (compactLabels) 1 else 2,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
-            modifier = Modifier.heightIn(min = 28.dp)
+            modifier = Modifier.heightIn(min = if (compactLabels) 16.dp else 28.dp)
         )
     }
 }
@@ -1054,7 +1063,8 @@ private fun SortPicker(selected: AppSort, onChange: (AppSort) -> Unit) {
     Box {
         TextButton(
             onClick = { open = true },
-            modifier = Modifier.border(.7.dp, Outline, RoundedCornerShape(10.dp))
+            modifier = Modifier.widthIn(max = 192.dp)
+                .border(.7.dp, Outline, RoundedCornerShape(10.dp))
                 .heightIn(min = 48.dp)
         ) {
             Icon(
@@ -1064,7 +1074,8 @@ private fun SortPicker(selected: AppSort, onChange: (AppSort) -> Unit) {
                 modifier = Modifier.size(18.dp)
             )
             Spacer(Modifier.width(7.dp))
-            Text(stringResource(sortLabel(selected)), fontSize = 12.sp, maxLines = 1)
+            Text(stringResource(sortLabel(selected)), fontSize = 12.sp, maxLines = 1,
+                overflow = TextOverflow.Ellipsis)
         }
         DropdownMenu(
             expanded = open, onDismissRequest = { open = false },
