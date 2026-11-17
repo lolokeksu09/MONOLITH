@@ -177,7 +177,9 @@ fun ReferenceHome(
     onAppActions: (LaunchableApp) -> Unit,
     onAllApps: () -> Unit,
     onSettings: () -> Unit,
-    onMakeDefaultHome: () -> Unit
+    onMakeDefaultHome: () -> Unit,
+    editorialApps: List<LaunchableApp> = apps,
+    editorialIsRecent: Boolean = false
 ) {
     var page by rememberSaveable { mutableIntStateOf(0) }
     var orbitOpen by rememberSaveable { mutableStateOf(false) }
@@ -279,7 +281,10 @@ fun ReferenceHome(
                     onNext = { sendMediaKey(context, KeyEvent.KEYCODE_MEDIA_NEXT) }
                 )
             } else {
-                EditorialScene(now, apps, iconStyle, openApp, onAppActions, openDrawer)
+                EditorialScene(
+                    now, editorialApps, iconStyle, openApp, onAppActions,
+                    openDrawer, editorialIsRecent
+                )
             }
         }
 
@@ -693,7 +698,8 @@ private fun EditorialScene(
     iconStyle: AppIconStyle,
     onLaunch: (LaunchableApp) -> Unit,
     onActions: (LaunchableApp) -> Unit,
-    onAllApps: () -> Unit
+    onAllApps: () -> Unit,
+    isRecentlyOpened: Boolean
 ) {
     val locale = Locale.getDefault()
     val dayShort = now.format(DateTimeFormatter.ofPattern("EEE", locale)).uppercase(locale)
@@ -756,8 +762,13 @@ private fun EditorialScene(
             modifier = Modifier.align(Alignment.BottomStart)
                 .padding(start = 28.dp, bottom = layout.editorialBottomDp.dp)
         ) {
-            Text(stringResource(R.string.reference_quick_apps), fontSize = 10.sp,
-                color = Soft, letterSpacing = 1.8.sp)
+            Text(
+                stringResource(
+                    if (isRecentlyOpened) R.string.reference_recent_apps
+                    else R.string.reference_quick_apps
+                ),
+                fontSize = 10.sp, color = Soft, letterSpacing = 1.8.sp
+            )
             Spacer(Modifier.height(13.dp))
             if (apps.isEmpty()) {
                 Text(stringResource(R.string.reference_no_quick_apps),

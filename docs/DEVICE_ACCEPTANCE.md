@@ -6,6 +6,15 @@ Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, rec
 
 **2026-11-12 screenshot-only checkpoint:** Four user-provided images show collapsed/expanded Orbit, All Apps and Settings. See [the screenshot QA evidence record](QA_0.20_SCREENSHOT_2026-11-12.md). This is a **partial visual rendering observation, not a hardware QA pass**: installed release identity, gestures, install-over, HOME recovery, TalkBack and actual responsiveness remain unverified. **All device-test checkboxes below remain open.**
 
+## PR #54 Preview — P4 real Editorial recent shortcuts (not device-tested)
+
+- [ ] Launch two different apps from MONOLITH, open Editorial and confirm only real locally recorded recent apps appear in most-recent-first order under the localized `RECENT IN MONOLITH` header.
+- [ ] Tap and long-press recent shortcuts and confirm launch, return HOME and app actions are correct. Ensure Orbit saved favorites are still in their saved order.
+- [ ] Hide or uninstall the most recent app. Check it is absent from Editorial and no stale shortcut remains. Clear launch history; Editorial should show usable real quick-access fallback, not fabricated recent apps.
+- [ ] On compact and regular display settings, verify the 4/8-item limit, RU/EN label width, and untouched original artwork. All Apps navigation via footer and the empty state must remain functional.
+
+**All four physical checks are still open.** Robolectric tests alone are not a Lenovo hardware pass.
+
 ## PR #54 Preview — P3 safe-area responsive composition (not device-tested)
 
 - [ ] Compare Minimal at normal and maximum supported system text scaling. The clock, media buttons, Orbit center and available shortcuts must not overlap; the clock must remain readable.

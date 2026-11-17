@@ -55,6 +55,7 @@
     <string name="reference_orbit_collapsed">Orbit applications collapsed</string>
     <string name="reference_orbit_expanded">Orbit applications expanded</string>
     <string name="reference_quick_apps">QUICK ACCESS</string>
+    <string name="reference_recent_apps">RECENT IN MONOLITH</string>
     <string name="reference_no_quick_apps">No shortcuts available yet</string>
     <string name="reference_browse_all_apps">Browse all apps</string>
     <string name="reference_swipe_hint">SWIPE LEFT  —  EDITORIAL</string>

@@ -18,3 +18,21 @@ fun chooseReferenceApps(
     val remaining = sortApps(installed.filterNot { it.id in usedIds }, AppSort.FREQUENT, stats)
     return (priority + remaining).take(limit.coerceIn(0, ORBIT_CAPACITY))
 }
+
+/**
+ * Editorial shows actual apps recently launched through MONOLITH, never inferred
+ * device-wide usage. A zero or absent timestamp is not evidence of recent use.
+ * The caller may fall back to its current quick-access list on a fresh install.
+ */
+fun chooseRecentlyOpenedApps(
+    apps: List<LaunchableApp>,
+    hiddenIds: Set<String> = emptySet(),
+    stats: Map<String, LaunchStats> = emptyMap(),
+    limit: Int = 8
+): List<LaunchableApp> {
+    val eligible = filterHiddenApps(apps, hiddenIds)
+        .distinctBy { it.id }
+        .filter { (stats[it.id]?.lastOpened ?: 0L) > 0L }
+    return sortApps(eligible, AppSort.LAST_OPENED, stats)
+        .take(limit.coerceIn(0, 8))
+}

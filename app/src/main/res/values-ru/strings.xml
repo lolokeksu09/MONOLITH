@@ -55,6 +55,7 @@
     <string name="reference_orbit_collapsed">Круг приложений свёрнут</string>
     <string name="reference_orbit_expanded">Круг приложений раскрыт</string>
     <string name="reference_quick_apps">БЫСТРЫЙ ДОСТУП</string>
+    <string name="reference_recent_apps">НЕДАВНО В MONOLITH</string>
     <string name="reference_no_quick_apps">Пока нет ярлыков</string>
     <string name="reference_browse_all_apps">Открыть список приложений</string>
     <string name="reference_swipe_hint">СВАЙП ВЛЕВО  —  ЭКРАН</string>

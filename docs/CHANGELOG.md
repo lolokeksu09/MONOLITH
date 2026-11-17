@@ -2,6 +2,9 @@
 
 ## Unreleased — handheld visual hierarchy pass
 
+- Make Editorial a genuinely different app-launch surface: show real launcher-local recently opened apps in recency order, with an accurate localized label; keep existing quick-access shortcuts when no recent activity exists.
+- Preserve Orbit's saved favorite order, hidden-app filtering, original icon art and touch targets; add sorting/empty/hidden checks and real Compose tap tests without permissions or migration.
+
 - Calculate safe-area and font-scale responsive layouts on Minimal and Editorial: scaled clock and weekday, compact top spacing, four real Editorial shortcuts instead of eight in compact layouts, and omission of only the duplicated Minimal quick-access strip on very short screens.
 - Preserve existing default-size layout and all original application icon geometry and gestures; add normal/compact/large-text unit checks and a 320×520dp Compose rendering test. Physical screenshot QA remains open.
 

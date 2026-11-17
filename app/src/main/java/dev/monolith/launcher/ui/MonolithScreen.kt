@@ -95,6 +95,7 @@ import dev.monolith.launcher.data.LaunchableApp
 import dev.monolith.launcher.data.LaunchStats
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.chooseReferenceApps
+import dev.monolith.launcher.data.chooseRecentlyOpenedApps
 import dev.monolith.launcher.data.filterApps
 import dev.monolith.launcher.data.filterHiddenApps
 import dev.monolith.launcher.data.ORBIT_CAPACITY
@@ -211,6 +212,13 @@ fun MonolithScreen(
             favoriteIds = orbitFavorites
         )
     }
+    // Editorial uses real launcher-local recent activity; Orbit retains its
+    // saved favorites and frequent-app fallback. No Android usage permission.
+    val recentEditorialApps = remember(apps, hiddenApps, launchStats) {
+        chooseRecentlyOpenedApps(apps, hiddenApps, launchStats)
+    }
+    val editorialApps = recentEditorialApps.ifEmpty { referenceApps }
+
     val launchAndReturnHome: (LaunchableApp) -> Unit = { app ->
         screen = Screen.HOME
         query = ""
@@ -252,6 +260,8 @@ fun MonolithScreen(
             when (screen) {
                 Screen.HOME -> ReferenceHome(
                     apps = referenceApps,
+                    editorialApps = editorialApps,
+                    editorialIsRecent = recentEditorialApps.isNotEmpty(),
                     iconStyle = preferences.appIconStyle,
                     homeRequestGeneration = homeRequestGeneration,
                     isDefaultHome = isDefaultHome,

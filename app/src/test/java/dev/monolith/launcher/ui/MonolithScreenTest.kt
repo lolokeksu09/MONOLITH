@@ -26,6 +26,7 @@ import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performScrollTo
 import dev.monolith.launcher.data.AppIconStyle
 import dev.monolith.launcher.data.LaunchableApp
+import dev.monolith.launcher.data.LaunchStats
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.DrawerSearchPosition
 import org.junit.Assert.assertEquals
@@ -61,6 +62,7 @@ class MonolithScreenTest {
         loading: Boolean = false,
         loadError: Boolean = false,
         hiddenApps: Set<String> = emptySet(),
+        launchStats: Map<String, LaunchStats> = emptyMap(),
         onRetry: () -> Unit = {},
         onPreferencesChange: (LauncherPreferences) -> Unit =
             { currentPreferences.value = it },
@@ -72,7 +74,7 @@ class MonolithScreenTest {
                 apps = apps,
                 preferences = currentPreferences.value,
                 homeRequestGeneration = 0,
-                launchStats = emptyMap(),
+                launchStats = launchStats,
                 hiddenApps = hiddenApps,
                 orbitFavorites = currentFavorites.value,
                 loading = loading,
@@ -312,6 +314,38 @@ class MonolithScreenTest {
         assertEquals(Screen.ALL_APPS, destinationOnBack(Screen.SETTINGS, Screen.ALL_APPS))
         assertEquals(Screen.HOME, destinationOnBack(Screen.SETTINGS, Screen.HOME))
         assertEquals(Screen.HOME, destinationOnBack(Screen.ALL_APPS, Screen.HOME))
+    }
+
+    @Test
+    fun editorialRecentShortcutsOpenActualAppsWithoutChangingOrbitFavorites() {
+        val launched = mutableListOf<LaunchableApp>()
+        currentFavorites.value = listOf(appAlpha.id)
+        launchMonolith(
+            apps = listOf(appAlpha, appBeta),
+            launchStats = mapOf(appBeta.id to LaunchStats(1, 100L)),
+            onLaunch = { launched += it }
+        )
+        composeRule.onNodeWithText("EDITORIAL →").performClick()
+        composeRule.onNodeWithText("RECENT IN MONOLITH").assertExists()
+        composeRule.onNodeWithContentDescription("Beta").performClick()
+        composeRule.waitForIdle()
+        assertEquals(listOf(appBeta), launched)
+        assertEquals(listOf(appAlpha.id), currentFavorites.value)
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+    }
+
+    @Test
+    fun editorialFreshOrHiddenHistoryUsesRealQuickAccessFallback() {
+        launchMonolith(
+            apps = listOf(appAlpha, appBeta),
+            hiddenApps = setOf(appBeta.id),
+            launchStats = mapOf(appBeta.id to LaunchStats(1, 100L))
+        )
+        composeRule.onNodeWithText("EDITORIAL →").performClick()
+        composeRule.onNodeWithText("QUICK ACCESS").assertExists()
+        composeRule.onNodeWithText("RECENT IN MONOLITH").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Alpha").assertExists()
+        composeRule.onNodeWithContentDescription("Beta").assertDoesNotExist()
     }
 
     @Test
