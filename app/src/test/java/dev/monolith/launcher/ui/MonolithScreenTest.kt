@@ -203,6 +203,53 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun visibleOrbitTriggerKeepsSmallTouchAreaAndButtonSemantics() {
+        launchMonolith(apps = listOf(appAlpha, appBeta))
+        val center = composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications collapsed"
+            ) and SemanticsMatcher.expectValue(
+                SemanticsProperties.Role, Role.Button
+            )
+        )
+        center.assertExists()
+        val width = center.fetchSemanticsNode().boundsInRoot.width
+        val settingsWidth = composeRule.onNodeWithContentDescription("Settings")
+            .fetchSemanticsNode().boundsInRoot.width
+        assertTrue("The stronger visible ring must preserve the 48dp touch boundary",
+            width <= settingsWidth * 1.5f)
+        center.performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("OPEN ORBIT").assertDoesNotExist()
+    }
+
+    @Test
+    fun expandedOrbitCollapseIsAnAccessibleButton() {
+        launchMonolith(apps = listOf(appAlpha, appBeta))
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications collapsed"
+            )
+        ).performClick()
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications expanded"
+            ) and SemanticsMatcher.expectValue(
+                SemanticsProperties.Role, Role.Button
+            )
+        ).performClick()
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNode(
+                    SemanticsMatcher.expectValue(
+                        SemanticsProperties.StateDescription, "Orbit applications collapsed"
+                    )
+                ).assertExists()
+            }.isSuccess
+        }
+    }
+
+    @Test
     fun collapseControlStillClosesOrbitOnOrdinaryTap() {
         launchMonolith(apps = listOf(appAlpha, appBeta))
         composeRule.onNode(

@@ -19,6 +19,15 @@ Run `bash scripts/collect-device-acceptance.sh preview /path/to/report.txt --lau
 
 **All device checks remain NOT RUN until actual Lenovo observations are recorded.**
 
+## Orbit trigger contrast/semantics follow-up (device checks OPEN)
+
+- [ ] Compare the collapsed trigger on the same phone/display brightness with the previous signed beta. The optical ring should be clearly visible, but the 48dp hit area should remain localized to the center.
+- [ ] Test collapsed trigger tapping, long press, expanded Collapse tap, hold-and-drag app selection, release outside icons and Android swipe-up. Confirm no accidental app launch or lost swipe gestures.
+- [ ] Enable TalkBack: the collapsed control should announce a button, its action and collapsed state; after expansion the Collapse control should announce a button and expanded state.
+- [ ] Repeat with enlarged font and system reduced motion; no labels should overlap the Orbit icon targets.
+
+**Checks remain NOT RUN until observed on Lenovo.** Compose tests are not physical touch or visual evidence.
+
 ## PR #54 Preview — P4 real Editorial recent shortcuts (not device-tested)
 
 - [ ] Launch two different apps from MONOLITH, open Editorial and confirm only real locally recorded recent apps appear in most-recent-first order under the localized `RECENT IN MONOLITH` header.
