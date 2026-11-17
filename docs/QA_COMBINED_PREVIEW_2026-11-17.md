@@ -8,7 +8,7 @@ This branch combines the **source and tests** from [PR #55](https://github.com/l
 
 ## Intent and boundaries
 
-- **Only** the separate `dev.monolith.launcher.preview` Debug Preview is built for visual comparison. This build uses a **test certificate**, not the permanent production certificate. It does **not** upgrade the installed `dev.monolith.launcher` or authorize a signed release.
+- The branch was first built as a separate `dev.monolith.launcher.preview` with a **test certificate**. On 2026-11-17 the user additionally **authorized a signed beta release** of this combined branch. Any production `dev.monolith.launcher` APK must pass the original pinned signing-certificate check; Preview cannot be installed over the signed production launcher.
 - No original app-icon artwork, HOME-role logic, existing preferences, app identifiers or release signing configuration changes.
 - Automated Android unit/Compose tests, icon-fidelity guard, Android Lint and APK identity/signing smoke checks must all pass against the **integration commit**. Success on the individual PRs does not establish combined correctness.
 - **Physical Lenovo checks remain NOT RUN** unless the user provides observations/screenshots. A green CI is not a screenshot or measured touch/gesture result.
@@ -23,4 +23,4 @@ This branch combines the **source and tests** from [PR #55](https://github.com/l
 - [ ] **HOME role:** on production package, `adb shell cmd role holders android.app.role.HOME` is a **read-only** diagnostic. If it is not `dev.monolith.launcher`, the Set Default prompt is expected. Do not grant or modify role automatically.
 - [ ] Report all clipped text, unexpected overlays, missing hit targets, jank and accidental launches. Record exact firmware, version, density/font scale and screenshots.
 
-The next signed production beta may be considered **only after** the combined CI passes and the critical Lenovo visual/touch comparisons above are reviewed. Merging a Preview PR does not itself publish a signed release.
+Release decision: the user explicitly authorized shipping this integration as a **beta** while Lenovo visual/touch checks remain pending. The new `0.25.1-beta` release must be labeled beta with the open checks prominently disclosed. Merging PR #60 is not by itself evidence that the permanent signing job ran, or that GitHub Release and its signed APK were actually published.

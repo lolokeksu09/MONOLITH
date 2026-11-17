@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.25.1-beta — combined visual polish release
+
+- Release integration PR #60: approved INK transparency fallback, compact App Drawer, accessible full-row Settings search switch, improved Orbit trigger contrast and screen-reader semantics.
+- No native app icon artwork, stored preference keys, package ID, existing HOME role handling or signing certificate change. Lenovo physical acceptance remains open; this is a beta and not a stable-device validation claim.
+
 ## Unreleased — Orbit trigger clarity and accessibility
 
 - Increase the **visible** collapsed Orbit ring from roughly 24dp to 34dp within its existing 42dp canvas. Improve its contrast and the caption's readability while preserving the exact 48dp touch target, application icon artwork, expansion geometry and gestures.
