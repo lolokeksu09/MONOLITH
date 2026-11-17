@@ -65,12 +65,8 @@ object AppIconCache {
                     config = Bitmap.Config.ARGB_8888
                 )
                 AppIconStyle.MONO -> renderMonochrome(drawable, boundedSize)
-                AppIconStyle.INK -> nativeInkDrawable(drawable)?.let {
-                    renderInk(it, boundedSize)
-                } ?: drawable.toBitmap(
-                    width = boundedSize,
-                    height = boundedSize,
-                    config = Bitmap.Config.ARGB_8888
+                AppIconStyle.INK -> renderInkWithOriginalFallback(
+                    drawable, nativeInkDrawable(drawable), boundedSize
                 )
             }
         }.getOrNull() ?: return null
@@ -96,6 +92,45 @@ private fun nativeInkDrawable(drawable: Drawable): Drawable? =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
         drawable is AdaptiveIconDrawable
     ) drawable.monochrome else null
+
+/**
+ * Some adaptive-icon monochrome layers render nearly transparent. The icon
+ * renderer must not cache an empty INK bitmap as a successful application
+ * icon. Fallback uses the untouched activity icon, matching the existing
+ * fallback for apps that have no monochrome layer.
+ */
+internal fun renderInkWithOriginalFallback(
+    original: Drawable,
+    monochrome: Drawable?,
+    sizePx: Int
+): Bitmap {
+    val candidate = monochrome?.let { mono ->
+        runCatching { renderInk(mono, sizePx) }.getOrNull()
+    }
+    if (candidate != null && containsVisibleInkArtwork(candidate)) return candidate
+    return original.toBitmap(
+        width = sizePx,
+        height = sizePx,
+        config = Bitmap.Config.ARGB_8888
+    )
+}
+
+/**
+ * Check cached monochrome output once, off the UI thread. At least 1/512 of
+ * the pixels must have useful opacity; isolated transparent/noise pixels do
+ * not count as recognizable icon artwork.
+ */
+internal fun containsVisibleInkArtwork(bitmap: Bitmap): Boolean {
+    if (bitmap.width <= 0 || bitmap.height <= 0) return false
+    val pixels = IntArray(bitmap.width * bitmap.height)
+    bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+    val required = (pixels.size / 512).coerceAtLeast(4)
+    var visible = 0
+    for (pixel in pixels) {
+        if ((pixel ushr 24) >= 48 && ++visible >= required) return true
+    }
+    return false
+}
 
 private fun renderMonochrome(drawable: Drawable, sizePx: Int): Bitmap =
     renderDrawable(drawable, sizePx, Paint(Paint.ANTI_ALIAS_FLAG).apply {
