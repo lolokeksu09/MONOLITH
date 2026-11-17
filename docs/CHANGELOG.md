@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — compact All Apps header (screenshot follow-up, 2026-11-17)
+
+- Remove redundant MONOLITH overline within All Apps; keep the page title, Back and Settings in the existing 48dp control row. Shorten upper whitespace and tighten grid row spacing without changing any app icon artwork, sizes or hit targets.
+- Keep top/bottom search configurations, IME quick launch, sorting selection, two-line four-column app labels and full TalkBack names. Preserve at least 48dp touch height and the original application package and signing identity.
+- Add a Compose navigation/search/sort regression and an explicit [drawer visual QA checklist](DRAWER_POLISH_2026-11-17.md). Screenshot comparison on Lenovo remains open.
+
+
 ## 0.25.0-beta candidate — handheld hierarchy and one-handed launcher improvements (PR #54)
 
 - Assert manifest package identity from actual built APKs in CI: `dev.monolith.launcher.preview` for Debug Preview and `dev.monolith.launcher` for disposable-key release smoke build, in addition to pinned-certificate check in the production-only release workflow.

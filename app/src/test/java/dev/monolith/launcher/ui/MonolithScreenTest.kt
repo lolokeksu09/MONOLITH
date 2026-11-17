@@ -452,6 +452,29 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun compactDrawerHeaderKeepsSearchSortAndBackNavigation() {
+        currentPreferences.value = LauncherPreferences(drawerColumns = 4)
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Apps").assertIsDisplayed()
+        // The brand remains on HOME; the drawer no longer repeats it above
+        // the page title, leaving more room for the actual catalog.
+        composeRule.onNodeWithText("MONOLITH").assertDoesNotExist()
+        composeRule.onNode(hasSetTextAction()).assertIsDisplayed()
+
+        composeRule.onNodeWithText("A–Z").performClick()
+        composeRule.onNodeWithText("Most frequently launched").performClick()
+        composeRule.waitForIdle()
+        assertEquals(dev.monolith.launcher.data.AppSort.FREQUENT,
+            currentPreferences.value.appSort)
+
+        composeRule.onNodeWithContentDescription("Back to home").performClick()
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+    }
+
+    @Test
     fun drawerListsInstalledApps() {
         launchMonolith()
         composeRule.onNodeWithText("ALL APPS ↑").performClick()

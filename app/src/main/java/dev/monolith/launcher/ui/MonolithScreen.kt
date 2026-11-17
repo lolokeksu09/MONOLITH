@@ -284,7 +284,7 @@ fun MonolithScreen(
                             .background(Color.Black)
                             .windowInsetsPadding(WindowInsets.safeDrawing)
                             .imePadding()
-                            .padding(horizontal = 20.dp, vertical = 10.dp)
+                            .padding(horizontal = 20.dp, vertical = 8.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth().pointerInput(Unit) {
@@ -315,20 +315,13 @@ fun MonolithScreen(
                                     tint = Foreground
                                 )
                             }
-                            Column(
+                            Text(
+                                stringResource(R.string.drawer_title),
                                 modifier = Modifier.weight(1f).padding(start = 10.dp),
-                                horizontalAlignment = Alignment.Start
-                            ) {
-                                Text(
-                                    "MONOLITH", color = Muted, fontSize = 10.sp,
-                                    fontWeight = FontWeight.Medium, letterSpacing = 2.sp
-                                )
-                                Text(
-                                    stringResource(R.string.drawer_title),
-                                    fontSize = 29.sp, fontWeight = FontWeight.SemiBold,
-                                    letterSpacing = (-.8).sp, lineHeight = 34.sp
-                                )
-                            }
+                                fontSize = 26.sp, fontWeight = FontWeight.SemiBold,
+                                letterSpacing = (-.6).sp, lineHeight = 32.sp,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis
+                            )
                             TextButton(
                                 onClick = {
                                     settingsOrigin = Screen.ALL_APPS
@@ -343,9 +336,9 @@ fun MonolithScreen(
                                 )
                             }
                         }
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(6.dp))
                         Box(Modifier.fillMaxWidth().height(1.dp).background(Outline))
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(9.dp))
                         val bottomSearch = preferences.drawerSearchPosition ==
                             DrawerSearchPosition.BOTTOM
                         if (preferences.showDrawerSearch && !bottomSearch) {
@@ -360,7 +353,7 @@ fun MonolithScreen(
                                 }
                             )
                         }
-                        Spacer(Modifier.height(9.dp))
+                        Spacer(Modifier.height(7.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -419,9 +412,9 @@ fun MonolithScreen(
                                 state = gridState,
                                 columns = GridCells.Fixed(preferences.drawerColumns),
                                 modifier = Modifier.fillMaxWidth().weight(1f),
-                                contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp),
+                                contentPadding = PaddingValues(top = 9.dp, bottom = 16.dp),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                verticalArrangement = Arrangement.spacedBy(14.dp)
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 items(visibleApps, key = { it.id }) { app ->
                                     DrawerAppTile(
@@ -910,7 +903,7 @@ private fun DrawerSearchField(
             onSearch()
         }),
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
         colors = TextFieldDefaults.colors(
             focusedTextColor = Foreground,
             unfocusedTextColor = Foreground,
@@ -1128,7 +1121,7 @@ private fun SortPicker(selected: AppSort, onChange: (AppSort) -> Unit) {
     Box {
         TextButton(
             onClick = { open = true },
-            modifier = Modifier.widthIn(max = 192.dp)
+            modifier = Modifier.widthIn(max = 176.dp)
                 .border(.7.dp, Outline, RoundedCornerShape(10.dp))
                 .heightIn(min = 48.dp)
         ) {
