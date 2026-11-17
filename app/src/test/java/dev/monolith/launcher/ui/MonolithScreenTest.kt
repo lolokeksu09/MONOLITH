@@ -450,13 +450,35 @@ class MonolithScreenTest {
             onLaunch = { launched += it }
         )
         composeRule.onNodeWithText("EDITORIAL →").performClick()
-        composeRule.onNodeWithText("RECENT IN MONOLITH").assertExists()
+        // One recent app is supplemented with a real quick-access fallback.
+        composeRule.onNodeWithText("QUICK ACCESS").assertExists()
+        composeRule.onNodeWithText("RECENT IN MONOLITH").assertDoesNotExist()
         composeRule.onNodeWithText("Beta").assertIsDisplayed()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Beta").performClick()
         composeRule.waitForIdle()
         assertEquals(listOf(appBeta), launched)
         assertEquals(listOf(appAlpha.id), currentFavorites.value)
         composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+    }
+
+    @Config(qualifiers = "w412dp-h860dp")
+    @Test
+    fun minimalOneRecentAppAlsoShowsPinnedAndAvailableApps() {
+        val launched = mutableListOf<LaunchableApp>()
+        currentFavorites.value = listOf(appAlpha.id)
+        launchMonolith(
+            apps = listOf(appAlpha, appBeta, appGamma),
+            launchStats = mapOf(appBeta.id to LaunchStats(1, 100L)),
+            onLaunch = { launched += it }
+        )
+        composeRule.onNodeWithText("QUICK ACCESS").assertIsDisplayed()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+        composeRule.onNodeWithText("Beta").assertIsDisplayed()
+        composeRule.onNodeWithText("Gamma").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Gamma").performClick()
+        assertEquals(listOf(appGamma), launched)
+        assertEquals(listOf(appAlpha.id), currentFavorites.value)
     }
 
     @Test

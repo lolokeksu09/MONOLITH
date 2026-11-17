@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — always-filled HOME shortcut row
+
+- Fill empty slots in Minimal/Editorial with existing Orbit favorites and frequent installed apps **after** launcher-local recent apps; deduplicate by app ID and cap the row at four. One recent app no longer leaves three blank positions when other visible apps exist.
+- Name the section "Recent" only when every displayed shortcut is actually recent; otherwise use the existing Quick Access heading. No fake usage data, permissions, new preferences or icon artwork changes.
+- Add pure selection/hidden-app/limit regressions and an end-to-end Compose check for one recent plus pinned/available shortcuts.
+
 ## Unreleased — visible Minimal & Editorial shortcuts
 
 - Make lower quick apps identifiable **without first opening Orbit**: show the same two-line, high-contrast app captions on Minimal and Editorial, plus a stronger shortcut section heading.

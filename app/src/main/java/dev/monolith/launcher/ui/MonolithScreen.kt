@@ -97,6 +97,7 @@ import dev.monolith.launcher.data.LaunchStats
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.chooseReferenceApps
 import dev.monolith.launcher.data.chooseRecentlyOpenedApps
+import dev.monolith.launcher.data.chooseHomeShortcuts
 import dev.monolith.launcher.data.filterApps
 import dev.monolith.launcher.data.filterHiddenApps
 import dev.monolith.launcher.data.ORBIT_CAPACITY
@@ -213,12 +214,15 @@ fun MonolithScreen(
             favoriteIds = orbitFavorites
         )
     }
-    // Editorial uses real launcher-local recent activity; Orbit retains its
-    // saved favorites and frequent-app fallback. No Android usage permission.
+    // HOME shows up to four meaningful shortcuts immediately. Genuine
+    // launcher-local recents take priority; Orbit favorites/frequent apps
+    // fill remaining slots without duplicates or a usage-permission request.
     val recentEditorialApps = remember(apps, hiddenApps, launchStats) {
         chooseRecentlyOpenedApps(apps, hiddenApps, launchStats)
     }
-    val editorialApps = recentEditorialApps.ifEmpty { referenceApps }
+    val homeShortcuts = remember(recentEditorialApps, referenceApps) {
+        chooseHomeShortcuts(recentEditorialApps, referenceApps)
+    }
 
     val launchAndReturnHome: (LaunchableApp) -> Unit = { app ->
         screen = Screen.HOME
@@ -261,10 +265,10 @@ fun MonolithScreen(
             when (screen) {
                 Screen.HOME -> ReferenceHome(
                     apps = referenceApps,
-                    editorialApps = editorialApps,
-                    editorialIsRecent = recentEditorialApps.isNotEmpty(),
-                    minimalQuickApps = editorialApps,
-                    minimalQuickIsRecent = recentEditorialApps.isNotEmpty(),
+                    editorialApps = homeShortcuts.apps,
+                    editorialIsRecent = homeShortcuts.allRecent,
+                    minimalQuickApps = homeShortcuts.apps,
+                    minimalQuickIsRecent = homeShortcuts.allRecent,
                     iconStyle = preferences.appIconStyle,
                     homeRequestGeneration = homeRequestGeneration,
                     isDefaultHome = isDefaultHome,
