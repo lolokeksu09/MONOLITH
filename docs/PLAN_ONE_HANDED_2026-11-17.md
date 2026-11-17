@@ -17,9 +17,16 @@
 | P0 | Finish handheld hierarchy, error states, icon and accessible-selection fixes | `ReferenceHome.kt`, `MonolithScreen.kt`, existing UI tests | [PR #54](https://github.com/lolokeksu09/MONOLITH/pull/54) checks pass; physical-device test separate | Implemented on draft PR #54 |
 | P1 | **Search IME quick launch:** when nonblank search is settled and exactly one visible app remains, Search opens it; otherwise Search only hides keyboard | `MonolithScreen.kt`, `MonolithScreenTest.kt` | Top and Bottom use one guarded handler; positive and negative tests; successful unit tests, Lint, debug APK and native-icon guard | Implemented; Android CI passed for code commit `d061e538` (device QA pending) |
 | P2 | Optional press/drag/release **from the expanded Orbit's Collapse control** (not from collapsed center) | `ReferenceHome.kt`, `OrbitLayout.kt` and gesture tests | No launch outside a 20dp target, until animation is complete, or on cancellation. Existing tap and app icon actions retained; physical device gesture review | Implemented; Android CI #44025481548 passed for `e0cb52dd` (Lenovo gesture QA still pending) |
-| P3 | Responsive component placement if layout fails at compact screens or large text | `ReferenceHome.kt`, screenshot comparison | No clipping with safeDrawing/IME, RU/EN and font scaling; icons stay unchanged | **Not implemented** |
+| P3 | Safe-area responsive Minimal and Editorial composition for compact screens or large text | `ReferenceHome.kt`, Compose UI tests | Clock remains readable, optional low-value labels/quick dock yield space, Editorial shows four primary shortcuts on compact height, original icons and navigation unchanged | Implemented in source on this patch; CI and real device visual QA pending |
 | P4 | Clarify Editorial shortcuts and empty state based on real launches | `ReferenceHome.kt`, focused UI tests | Actual one-tap action; no decorative status or extra permissions | **Not implemented** |
 | P5 | Shipping / performance gate | `docs/DEVICE_ACCEPTANCE.md`, CI, direct Lenovo observations | Record frame/startup measurements, settings preservation on signed update, HOME fallback and TalkBack before stable | **Not implemented** |
+
+## P3 responsive layout contract (implemented source; device QA open)
+
+1. Compute layout using the actual safeDrawing width and height plus the platform font scale. Normal 412 × 860dp / 1.0 scale retains the approved 32dp media top, 142dp clock top, 78sp clock, 215dp shortcut bottom and eight Editorial shortcuts.
+2. When height is under 700dp, width under 360dp or font scale at least 1.25, reduce clock/Editorial typography and upper padding while keeping clock and native icon artwork. Time always remains visible.
+3. On a safeDrawing area shorter than 590dp, remove the **duplicated** Minimal quick-access strip (Orbit and All Apps remain reachable). On compact Editorial show the first four real shortcuts; the rest stay in the ordinary drawer and Orbit. Drop only the decorative greeting in very short or extra-large-text layouts.
+4. No new user setting, persistence migration or change to HOME gesture paths. CI asserts normal and compact layout properties and a rendered short-screen HOME; physical screenshot comparison and large-text/IME acceptance remain pending.
 
 ## P2 gesture contract (implemented source; device QA open)
 

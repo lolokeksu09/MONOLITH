@@ -2,6 +2,10 @@
 
 ## Unreleased — handheld visual hierarchy pass
 
+- Calculate safe-area and font-scale responsive layouts on Minimal and Editorial: scaled clock and weekday, compact top spacing, four real Editorial shortcuts instead of eight in compact layouts, and omission of only the duplicated Minimal quick-access strip on very short screens.
+- Preserve existing default-size layout and all original application icon geometry and gestures; add normal/compact/large-text unit checks and a 320×520dp Compose rendering test. Physical screenshot QA remains open.
+
+
 - Add opt-in hold/drag/release selection from the expanded Orbit's existing Collapse control: only drop within a 20dp target after expansion can launch; cancellation and release outside any icon are inert.
 - Keep ordinary Collapse tap, app-icon tap/hold, source icon artwork and all current controls. Provide drag target text feedback and geometry/Compose regression checks; physical gesture QA still open.
 

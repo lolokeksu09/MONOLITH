@@ -1,6 +1,10 @@
 package dev.monolith.launcher.ui
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -85,6 +89,65 @@ class MonolithScreenTest {
                 onClearLaunchHistory = onClearLaunchHistory
             )
         }
+    }
+
+    @Test
+    fun regularPhoneLayoutPreservesApprovedHomeHierarchy() {
+        val layout = referencePhoneLayout(412f, 860f, 1f)
+        assertFalse(layout.compact)
+        assertEquals(32, layout.mediaTopDp)
+        assertEquals(142, layout.clockTopDp)
+        assertEquals(78f, layout.clockFontSp)
+        assertEquals(215, layout.quickAppsBottomDp)
+        assertTrue(layout.showQuickApps)
+        assertEquals(8, layout.editorialAppLimit)
+        assertEquals(144, layout.editorialBottomDp)
+    }
+
+    @Test
+    fun compactAndLargeFontLayoutsKeepTheClockAndReduceClutter() {
+        val compact = referencePhoneLayout(320f, 640f, 1.5f)
+        assertTrue(compact.compact)
+        assertTrue(compact.showQuickApps)
+        assertTrue(compact.clockFontSp < 78f)
+        assertEquals(4, compact.editorialAppLimit)
+        assertTrue(compact.editorialDayFontSp < 96f)
+
+        val short = referencePhoneLayout(320f, 520f, 2f)
+        assertTrue(short.compact)
+        assertFalse(short.showQuickApps)
+        assertFalse(short.showClockDate)
+        assertFalse(short.showEditorialGreeting)
+        assertTrue(short.clockFontSp > 0f)
+        assertTrue(short.clockTopDp + short.clockLineSp * 2f < 260f)
+
+        // An invalid font scale cannot create NaN offsets or font sizes.
+        assertTrue(referencePhoneLayout(320f, 520f, Float.NaN).clockFontSp.isFinite())
+    }
+
+    @Test
+    fun veryShortScreenRetainsOrbitAndAppsNavigationWithoutQuickDockOverlap() {
+        composeRule.setContent {
+            Box(Modifier.size(320.dp, 520.dp)) {
+                ReferenceHome(
+                    apps = listOf(appAlpha, appBeta),
+                    iconStyle = AppIconStyle.ORIGINAL,
+                    homeRequestGeneration = 0,
+                    isDefaultHome = true,
+                    loading = false,
+                    loadError = false,
+                    onRetry = {},
+                    onLaunch = {},
+                    onAppActions = {},
+                    onAllApps = {},
+                    onSettings = {},
+                    onMakeDefaultHome = {}
+                )
+            }
+        }
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+        composeRule.onNodeWithText("QUICK ACCESS").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Settings").assertExists()
     }
 
     @Test

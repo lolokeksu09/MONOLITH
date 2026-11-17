@@ -6,6 +6,15 @@ Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, rec
 
 **2026-11-12 screenshot-only checkpoint:** Four user-provided images show collapsed/expanded Orbit, All Apps and Settings. See [the screenshot QA evidence record](QA_0.20_SCREENSHOT_2026-11-12.md). This is a **partial visual rendering observation, not a hardware QA pass**: installed release identity, gestures, install-over, HOME recovery, TalkBack and actual responsiveness remain unverified. **All device-test checkboxes below remain open.**
 
+## PR #54 Preview — P3 safe-area responsive composition (not device-tested)
+
+- [ ] Compare Minimal at normal and maximum supported system text scaling. The clock, media buttons, Orbit center and available shortcuts must not overlap; the clock must remain readable.
+- [ ] Test effective safeDrawing bounds equivalent to 320 × 520dp and 320 × 640dp, plus normal 412 × 860dp. Record device, font scale and screenshots. The very short layout should omit only the duplicated Minimal quick-access panel, while preserving Orbit and All Apps.
+- [ ] Open Editorial at these sizes. Check the scaled weekday, date, real shortcuts (up to four when compact), background artwork and bottom navigation; verify no interaction is hidden under Android bars.
+- [ ] Test long press actions and media keys with larger fonts, and return from HOME. Verify application original icons unchanged.
+
+All four checks above are **NOT RUN on Lenovo**; Compose tests are not pixel-level screen evidence.
+
 ## PR #54 Preview — Orbit hold/drag/release and search IME quick launch (not device-tested)
 
 **Exact source:** `e0cb52dd59b5ecf82d0fae3b32a05eddf4e7c2d1`, [Android CI #44025481548](https://github.com/lolokeksu09/MONOLITH/actions/runs/44025481548) succeeded (unit tests, Lint, debug build, icon guard and disposable-key signature check). This is a **separately installed `dev.monolith.launcher.preview`** debug build, not a production-signed update to the installed launcher.
