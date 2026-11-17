@@ -9,6 +9,7 @@
     <string name="appearance_hint">Original: app artwork. Mono: grayscale. INK: system monochrome, or original.</string>
     <string name="back_home">Back home</string>
     <string name="catalog_failed">Unable to load installed applications</string>
+    <string name="catalog_empty_retry">Unable to load apps. Try again</string>
     <string name="catalog_stale_retry">App list could not refresh. Using the last loaded list. Tap to retry.</string>
     <string name="clear_launches">Clear launch history</string>
     <string name="default_sort">Sort by default</string>

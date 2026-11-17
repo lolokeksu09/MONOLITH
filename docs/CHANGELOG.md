@@ -2,6 +2,10 @@
 
 ## Unreleased — handheld visual hierarchy pass
 
+- Correct first-load catalog failure: one retry button in All Apps, a truthful empty-state retry on HOME, and preserve the stale-catalog retry only when cached applications actually exist.
+- Mark the current sort option as selected in the menu for accessibility; trim an obsolete Classic-HOME data notice from Settings without changing saved preferences.
+- Add targeted UI regression tests for empty-error retry, cached-error display and selection semantics.
+
 - Prevent stale app results during the 180ms search debounce, while preserving immediate clear and the background projection.
 - Group Settings radio choices for screen readers; announce compact-grid app names once and preserve complete accessible labels.
 - Remove the redundant technical subtitle beneath media controls on Minimal HOME; keep real media-key actions.

@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasSetTextAction
@@ -11,6 +12,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
@@ -178,11 +180,49 @@ class MonolithScreenTest {
     fun catalogErrorOffersRetry() {
         var retried = false
         launchMonolith(apps = emptyList(), loadError = true, onRetry = { retried = true })
-        composeRule.onNodeWithText(
-            "App list could not refresh. Using the last loaded list. Tap to retry."
-        ).performClick()
+        composeRule.onNodeWithText("Unable to load apps. Try again").performClick()
         composeRule.waitForIdle()
         assertTrue(retried)
+        composeRule.onNodeWithText(
+            "App list could not refresh. Using the last loaded list. Tap to retry."
+        ).assertDoesNotExist()
+    }
+
+    @Test
+    fun firstLoadFailureInDrawerOffersExactlyOneRetry() {
+        var retries = 0
+        launchMonolith(apps = emptyList(), loadError = true, onRetry = { retries++ })
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Unable to load installed applications").assertExists()
+        composeRule.onAllNodesWithText("Try again").assertCountEquals(1)
+        composeRule.onNodeWithText(
+            "App list could not refresh. Using the last loaded list. Tap to retry."
+        ).assertDoesNotExist()
+        composeRule.onNodeWithText("Try again").performClick()
+        assertEquals(1, retries)
+    }
+
+    @Test
+    fun failedRefreshWithExistingCatalogKeepsAppsVisible() {
+        launchMonolith(apps = listOf(appAlpha), loadError = true)
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Alpha").assertExists()
+        composeRule.onNodeWithText(
+            "App list could not refresh. Using the last loaded list. Tap to retry."
+        ).assertExists()
+        composeRule.onNodeWithText("Unable to load installed applications")
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun sortMenuAnnouncesTheActiveChoice() {
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("A–Z").performClick()
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)
+                and hasText("A–Z")
+        ).assertExists()
     }
 
     @Test

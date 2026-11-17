@@ -75,6 +75,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -346,21 +347,24 @@ fun MonolithScreen(
                                 onPreferencesChange(preferences.copy(appSort = it))
                             }
                         }
-                        if (loadError) {
+                        // A cached-list refresh failure differs from a first-load failure.
+                        // Never claim that cached apps exist, or offer two retries, when empty.
+                        if (loadError && apps.isNotEmpty()) {
                             TextButton(onClick = onRetry) {
                                 Text(stringResource(R.string.catalog_stale_retry), color = Foreground)
                             }
                         }
                         when {
-                            loading && apps.isEmpty() -> {
-                                Text(stringResource(R.string.loading), color = Muted)
-                                Spacer(Modifier.weight(1f))
-                            }
                             loadError && apps.isEmpty() -> {
                                 Text(stringResource(R.string.catalog_failed), color = Muted)
-                                TextButton(onClick = onRetry) {
-                                    Text(stringResource(R.string.retry))
+                                TextButton(onClick = onRetry,
+                                    modifier = Modifier.heightIn(min = 48.dp)) {
+                                    Text(stringResource(R.string.retry), color = Foreground)
                                 }
+                                Spacer(Modifier.weight(1f))
+                            }
+                            loading && apps.isEmpty() -> {
+                                Text(stringResource(R.string.loading), color = Muted)
                                 Spacer(Modifier.weight(1f))
                             }
                             visibleApps == null -> {
@@ -564,9 +568,6 @@ fun MonolithScreen(
                         )
                     }
                     Spacer(Modifier.height(14.dp))
-                    Text(stringResource(R.string.reference_legacy_data_note),
-                        fontSize = 11.sp, color = Muted)
-                    Spacer(Modifier.height(16.dp))
                     SettingsAction(
                         title = stringResource(R.string.back_home),
                         onClick = { screen = Screen.HOME }
@@ -1105,7 +1106,8 @@ private fun SortPicker(selected: AppSort, onChange: (AppSort) -> Unit) {
             AppSort.entries.forEach { choice ->
                 DropdownMenuItem(
                     text = { Text(stringResource(sortLabel(choice))) },
-                    onClick = { open = false; if (selected != choice) onChange(choice) }
+                    onClick = { open = false; if (selected != choice) onChange(choice) },
+                    modifier = Modifier.semantics { this.selected = selected == choice }
                 )
             }
         }

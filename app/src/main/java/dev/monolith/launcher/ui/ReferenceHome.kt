@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -232,9 +233,11 @@ fun ReferenceHome(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (loadError) {
-                TextButton(onClick = onRetry) {
-                    Text(stringResource(R.string.catalog_stale_retry),
-                        color = Paper, fontSize = 12.sp)
+                TextButton(onClick = onRetry, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text(stringResource(
+                        if (apps.isEmpty()) R.string.catalog_empty_retry
+                        else R.string.catalog_stale_retry
+                    ), color = Paper, fontSize = 12.sp)
                 }
             } else if (loading && apps.isEmpty()) {
                 Text(stringResource(R.string.loading), color = Soft, fontSize = 12.sp)

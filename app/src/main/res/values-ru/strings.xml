@@ -9,6 +9,7 @@
     <string name="appearance_hint">Original — исходные; Mono — серые; INK — системные или исходные.</string>
     <string name="back_home">На рабочий стол</string>
     <string name="catalog_failed">Не удалось загрузить список приложений</string>
+    <string name="catalog_empty_retry">Не удалось загрузить приложения. Повторить</string>
     <string name="catalog_stale_retry">Не удалось обновить список. Показаны ранее загруженные приложения. Повторить.</string>
     <string name="clear_launches">Очистить историю запусков</string>
     <string name="default_sort">Сортировка по умолчанию</string>
