@@ -397,8 +397,8 @@ class MonolithScreenTest {
     fun pageIndicatorStillNavigatesBetweenMinimalAndEditorial() {
         launchMonolith()
         composeRule.onNodeWithText("EDITORIAL →").performClick()
-        composeRule.onNodeWithText("MINIMAL").assertExists()
-        composeRule.onNodeWithText("MINIMAL").performClick()
+        composeRule.onNodeWithText("MINIMAL", substring = true).assertExists()
+        composeRule.onNodeWithText("MINIMAL", substring = true).performClick()
         composeRule.onNodeWithText("OPEN ORBIT").assertExists()
     }
 

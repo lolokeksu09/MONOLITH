@@ -856,8 +856,8 @@ private fun EditorialShortcut(
         modifier = Modifier.width(if (showLabel) 58.dp else 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Preserve the approved artwork frame and the original 48dp touch
-        // target; text below it is decorative and not an extra click zone.
+        // Preserve the approved artwork frame and original 48dp touch
+        // target; the readable caption is not an extra click zone.
         Box(
             modifier = Modifier.size(48.dp)
                 .semantics { contentDescription = app.label }
@@ -891,7 +891,7 @@ private fun EditorialShortcut(
                 color = Soft, fontSize = 10.sp, maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.width(58.dp).clearAndSetSemantics { }
+                modifier = Modifier.width(58.dp)
             )
         }
     }
