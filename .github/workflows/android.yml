@@ -3,6 +3,7 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, closed]
   workflow_dispatch:
 
 permissions:
@@ -71,7 +72,17 @@ jobs:
 
   signed-release:
     needs: verify
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    # One-time merge-authorized beta release for PR #54; all other releases
+    # retain the original explicit workflow_dispatch main-branch gate.
+    # Never run the signing job for an open/updated pull request.
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request' &&
+       github.event.action == 'closed' &&
+       github.event.pull_request.merged == true &&
+       github.event.pull_request.number == 54 &&
+       github.event.pull_request.base.ref == 'main' &&
+       github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -146,9 +157,13 @@ jobs:
           VERSION_NAME="${VERSION_BASE}.${GITHUB_RUN_NUMBER}"
           ASSET="MONOLITH-${VERSION_NAME}-signed.apk"
           cp app/build/outputs/apk/release/app-release.apk "$ASSET"
+          NOTES_ARGS=(--notes "Permanently signed beta APK. Certificate pinned and verified. Refer to docs/CHANGELOG.md at this release tag for features and fixes. Physical Lenovo Legion Y70 / Motorola Android 16 acceptance is pending. Keep the stock launcher installed.")
+          if [[ "$VERSION_BASE" == "0.25.0-beta" ]]; then
+            NOTES_ARGS=(--notes-file docs/RELEASE_NOTES_0.25.md)
+          fi
           gh release create "v${VERSION_NAME}" "$ASSET" \
             --title "MONOLITH ${VERSION_NAME}" \
-            --notes "Permanently signed beta APK. Certificate pinned and verified. Refer to docs/CHANGELOG.md at this release tag for features and fixes. Physical Lenovo Legion Y70 / Motorola Android 16 acceptance is pending. Keep the stock launcher installed." \
+            "${NOTES_ARGS[@]}" \
             --prerelease --target "$GITHUB_SHA"
       - name: Destroy temporary keystore copy
         if: always()

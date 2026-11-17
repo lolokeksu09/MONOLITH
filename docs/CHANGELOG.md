@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — handheld visual hierarchy pass
+## 0.25.0-beta candidate — handheld hierarchy and one-handed launcher improvements (PR #54)
 
 - Assert manifest package identity from actual built APKs in CI: `dev.monolith.launcher.preview` for Debug Preview and `dev.monolith.launcher` for disposable-key release smoke build, in addition to pinned-certificate check in the production-only release workflow.
 
