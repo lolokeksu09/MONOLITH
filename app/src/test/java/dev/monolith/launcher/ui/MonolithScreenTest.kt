@@ -664,6 +664,36 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun settingsSearchSwitchRowTogglesFromItsLabelAndHidesDependentChoices() {
+        launchMonolith()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        composeRule.onNodeWithText("Search bar position").assertExists()
+
+        // The whole settings row is an accessible switch, not a tiny hit target.
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch)
+        ).assertExists()
+        composeRule.onNodeWithText("Show search bar in app drawer").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        assertFalse(currentPreferences.value.showDrawerSearch)
+        composeRule.onNodeWithText("Search bar position").assertDoesNotExist()
+
+        composeRule.onNodeWithText("Show search bar in app drawer").performClick()
+        composeRule.waitForIdle()
+        assertTrue(currentPreferences.value.showDrawerSearch)
+        composeRule.onNodeWithText("Search bar position").assertExists()
+    }
+
+    @Test
+    fun settingsFooterReturnsHomeWithoutExtraActionNavigation() {
+        launchMonolith()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        composeRule.onNodeWithText("Back home").performScrollTo().performClick()
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+        assertTrue(currentPreferences.value.showDrawerSearch)
+    }
+
+    @Test
     fun settingsIconModeSelectionIsAnnouncedAndReported() {
         val received = mutableListOf<LauncherPreferences>()
         launchMonolith(onPreferencesChange = {
