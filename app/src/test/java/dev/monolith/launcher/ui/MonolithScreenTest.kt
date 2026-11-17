@@ -1,6 +1,7 @@
 package dev.monolith.launcher.ui
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -151,6 +152,67 @@ class MonolithScreenTest {
                 ).assertExists()
             }.isSuccess
         }
+    }
+
+    @Test
+    fun longPressDragFromCollapseLaunchesSingleOrbitApp() {
+        val launched = mutableListOf<LaunchableApp>()
+        launchMonolith(apps = listOf(appAlpha), onLaunch = { launched += it })
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications collapsed"
+            )
+        ).performClick()
+        composeRule.waitForIdle()
+        // The existing Collapse control is 176dp below the Orbit center.
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications expanded"
+            )
+        ).performTouchInput {
+            val start = center
+            val pxPerDp = height / 48f
+            down(start)
+            advanceEventTime(800L)
+            moveTo(Offset(start.x, start.y - 48f * pxPerDp))
+            moveTo(Offset(start.x, start.y - 176f * pxPerDp))
+            up()
+        }
+        composeRule.waitForIdle()
+        assertEquals(listOf(appAlpha), launched)
+        composeRule.onNodeWithText("QUICK ACCESS").assertExists()
+    }
+
+    @Test
+    fun dragReleaseBetweenCollapseAndOrbitIconDoesNotLaunch() {
+        val launched = mutableListOf<LaunchableApp>()
+        launchMonolith(apps = listOf(appAlpha), onLaunch = { launched += it })
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications collapsed"
+            )
+        ).performClick()
+        composeRule.waitForIdle()
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications expanded"
+            )
+        ).performTouchInput {
+            val start = center
+            val pxPerDp = height / 48f
+            down(start)
+            advanceEventTime(800L)
+            moveTo(Offset(start.x, start.y - 48f * pxPerDp))
+            moveTo(Offset(start.x, start.y - 88f * pxPerDp))
+            up()
+        }
+        composeRule.waitForIdle()
+        assertTrue(launched.isEmpty())
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications expanded"
+            )
+        ).assertExists()
     }
 
     @Test
