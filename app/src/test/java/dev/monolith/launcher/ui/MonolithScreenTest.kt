@@ -134,6 +134,26 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun collapseControlStillClosesOrbitOnOrdinaryTap() {
+        launchMonolith(apps = listOf(appAlpha, appBeta))
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications collapsed"
+            )
+        ).performClick()
+        composeRule.onNodeWithText("Collapse orbit").performClick()
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNode(
+                    SemanticsMatcher.expectValue(
+                        SemanticsProperties.StateDescription, "Orbit applications collapsed"
+                    )
+                ).assertExists()
+            }.isSuccess
+        }
+    }
+
+    @Test
     fun oneHandedBottomSearchIsOptInAndStillFilters() {
         launchMonolith()
         composeRule.onNodeWithContentDescription("Settings").performClick()

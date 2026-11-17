@@ -27,6 +27,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -54,6 +55,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -82,6 +84,7 @@ import dev.monolith.launcher.R
 import dev.monolith.launcher.data.AppIconStyle
 import dev.monolith.launcher.data.LaunchableApp
 import dev.monolith.launcher.data.orbitHitTargetsEnabled
+import dev.monolith.launcher.data.orbitDragTarget
 import dev.monolith.launcher.data.orbitPositions
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -313,6 +316,10 @@ private fun MinimalScene(
         if (orbitOpen) R.string.reference_orbit_expanded
         else R.string.reference_orbit_collapsed
     )
+    // Drag selection is transient: neither app order nor user settings change.
+    var draggedOrbitIndex by remember(orbitOpen, apps) { mutableStateOf<Int?>(null) }
+    val latestOrbitProgress by rememberUpdatedState(orbitProgress)
+    val latestLaunch by rememberUpdatedState(onLaunch)
 
     BoxWithConstraints(Modifier.fillMaxSize().background(Ink)) {
         // Avoid overlap between central Orbit and quick apps on compact screens.
@@ -457,6 +464,36 @@ private fun MinimalScene(
                     modifier = Modifier.semantics {
                         stateDescription = orbitStateDescription
                     }.clickable(onClick = onToggleOrbit)
+                        // Optional one-stroke selection starts ONLY after a long
+                        // press on the existing Collapse control. Ordinary taps,
+                        // Orbit icons, and Android HOME swipes remain independent.
+                        .pointerInput(apps, orbitScale) {
+                            detectDragGesturesAfterLongPress(
+                                onDragStart = { draggedOrbitIndex = null },
+                                onDrag = { change, _ ->
+                                    change.consume()
+                                    val density = this.density
+                                    draggedOrbitIndex = orbitDragTarget(
+                                        count = apps.size,
+                                        xDp = (change.position.x - size.width / 2f) / density,
+                                        // The Collapse row is 176dp BELOW Orbit center.
+                                        yDp = (change.position.y - size.height / 2f) / density +
+                                            176f,
+                                        orbitScale = orbitScale,
+                                        progress = latestOrbitProgress,
+                                        expanded = orbitOpen
+                                    )
+                                },
+                                onDragEnd = {
+                                    val index = draggedOrbitIndex
+                                    draggedOrbitIndex = null
+                                    if (orbitHitTargetsEnabled(orbitOpen, latestOrbitProgress)) {
+                                        index?.let { apps.getOrNull(it) }?.let(latestLaunch)
+                                    }
+                                },
+                                onDragCancel = { draggedOrbitIndex = null }
+                            )
+                        }
                         .height(48.dp).padding(horizontal = 14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -470,6 +507,18 @@ private fun MinimalScene(
                     Text(
                         stringResource(R.string.reference_close_orbit),
                         color = Soft, fontSize = 11.sp, letterSpacing = 1.sp
+                    )
+                }
+            }
+            // The preview is text only; it never alters the locked icon artwork.
+            draggedOrbitIndex?.let { index ->
+                apps.getOrNull(index)?.let { target ->
+                    Text(
+                        target.label,
+                        modifier = Modifier.align(Alignment.Center)
+                            .offset(y = 224.dp).padding(horizontal = 30.dp),
+                        color = Paper, fontSize = 12.sp,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
                 }
             }

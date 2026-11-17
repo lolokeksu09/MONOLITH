@@ -82,6 +82,38 @@ class OrbitCustomizationTest {
         assertEquals(OrbitPoint(0f, 0f), orbitPositions(1).single())
     }
 
+    @Test fun orbitDragSelectsOnlyInsideAnExpandedIconHitTarget() {
+        for (count in listOf(1, 8, 12, 15)) {
+            val points = orbitPositions(count)
+            points.forEachIndexed { index, point ->
+                assertEquals(
+                    "incorrect drag target for count $count, icon $index",
+                    index, orbitDragTarget(count, point.x, point.y, 1f, 1f, true)
+                )
+                assertEquals(
+                    "incorrect scaled drag target for count $count, icon $index",
+                    index, orbitDragTarget(count, point.x * .92f, point.y * .92f,
+                        .92f, 1f, true)
+                )
+            }
+        }
+        assertEquals(null, orbitDragTarget(0, 0f, 0f, 1f, 1f, true))
+    }
+
+    @Test fun orbitDragRejectsUnintentionalOrIncompleteSelections() {
+        // Between 58dp-spaced targets, the 24dp selection radius leaves
+        // a clear cancellation gap (the finger must finish on an app).
+        assertEquals(null, orbitDragTarget(2, 0f, 0f, 1f, 1f, true))
+        assertEquals(null, orbitDragTarget(8, 250f, 250f, 1f, 1f, true))
+        assertEquals(null, orbitDragTarget(8, -58f, -87f, 1f, .89f, true))
+        assertEquals(null, orbitDragTarget(8, -58f, -87f, 1f, 1f, false))
+        assertEquals(null, orbitDragTarget(8, Float.NaN, 0f, 1f, 1f, true))
+        assertEquals(null, orbitDragTarget(8, 0f, Float.POSITIVE_INFINITY, 1f, 1f, true))
+        assertEquals(null, orbitDragTarget(8, 0f, 0f, 0f, 1f, true))
+        assertEquals(null, orbitDragTarget(8, 0f, 0f, 1f, 1f, true, -1f))
+        assertEquals(null, orbitDragTarget(8, 0f, 0f, 1f, 1f, true, Float.NaN))
+    }
+
     @Test fun collapsedOrbitHasNoAppClickTargets() {
         assertFalse(orbitHitTargetsEnabled(false))
         assertTrue(orbitHitTargetsEnabled(true))
