@@ -2,9 +2,21 @@
 
 Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, record date, firmware, tested signed APK tag and pass/fail evidence. CI success is not device success.
 
-**Latest published production-signed candidate:** [v0.24.0-beta.463](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.24.0-beta.463), built from `62eb199cb43e927c1f6dcca6633a15b693244ab8` on 2026-11-12. Its [Android CI](https://github.com/lolokeksu09/MONOLITH/actions/runs/43214691432) passed. **No physical-device acceptance evidence has been recorded for this exact signed APK.** Note firmware, installed version, certificate identity and pass/fail observations before changing this status. Earlier-version requirements below remain historical test references, not claims that v0.20 is latest.
+**Latest published production-signed candidate:** [v0.25.0-beta.487](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.25.0-beta.487), built from merge commit `2ce466624a1c17a8d27834f75dd0f4495038ed9b` on 2026-11-17. Its [release CI](https://github.com/lolokeksu09/MONOLITH/actions/runs/44033324678) passed permanent-signature verification. **Exact installed build and device acceptance remain unverified.**
 
 **2026-11-12 screenshot-only checkpoint:** Four user-provided images show collapsed/expanded Orbit, All Apps and Settings. See [the screenshot QA evidence record](QA_0.20_SCREENSHOT_2026-11-12.md). This is a **partial visual rendering observation, not a hardware QA pass**: installed release identity, gestures, install-over, HOME recovery, TalkBack and actual responsiveness remain unverified. **All device-test checkboxes below remain open.**
+
+## 2026-11-17 screenshot follow-up — INK and HOME status (open device checks)
+
+Four user-provided screenshots show Minimal, Editorial, All Apps and Settings, with **INK explicitly selected**, a nearly invisible-looking `Диск` entry and `Сделать главным экраном` at the bottom of HOME. The screenshot does **not** prove the installed version, underlying bitmap alpha, a render failure for every app, or that MONOLITH already holds the HOME role.
+
+- [ ] On Lenovo, confirm installed `dev.monolith.launcher` version via Settings/App info or `adb shell dumpsys package dev.monolith.launcher` before comparing. Verify `v0.25.0-beta.487` if testing that release.
+- [ ] Compare `Диск` and other faint icons under INK and ORIGINAL; take paired screenshots at the same display scale. On the new Preview, a fully transparent/near-invisible monochrome bitmap should fall back to the unchanged original app icon; verify no tint or layout regression for already-valid INK icons.
+- [ ] Inspect HOME role **read-only** with `adb shell cmd role holders android.app.role.HOME`. If it does not contain `dev.monolith.launcher`, the displayed `Сделать главным экраном` prompt is expected; select MONOLITH through Android's normal default-home flow, then confirm the prompt disappears after returning to the app.
+- [ ] If the role holder **is already** `dev.monolith.launcher` while the prompt remains, record `adb shell dumpsys package dev.monolith.launcher`, exact firmware, and a screenshot/video after returning to MONOLITH. Treat this as a suspected ROLE_HOME state bug, not as a confirmed one from the screenshot alone.
+- [ ] The gray capsule over the Antigravity / Authenticator row may be unrelated system overlay; repeat the screenshot after disabling visible floating/overlay UI before attributing it to MONOLITH.
+
+**No HOME-role mutation or production update is performed by this audit.**
 
 ## PR #54 Preview — P5 performance, history and HOME recovery (hardware gate open)
 
@@ -18,6 +30,15 @@ Run `bash scripts/collect-device-acceptance.sh preview /path/to/report.txt --lau
 - [ ] Enable TalkBack and enlarged fonts; verify the All Apps search, Orbit gesture alternative, Editorial shortcuts, media actions and HOME page navigation.
 
 **All device checks remain NOT RUN until actual Lenovo observations are recorded.**
+
+## Orbit trigger contrast/semantics follow-up (device checks OPEN)
+
+- [ ] Compare the collapsed trigger on the same phone/display brightness with the previous signed beta. The optical ring should be clearly visible, but the 48dp hit area should remain localized to the center.
+- [ ] Test collapsed trigger tapping, long press, expanded Collapse tap, hold-and-drag app selection, release outside icons and Android swipe-up. Confirm no accidental app launch or lost swipe gestures.
+- [ ] Enable TalkBack: the collapsed control should announce a button, its action and collapsed state; after expansion the Collapse control should announce a button and expanded state.
+- [ ] Repeat with enlarged font and system reduced motion; no labels should overlap the Orbit icon targets.
+
+**Checks remain NOT RUN until observed on Lenovo.** Compose tests are not physical touch or visual evidence.
 
 ## PR #54 Preview — P4 real Editorial recent shortcuts (not device-tested)
 

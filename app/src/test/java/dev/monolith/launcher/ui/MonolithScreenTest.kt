@@ -203,6 +203,53 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun visibleOrbitTriggerKeepsSmallTouchAreaAndButtonSemantics() {
+        launchMonolith(apps = listOf(appAlpha, appBeta))
+        val center = composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications collapsed"
+            ) and SemanticsMatcher.expectValue(
+                SemanticsProperties.Role, Role.Button
+            )
+        )
+        center.assertExists()
+        val width = center.fetchSemanticsNode().boundsInRoot.width
+        val settingsWidth = composeRule.onNodeWithContentDescription("Settings")
+            .fetchSemanticsNode().boundsInRoot.width
+        assertTrue("The stronger visible ring must preserve the 48dp touch boundary",
+            width <= settingsWidth * 1.5f)
+        center.performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("OPEN ORBIT").assertDoesNotExist()
+    }
+
+    @Test
+    fun expandedOrbitCollapseIsAnAccessibleButton() {
+        launchMonolith(apps = listOf(appAlpha, appBeta))
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications collapsed"
+            )
+        ).performClick()
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications expanded"
+            ) and SemanticsMatcher.expectValue(
+                SemanticsProperties.Role, Role.Button
+            )
+        ).performClick()
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNode(
+                    SemanticsMatcher.expectValue(
+                        SemanticsProperties.StateDescription, "Orbit applications collapsed"
+                    )
+                ).assertExists()
+            }.isSuccess
+        }
+    }
+
+    @Test
     fun collapseControlStillClosesOrbitOnOrdinaryTap() {
         launchMonolith(apps = listOf(appAlpha, appBeta))
         composeRule.onNode(
@@ -452,6 +499,37 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun compactDrawerHeaderRetainsAccessibleSearchAndBackNavigation() {
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Apps").assertIsDisplayed()
+        // Drawer no longer stacks the redundant brand subtitle above its title.
+        composeRule.onNodeWithText("MONOLITH").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Search applications").assertExists()
+        composeRule.onNode(hasSetTextAction()).performTextInput("Bet")
+        composeRule.waitUntil(5_000) {
+            runCatching { composeRule.onNodeWithText("Beta").assertIsDisplayed() }.isSuccess
+        }
+        composeRule.onNodeWithContentDescription("Back home").performClick()
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+    }
+
+    @Test
+    fun compactDrawerHeaderPreservesBottomSearchPosition() {
+        currentPreferences.value = LauncherPreferences(
+            drawerSearchPosition = DrawerSearchPosition.BOTTOM
+        )
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Apps").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Search applications").assertExists()
+        composeRule.onNode(hasSetTextAction()).performTextInput("Bet")
+        composeRule.waitUntil(5_000) {
+            runCatching { composeRule.onNodeWithText("Beta").assertIsDisplayed() }.isSuccess
+        }
+    }
+
+    @Test
     fun drawerListsInstalledApps() {
         launchMonolith()
         composeRule.onNodeWithText("ALL APPS ↑").performClick()
@@ -661,6 +739,36 @@ class MonolithScreenTest {
         composeRule.onNodeWithText("Management").assertExists()
         composeRule.onNodeWithContentDescription("Back").performClick()
         composeRule.onNodeWithText("Apps").assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsSearchSwitchRowTogglesFromItsLabelAndHidesDependentChoices() {
+        launchMonolith()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        composeRule.onNodeWithText("Search bar position").assertExists()
+
+        // The whole settings row is an accessible switch, not a tiny hit target.
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch)
+        ).assertExists()
+        composeRule.onNodeWithText("Show search bar in app drawer").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        assertFalse(currentPreferences.value.showDrawerSearch)
+        composeRule.onNodeWithText("Search bar position").assertDoesNotExist()
+
+        composeRule.onNodeWithText("Show search bar in app drawer").performClick()
+        composeRule.waitForIdle()
+        assertTrue(currentPreferences.value.showDrawerSearch)
+        composeRule.onNodeWithText("Search bar position").assertExists()
+    }
+
+    @Test
+    fun settingsFooterReturnsHomeWithoutExtraActionNavigation() {
+        launchMonolith()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        composeRule.onNodeWithText("Back home").performScrollTo().performClick()
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+        assertTrue(currentPreferences.value.showDrawerSearch)
     }
 
     @Test

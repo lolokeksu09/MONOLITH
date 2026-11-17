@@ -36,6 +36,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -315,20 +316,18 @@ fun MonolithScreen(
                                     tint = Foreground
                                 )
                             }
-                            Column(
+                            // Keep the screen title on one line to restore
+                            // usable vertical space without shrinking touch targets.
+                            Text(
+                                stringResource(R.string.drawer_title),
                                 modifier = Modifier.weight(1f).padding(start = 10.dp),
-                                horizontalAlignment = Alignment.Start
-                            ) {
-                                Text(
-                                    "MONOLITH", color = Muted, fontSize = 10.sp,
-                                    fontWeight = FontWeight.Medium, letterSpacing = 2.sp
-                                )
-                                Text(
-                                    stringResource(R.string.drawer_title),
-                                    fontSize = 29.sp, fontWeight = FontWeight.SemiBold,
-                                    letterSpacing = (-.8).sp, lineHeight = 34.sp
-                                )
-                            }
+                                fontSize = 25.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                letterSpacing = (-.5).sp,
+                                lineHeight = 30.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                             TextButton(
                                 onClick = {
                                     settingsOrigin = Screen.ALL_APPS
@@ -343,9 +342,7 @@ fun MonolithScreen(
                                 )
                             }
                         }
-                        Spacer(Modifier.height(10.dp))
-                        Box(Modifier.fillMaxWidth().height(1.dp).background(Outline))
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(8.dp))
                         val bottomSearch = preferences.drawerSearchPosition ==
                             DrawerSearchPosition.BOTTOM
                         if (preferences.showDrawerSearch && !bottomSearch) {
@@ -513,25 +510,20 @@ fun MonolithScreen(
                             )
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
-                    Text(stringResource(R.string.orbit_density_hint), fontSize = 12.sp,
-                        lineHeight = 17.sp, color = Muted)
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(12.dp))
                     SettingsAction(
                         title = stringResource(R.string.reference_customize_orbit),
                         onClick = { orbitQuery = ""; screen = Screen.ORBIT_APPS }
                     )
                     Spacer(Modifier.height(18.dp))
                     SettingsSectionHeading(stringResource(R.string.settings_section_catalog))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(stringResource(R.string.drawer_search_toggle), modifier = Modifier.weight(1f))
-                        Switch(checked = preferences.showDrawerSearch,
-                            onCheckedChange = { onPreferencesChange(preferences.copy(showDrawerSearch = it)) })
-                    }
+                    SettingsSwitchRow(
+                        title = stringResource(R.string.drawer_search_toggle),
+                        checked = preferences.showDrawerSearch,
+                        onCheckedChange = {
+                            onPreferencesChange(preferences.copy(showDrawerSearch = it))
+                        }
+                    )
                     if (preferences.showDrawerSearch) {
                         Spacer(Modifier.height(10.dp))
                         Text(stringResource(R.string.drawer_search_position),
@@ -556,9 +548,6 @@ fun MonolithScreen(
                                 )
                             }
                         }
-                        Spacer(Modifier.height(8.dp))
-                        Text(stringResource(R.string.drawer_search_position_hint),
-                            color = Muted, fontSize = 11.sp, lineHeight = 15.sp)
                     }
                     Spacer(Modifier.height(16.dp))
                     Text(stringResource(R.string.drawer_columns), color = Muted, fontSize = 13.sp)
@@ -606,11 +595,14 @@ fun MonolithScreen(
                             onClick = onMakeDefaultHome
                         )
                     }
-                    Spacer(Modifier.height(14.dp))
-                    SettingsAction(
-                        title = stringResource(R.string.back_home),
-                        onClick = { screen = Screen.HOME }
-                    )
+                    Spacer(Modifier.height(10.dp))
+                    TextButton(
+                        onClick = { screen = Screen.HOME },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    ) {
+                        Text(stringResource(R.string.back_home),
+                            fontSize = 13.sp, color = Muted)
+                    }
                 }
                 Screen.ORBIT_APPS -> {
                     val keyboardController = LocalSoftwareKeyboardController.current
@@ -885,11 +877,15 @@ private fun DrawerSearchField(
     onSearch: () -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val searchLabel = stringResource(R.string.drawer_search_label)
     TextField(
         value = query,
         onValueChange = onQueryChange,
-        label = { Text(stringResource(R.string.drawer_search_label)) },
-        placeholder = { Text(stringResource(R.string.drawer_search_placeholder)) },
+        // One accessible placeholder instead of two competing labels. The
+        // field retains the same Search IME action and keyboard behavior.
+        placeholder = {
+            Text(searchLabel, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        },
         leadingIcon = {
             Icon(painterResource(R.drawable.ic_search),
                 contentDescription = null, modifier = Modifier.size(20.dp))
@@ -910,7 +906,8 @@ private fun DrawerSearchField(
             onSearch()
         }),
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
+            .semantics { contentDescription = searchLabel },
         colors = TextFieldDefaults.colors(
             focusedTextColor = Foreground,
             unfocusedTextColor = Foreground,
@@ -1018,6 +1015,29 @@ private fun SettingsSectionHeading(title: String) {
         )
         Spacer(Modifier.width(16.dp))
         Box(Modifier.weight(1f).height(1.dp).background(Outline))
+    }
+}
+
+/**
+ * One 56dp tap target for the entire preference, not only the small switch.
+ * A single toggleable parent supplies Switch semantics for TalkBack and
+ * avoids competing click handlers on the text and thumb.
+ */
+@Composable
+private fun SettingsSwitchRow(
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(title, modifier = Modifier.weight(1f).padding(end = 16.dp),
+            fontSize = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Switch(checked = checked, onCheckedChange = null)
     }
 }
 
