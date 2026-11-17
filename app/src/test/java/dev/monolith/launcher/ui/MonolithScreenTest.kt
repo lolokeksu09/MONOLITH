@@ -364,6 +364,10 @@ class MonolithScreenTest {
         assertEquals(Screen.HOME, destinationOnBack(Screen.ALL_APPS, Screen.HOME))
     }
 
+    // The default Robolectric viewport is intentionally short (<590dp),
+    // where Minimal hides its bottom shortcuts. Use a realistic taller HOME
+    // viewport to verify the visible shortcut row rather than a clipped node.
+    @Config(qualifiers = "w412dp-h860dp")
     @Test
     fun minimalQuickAccessShowsRecentAppsInsteadOfRepeatingOrbitFavorites() {
         val launched = mutableListOf<LaunchableApp>()
