@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — Orbit trigger clarity and accessibility
+
+- Increase the **visible** collapsed Orbit ring from roughly 24dp to 34dp within its existing 42dp canvas. Improve its contrast and the caption's readability while preserving the exact 48dp touch target, application icon artwork, expansion geometry and gestures.
+- Expose the collapsed trigger as an explicit accessible Button with a localized action and collapsed state; expose the expanded Collapse control as an accessible Button with expanded state. Preserve its existing normal-tap and hold/drag behaviors.
+- Add Compose tests for button-role semantics, unchanged touch bounds, opening and collapsing Orbit. Physical Lenovo visual and gesture review remains open.
+
+
 ## 0.25.0-beta candidate — handheld hierarchy and one-handed launcher improvements (PR #54)
 
 - Assert manifest package identity from actual built APKs in CI: `dev.monolith.launcher.preview` for Debug Preview and `dev.monolith.launcher` for disposable-key release smoke build, in addition to pinned-certificate check in the production-only release workflow.
