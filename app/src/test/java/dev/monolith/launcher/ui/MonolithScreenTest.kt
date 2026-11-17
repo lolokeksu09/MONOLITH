@@ -14,6 +14,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.longClick
@@ -58,7 +59,8 @@ class MonolithScreenTest {
         onRetry: () -> Unit = {},
         onPreferencesChange: (LauncherPreferences) -> Unit =
             { currentPreferences.value = it },
-        onClearLaunchHistory: () -> Unit = {}
+        onClearLaunchHistory: () -> Unit = {},
+        onLaunch: (LaunchableApp) -> Unit = {}
     ) {
         composeRule.setContent {
             MonolithScreen(
@@ -73,7 +75,7 @@ class MonolithScreenTest {
                 isDefaultHome = true,
                 onRetry = onRetry,
                 onMakeDefaultHome = {},
-                onLaunch = {},
+                onLaunch = onLaunch,
                 onAppInfo = {},
                 onOrbitFavoritesChange = { currentFavorites.value = it },
                 onPreferencesChange = onPreferencesChange,
@@ -346,6 +348,46 @@ class MonolithScreenTest {
                 composeRule.onNodeWithText("Beta").assertExists()
             }.isSuccess
         }
+    }
+
+    @Test
+    fun searchImeLaunchesSingleSettledResultAndReturnsHome() {
+        val launched = mutableListOf<LaunchableApp>()
+        assertEquals(appBeta, singleDrawerImeMatch("Bet", "Bet", true, listOf(appBeta)))
+        launchMonolith(onLaunch = { launched += it })
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNode(hasSetTextAction()).performTextInput("Bet")
+        composeRule.waitUntil(5_000) {
+            runCatching { composeRule.onNodeWithText("Beta").assertIsDisplayed() }.isSuccess
+        }
+        composeRule.onNode(hasSetTextAction()).performImeAction()
+        composeRule.waitForIdle()
+        assertEquals(listOf(appBeta), launched)
+        composeRule.onNodeWithText("QUICK ACCESS").assertExists()
+    }
+
+    @Test
+    fun searchImeNeverLaunchesStaleEmptyOrAmbiguousResults() {
+        assertEquals(null, singleDrawerImeMatch("Be", "Al", true, listOf(appBeta)))
+        assertEquals(null, singleDrawerImeMatch("", "", true, listOf(appBeta)))
+        assertEquals(null, singleDrawerImeMatch("Be", "Be", false, listOf(appBeta)))
+        assertEquals(null, singleDrawerImeMatch("a", "a", true, listOf(appAlpha, appBeta)))
+        assertEquals(null, singleDrawerImeMatch("Be", "Be", true, null))
+
+        val launched = mutableListOf<LaunchableApp>()
+        launchMonolith(onLaunch = { launched += it })
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNode(hasSetTextAction()).performTextInput("a")
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+                composeRule.onNodeWithText("Beta").assertIsDisplayed()
+            }.isSuccess
+        }
+        composeRule.onNode(hasSetTextAction()).performImeAction()
+        composeRule.waitForIdle()
+        assertTrue(launched.isEmpty())
+        composeRule.onNodeWithText("Apps").assertIsDisplayed()
     }
 
     @Test

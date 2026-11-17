@@ -123,6 +123,17 @@ internal fun drawerQueryIsSettling(
     searchEnabled: Boolean
 ): Boolean = searchEnabled && query != settledQuery
 
+/** Launch a unique current search result only; never choose a stale or ambiguous app. */
+internal fun singleDrawerImeMatch(
+    query: String,
+    settledQuery: String,
+    searchEnabled: Boolean,
+    visibleApps: List<LaunchableApp>?
+): LaunchableApp? =
+    if (searchEnabled && query.isNotBlank() && query == settledQuery)
+        visibleApps?.singleOrNull()
+    else null
+
 /** Return to the parent settings screen instead of unexpectedly jumping HOME. */
 internal fun destinationOnBack(screen: Screen, settingsOrigin: Screen): Screen = when (screen) {
     Screen.ORBIT_APPS, Screen.HIDDEN_APPS -> Screen.SETTINGS
@@ -328,7 +339,16 @@ fun MonolithScreen(
                         val bottomSearch = preferences.drawerSearchPosition ==
                             DrawerSearchPosition.BOTTOM
                         if (preferences.showDrawerSearch && !bottomSearch) {
-                            DrawerSearchField(query = query, onQueryChange = { query = it })
+                            DrawerSearchField(
+                                query = query,
+                                onQueryChange = { query = it },
+                                onSearch = {
+                                    singleDrawerImeMatch(
+                                        query, debouncedQuery, preferences.showDrawerSearch,
+                                        visibleApps
+                                    )?.let(launchAndReturnHome)
+                                }
+                            )
                         }
                         Spacer(Modifier.height(9.dp))
                         Row(
@@ -406,7 +426,16 @@ fun MonolithScreen(
                         }
                         if (preferences.showDrawerSearch && bottomSearch) {
                             Spacer(Modifier.height(9.dp))
-                            DrawerSearchField(query = query, onQueryChange = { query = it })
+                            DrawerSearchField(
+                                query = query,
+                                onQueryChange = { query = it },
+                                onSearch = {
+                                    singleDrawerImeMatch(
+                                        query, debouncedQuery, preferences.showDrawerSearch,
+                                        visibleApps
+                                    )?.let(launchAndReturnHome)
+                                }
+                            )
                         }
                     }
                 }
@@ -842,7 +871,8 @@ fun MonolithScreen(
 @Composable
 private fun DrawerSearchField(
     query: String,
-    onQueryChange: (String) -> Unit
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     TextField(
@@ -865,7 +895,10 @@ private fun DrawerSearchField(
         }),
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
+        keyboardActions = KeyboardActions(onSearch = {
+            keyboardController?.hide()
+            onSearch()
+        }),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp),
         colors = TextFieldDefaults.colors(

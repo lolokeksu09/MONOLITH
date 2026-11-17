@@ -2,6 +2,9 @@
 
 ## Unreleased — handheld visual hierarchy pass
 
+- Launch the single, current filtered app when keyboard Search is pressed; leave zero, multiple, empty, disabled and pending search results non-launching, for both Top and Bottom layouts.
+- Add positive and negative Compose/Robolectric tests and the [implementation plan](PLAN_ONE_HANDED_2026-11-17.md).
+
 - Correct first-load catalog failure: one retry button in All Apps, a truthful empty-state retry on HOME, and preserve the stale-catalog retry only when cached applications actually exist.
 - Mark the current sort option as selected in the menu for accessibility; trim an obsolete Classic-HOME data notice from Settings without changing saved preferences.
 - Add targeted UI regression tests for empty-error retry, cached-error display and selection semantics.
