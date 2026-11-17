@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — compact All Apps hierarchy
+
+- Reclaim vertical space in All Apps by replacing the stacked MONOLITH subtitle/title with a single-line 25sp title and removing its redundant divider. Preserve 48dp Back/Settings hit targets and the existing sort controls.
+- Make the search field a single-line placeholder with an explicit accessible search name, retaining the Search IME action and both Top/Bottom placement preferences.
+- Add Compose regressions for the compact header, accessible input, filtered results, Back-to-HOME and Bottom search. Application icon assets, sizes, grid sorting and HOME gestures are unchanged.
+
+
 ## 0.25.0-beta candidate — handheld hierarchy and one-handed launcher improvements (PR #54)
 
 - Assert manifest package identity from actual built APKs in CI: `dev.monolith.launcher.preview` for Debug Preview and `dev.monolith.launcher` for disposable-key release smoke build, in addition to pinned-certificate check in the production-only release workflow.
