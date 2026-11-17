@@ -315,20 +315,18 @@ fun MonolithScreen(
                                     tint = Foreground
                                 )
                             }
-                            Column(
+                            // Keep the screen title on one line to restore
+                            // usable vertical space without shrinking touch targets.
+                            Text(
+                                stringResource(R.string.drawer_title),
                                 modifier = Modifier.weight(1f).padding(start = 10.dp),
-                                horizontalAlignment = Alignment.Start
-                            ) {
-                                Text(
-                                    "MONOLITH", color = Muted, fontSize = 10.sp,
-                                    fontWeight = FontWeight.Medium, letterSpacing = 2.sp
-                                )
-                                Text(
-                                    stringResource(R.string.drawer_title),
-                                    fontSize = 29.sp, fontWeight = FontWeight.SemiBold,
-                                    letterSpacing = (-.8).sp, lineHeight = 34.sp
-                                )
-                            }
+                                fontSize = 25.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                letterSpacing = (-.5).sp,
+                                lineHeight = 30.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                             TextButton(
                                 onClick = {
                                     settingsOrigin = Screen.ALL_APPS
@@ -343,9 +341,7 @@ fun MonolithScreen(
                                 )
                             }
                         }
-                        Spacer(Modifier.height(10.dp))
-                        Box(Modifier.fillMaxWidth().height(1.dp).background(Outline))
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(8.dp))
                         val bottomSearch = preferences.drawerSearchPosition ==
                             DrawerSearchPosition.BOTTOM
                         if (preferences.showDrawerSearch && !bottomSearch) {
@@ -885,11 +881,15 @@ private fun DrawerSearchField(
     onSearch: () -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val searchLabel = stringResource(R.string.drawer_search_label)
     TextField(
         value = query,
         onValueChange = onQueryChange,
-        label = { Text(stringResource(R.string.drawer_search_label)) },
-        placeholder = { Text(stringResource(R.string.drawer_search_placeholder)) },
+        // One accessible placeholder instead of two competing labels. The
+        // field retains the same Search IME action and keyboard behavior.
+        placeholder = {
+            Text(searchLabel, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        },
         leadingIcon = {
             Icon(painterResource(R.drawable.ic_search),
                 contentDescription = null, modifier = Modifier.size(20.dp))
@@ -910,7 +910,8 @@ private fun DrawerSearchField(
             onSearch()
         }),
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
+            .semantics { contentDescription = searchLabel },
         colors = TextFieldDefaults.colors(
             focusedTextColor = Foreground,
             unfocusedTextColor = Foreground,

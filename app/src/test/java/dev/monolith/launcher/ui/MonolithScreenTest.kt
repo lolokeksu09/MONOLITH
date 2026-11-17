@@ -452,6 +452,37 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun compactDrawerHeaderRetainsAccessibleSearchAndBackNavigation() {
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Apps").assertIsDisplayed()
+        // Drawer no longer stacks the redundant brand subtitle above its title.
+        composeRule.onNodeWithText("MONOLITH").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Search applications").assertExists()
+        composeRule.onNode(hasSetTextAction()).performTextInput("Bet")
+        composeRule.waitUntil(5_000) {
+            runCatching { composeRule.onNodeWithText("Beta").assertIsDisplayed() }.isSuccess
+        }
+        composeRule.onNodeWithContentDescription("Back home").performClick()
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+    }
+
+    @Test
+    fun compactDrawerHeaderPreservesBottomSearchPosition() {
+        currentPreferences.value = LauncherPreferences(
+            drawerSearchPosition = DrawerSearchPosition.BOTTOM
+        )
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Apps").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Search applications").assertExists()
+        composeRule.onNode(hasSetTextAction()).performTextInput("Bet")
+        composeRule.waitUntil(5_000) {
+            runCatching { composeRule.onNodeWithText("Beta").assertIsDisplayed() }.isSuccess
+        }
+    }
+
+    @Test
     fun drawerListsInstalledApps() {
         launchMonolith()
         composeRule.onNodeWithText("ALL APPS ↑").performClick()
