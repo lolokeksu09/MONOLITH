@@ -112,8 +112,10 @@ class MonolithScreenTest {
         assertTrue(compact.compact)
         assertTrue(compact.showQuickApps)
         assertTrue(compact.clockFontSp < 78f)
-        assertEquals(4, compact.editorialAppLimit)
+        assertEquals(3, compact.editorialAppLimit)
         assertEquals(3, referencePhoneLayout(280f, 640f, 1f).editorialAppLimit)
+        assertEquals(3, referencePhoneLayout(320f, 860f, 1f).editorialAppLimit)
+        assertEquals(4, referencePhoneLayout(360f, 860f, 1f).editorialAppLimit)
         assertTrue(compact.editorialDayFontSp < 96f)
 
         val short = referencePhoneLayout(320f, 520f, 2f)
@@ -392,7 +394,39 @@ class MonolithScreenTest {
             }
         }
         composeRule.onNodeWithText("RECENT IN MONOLITH").assertIsDisplayed()
+        composeRule.onNodeWithText("Beta").assertIsDisplayed()
         composeRule.onNodeWithText("QUICK ACCESS").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Beta").performClick()
+        assertEquals(listOf(appBeta), launched)
+    }
+
+    @Config(qualifiers = "w412dp-h860dp")
+    @Test
+    fun minimalQuickAccessFallbackShowsReadableLabelsAndPreservesClick() {
+        val launched = mutableListOf<LaunchableApp>()
+        composeRule.setContent {
+            Box(Modifier.size(412.dp, 860.dp)) {
+                ReferenceHome(
+                    apps = listOf(appAlpha, appBeta),
+                    minimalQuickApps = listOf(appAlpha, appBeta),
+                    minimalQuickIsRecent = false,
+                    iconStyle = AppIconStyle.ORIGINAL,
+                    homeRequestGeneration = 0,
+                    isDefaultHome = true,
+                    loading = false,
+                    loadError = false,
+                    onRetry = {},
+                    onLaunch = { launched += it },
+                    onAppActions = {},
+                    onAllApps = {},
+                    onSettings = {},
+                    onMakeDefaultHome = {}
+                )
+            }
+        }
+        composeRule.onNodeWithText("QUICK ACCESS").assertIsDisplayed()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+        composeRule.onNodeWithText("Beta").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Beta").performClick()
         assertEquals(listOf(appBeta), launched)
     }

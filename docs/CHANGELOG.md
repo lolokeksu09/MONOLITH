@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — visible Minimal & Editorial shortcuts
+
+- Make lower quick apps identifiable **without first opening Orbit**: show the same two-line, high-contrast app captions on Minimal and Editorial, plus a stronger shortcut section heading.
+- Increase caption width from 58dp to 64dp (11sp, up to two lines), limit shortcut rows to three apps on narrow widths / enlarged font, and deepen the existing Editorial bottom scrim rather than changing native icon artwork or adding new icon frames.
+- Retain existing 29dp application icon bitmap, 42dp Editorial frame, 48dp target, onClick/longClick behavior, quick-access fallback, and page transitions. Add viewport/label/click tests; physical Lenovo visual review remains pending.
+
 ## Unreleased — Minimal & Editorial hierarchy polish
 
 - Make Minimal's quick-access row show actual launcher-local recent apps when they exist (instead of duplicating pinned Orbit apps); preserve previous pinned/frequent fallback when history is empty. No usage permissions or persistence changes.
