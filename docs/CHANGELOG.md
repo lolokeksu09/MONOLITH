@@ -3,6 +3,7 @@
 ## Unreleased — 0.25.1 INK icon resilience / HOME-role investigation
 
 - Do not cache a nearly transparent Android adaptive-icon monochrome layer as a visible INK icon. For broken/empty INK layers only, fall back to the unmodified source activity icon, as already done when no monochrome layer exists. ORIGINAL and MONO, drawing dimensions, touch targets and existing preferences remain unchanged.
+- Apply the existing INK off-white tint deterministically to monochrome alpha masks (preserving their opacity), rather than depending on a saveLayer paint color filter.
 - Add Robolectric bitmap tests for empty, barely visible, valid monochrome and missing-layer cases. Lenovo screenshots for affected app icons and actual HOME-role status are still required.
 
 

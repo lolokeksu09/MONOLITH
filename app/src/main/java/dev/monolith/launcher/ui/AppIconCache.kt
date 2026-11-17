@@ -7,8 +7,6 @@ import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
@@ -137,10 +135,22 @@ private fun renderMonochrome(drawable: Drawable, sizePx: Int): Bitmap =
         colorFilter = ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(0f) })
     })
 
-private fun renderInk(drawable: Drawable, sizePx: Int): Bitmap =
-    renderDrawable(drawable, sizePx, Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        colorFilter = PorterDuffColorFilter(0xFFF4F3F0.toInt(), PorterDuff.Mode.SRC_IN)
-    })
+/**
+ * Applying a PorterDuff color filter to a saveLayer paint is not consistent
+ * across renderers (notably in bitmap unit tests). Tint the native alpha mask
+ * explicitly, retaining its exact alpha channel and changing INK mode only.
+ */
+private fun renderInk(drawable: Drawable, sizePx: Int): Bitmap {
+    val bitmap = renderDrawable(drawable, sizePx, Paint(Paint.ANTI_ALIAS_FLAG))
+    val pixels = IntArray(sizePx * sizePx)
+    bitmap.getPixels(pixels, 0, sizePx, 0, 0, sizePx, sizePx)
+    val inkRgb = 0x00F4F3F0
+    for (i in pixels.indices) {
+        pixels[i] = (pixels[i] and 0xFF000000.toInt()) or inkRgb
+    }
+    bitmap.setPixels(pixels, 0, sizePx, 0, 0, sizePx, sizePx)
+    return bitmap
+}
 
 private fun renderDrawable(drawable: Drawable, sizePx: Int, paint: Paint): Bitmap {
     val result = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
