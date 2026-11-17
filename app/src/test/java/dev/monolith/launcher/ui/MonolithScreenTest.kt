@@ -158,7 +158,8 @@ class MonolithScreenTest {
         // The central Orbit trigger must remain accessible.
         composeRule.onNodeWithText("OPEN ORBIT").assertExists()
         composeRule.onNodeWithText("System playback controls").assertDoesNotExist()
-        composeRule.onNodeWithContentDescription("Alpha").assertExists()
+        // On short layouts the collapsed quick-access panel is intentionally hidden.
+        // The real app shortcut must still be accessible once Orbit expands.
         val center = composeRule.onNode(
             SemanticsMatcher.expectValue(
                 SemanticsProperties.StateDescription, "Orbit applications collapsed"
@@ -171,6 +172,7 @@ class MonolithScreenTest {
             width <= settingsWidth * 1.5f)
         center.performClick()
         composeRule.waitForIdle()
+        composeRule.onNodeWithContentDescription("Alpha").assertExists()
         composeRule.onNodeWithText("MONOLITH").assertDoesNotExist()
         composeRule.onNodeWithText("QUICK ACCESS").assertDoesNotExist()
     }
