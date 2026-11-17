@@ -74,6 +74,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -387,6 +389,7 @@ private fun MinimalScene(
         if (orbitOpen) R.string.reference_orbit_expanded
         else R.string.reference_orbit_collapsed
     )
+    val orbitToggleLabel = stringResource(R.string.reference_orbit_toggle)
     // Drag selection is transient: neither app order nor user settings change.
     var draggedOrbitIndex by remember(orbitOpen, apps) { mutableStateOf<Int?>(null) }
     val latestOrbitProgress by rememberUpdatedState(orbitProgress)
@@ -484,14 +487,14 @@ private fun MinimalScene(
                 OrbitCluster(
                     apps, iconStyle, orbitOpen, orbitScale, orbitProgress, onLaunch, onActions
                 )
-                // A quiet label makes the small, accessible 48dp trigger discoverable
-                // without expanding its hit box.
+                // A legible label explains the central 48dp action without
+                // expanding its hit box into the surrounding Orbit icons.
                 if (!orbitOpen) {
                     Text(
                         stringResource(R.string.reference_open_orbit),
                         modifier = Modifier.align(Alignment.Center).offset(y = 38.dp),
-                        color = Soft, fontSize = 11.sp,
-                        letterSpacing = 1.5.sp,
+                        color = Paper.copy(alpha = .86f), fontSize = 12.sp,
+                        letterSpacing = 1.2.sp,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -500,12 +503,16 @@ private fun MinimalScene(
                 if (!orbitOpen && orbitProgress <= .62f) {
                     Box(
                         modifier = Modifier.size(48.dp)
-                            .semantics { stateDescription = orbitStateDescription }
+                            .semantics {
+                                stateDescription = orbitStateDescription
+                                contentDescription = orbitToggleLabel
+                                role = Role.Button
+                            }
                             .combinedClickable(
                                 onClick = onToggleOrbit,
                                 onLongClick = onToggleOrbit,
-                                onClickLabel = stringResource(R.string.reference_orbit_toggle),
-                                onLongClickLabel = stringResource(R.string.reference_orbit_toggle)
+                                onClickLabel = orbitToggleLabel,
+                                onLongClickLabel = orbitToggleLabel
                             ),
                         contentAlignment = Alignment.Center
                     ) {
@@ -516,10 +523,12 @@ private fun MinimalScene(
                                 scaleY = scaleX
                             }
                         ) {
-                            drawCircle(Dim.copy(alpha = .72f),
-                                radius = size.minDimension * .28f,
-                                style = Stroke(width = 1.2.dp.toPx()))
-                            drawCircle(Paper.copy(alpha = .93f), radius = 2.2.dp.toPx())
+                            // ~34dp visible ring inside the original 42dp canvas;
+                            // the actual touch target remains exactly 48dp.
+                            drawCircle(Soft.copy(alpha = .86f),
+                                radius = size.minDimension * .41f,
+                                style = Stroke(width = 1.5.dp.toPx()))
+                            drawCircle(Paper.copy(alpha = .96f), radius = 2.6.dp.toPx())
                         }
                     }
                 }
@@ -539,6 +548,7 @@ private fun MinimalScene(
                 Row(
                     modifier = Modifier.semantics {
                         stateDescription = orbitStateDescription
+                        role = Role.Button
                     }.clickable(onClick = onToggleOrbit)
                         // Optional one-stroke selection starts ONLY after a long
                         // press on the existing Collapse control. Ordinary taps,

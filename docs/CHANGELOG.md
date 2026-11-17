@@ -1,5 +1,33 @@
 # Changelog
 
+## Unreleased — Orbit trigger clarity and accessibility
+
+- Increase the **visible** collapsed Orbit ring from roughly 24dp to 34dp within its existing 42dp canvas. Improve its contrast and the caption's readability while preserving the exact 48dp touch target, application icon artwork, expansion geometry and gestures.
+- Expose the collapsed trigger as an explicit accessible Button with a localized action and collapsed state; expose the expanded Collapse control as an accessible Button with expanded state. Preserve its existing normal-tap and hold/drag behaviors.
+- Add Compose tests for button-role semantics, unchanged touch bounds, opening and collapsing Orbit. Physical Lenovo visual and gesture review remains open.
+
+
+## Unreleased — Settings interaction and clarity
+
+- Make the entire search-bar preference row a 56dp accessible Switch control. Tapping the label and the switch now uses the same handler and updates dependent Top/Bottom settings immediately.
+- Remove two redundant always-visible helper paragraphs beneath Orbit density and search position without changing the saved selection or its available options.
+- Move the existing Back Home action into a quieter footer without a misleading chevron, and clarify its Russian label as «На главный экран».
+- Add Compose regressions for touch/semantics, dependent-setting visibility, and HOME return; keep original app icons, screen navigation, sorting choices, signing and persistence unchanged.
+
+## Unreleased — compact All Apps hierarchy
+
+- Reclaim vertical space in All Apps by replacing the stacked MONOLITH subtitle/title with a single-line 25sp title and removing its redundant divider. Preserve 48dp Back/Settings hit targets and the existing sort controls.
+- Make the search field a single-line placeholder with an explicit accessible search name, retaining the Search IME action and both Top/Bottom placement preferences.
+- Add Compose regressions for the compact header, accessible input, filtered results, Back-to-HOME and Bottom search. Application icon assets, sizes, grid sorting and HOME gestures are unchanged.
+
+
+## Unreleased — 0.25.1 INK icon resilience / HOME-role investigation
+
+- Do not cache a nearly transparent Android adaptive-icon monochrome layer as a visible INK icon. For broken/empty INK layers only, fall back to the unmodified source activity icon, as already done when no monochrome layer exists. ORIGINAL and MONO, drawing dimensions, touch targets and existing preferences remain unchanged.
+- Apply the existing INK off-white tint deterministically to monochrome alpha masks (preserving their opacity), rather than depending on a saveLayer paint color filter.
+- Add Robolectric bitmap tests for empty, barely visible, valid monochrome and missing-layer cases. Lenovo screenshots for affected app icons and actual HOME-role status are still required.
+
+
 ## 0.25.0-beta candidate — handheld hierarchy and one-handed launcher improvements (PR #54)
 
 - Assert manifest package identity from actual built APKs in CI: `dev.monolith.launcher.preview` for Debug Preview and `dev.monolith.launcher` for disposable-key release smoke build, in addition to pinned-certificate check in the production-only release workflow.
