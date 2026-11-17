@@ -2,6 +2,8 @@
 
 ## Unreleased — handheld visual hierarchy pass
 
+- Assert manifest package identity from actual built APKs in CI: `dev.monolith.launcher.preview` for Debug Preview and `dev.monolith.launcher` for disposable-key release smoke build, in addition to pinned-certificate check in the production-only release workflow.
+
 - Move PackageManager catalog enumeration **and** local launch-history reads off the HOME UI thread; reject older refresh snapshots after a successful launch or history clear without changing persistence format.
 - Add Robolectric tests for real history persistence and refresh-version conflicts; introduce an opt-in, non-destructive ADB evidence collector (warm launch, HOME role identity, frame stats) for P5 Lenovo acceptance. Physical checks remain open.
 

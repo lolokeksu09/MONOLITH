@@ -33,6 +33,13 @@ jobs:
         run: python3 scripts/check_native_icon_fidelity.py
       - name: Unit tests, Android Lint, debug APK
         run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+      - name: Enforce isolated Preview APK identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging \
+            app/build/outputs/apk/debug/app-debug.apk | \
+            grep -F "package: name='dev.monolith.launcher.preview'"
       - name: Verify release signing using a disposable CI-only key
         shell: bash
         run: |
@@ -49,6 +56,9 @@ jobs:
           test -n "$VERSION_BASE"
           MONOLITH_VERSION_CODE=4 MONOLITH_VERSION_NAME="${VERSION_BASE}-ci" \
             gradle --no-daemon :app:assembleRelease
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging \
+            app/build/outputs/apk/release/app-release.apk | \
+            grep -F "package: name='dev.monolith.launcher'"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose \
             app/build/outputs/apk/release/app-release.apk
           rm -f "$MONOLITH_KEYSTORE_FILE"

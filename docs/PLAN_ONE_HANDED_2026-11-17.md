@@ -27,8 +27,8 @@
 2. A successful app launch or clearing history advances a local revision. A scan started before that revision may still update the installed-app list but **cannot overwrite** the newer launch history with an older snapshot.
 3. `MainActivityRefreshTest` checks real SharedPreferences record/read/clear and stale-snapshot rejection. No storage key or signing/manifest identifier changes.
 4. `scripts/collect-device-acceptance.sh` records device, installed package, HOME role holder and gfxinfo frame timing; optional `--launch` captures **warm** activity start (`am start -W`) without force-stop, install or changing default launcher. These observations must be collected on the actual Lenovo before accepting P5.
-5. **Not automatically verified:** production-certificate install-over, persisted settings after update, HOME fallback after reboot, TalkBack, cold-start metrics and user-perceived gesture smoothness. No stable release while these gates are open.
-
+5. CI inspects the **built APK manifests**: Debug Preview must be `dev.monolith.launcher.preview`, and its disposable-key release smoke counterpart must be `dev.monolith.launcher`. The production-only signed workflow still pins the permanent SHA-256 certificate.
+6. **Not automatically verified:** production-certificate install-over, persisted settings after update, HOME fallback after reboot, TalkBack, cold-start metrics and user-perceived gesture smoothness. No stable release while these gates are open.
 ## P4 Editorial utility contract (implemented source; device QA open)
 
 **Verified in Android CI:** source commit `1e1e48e04a8547e60eebeddaab10790135c125f2` passed [Android CI #44030897190](https://github.com/lolokeksu09/MONOLITH/actions/runs/44030897190) with unit and Compose tests, Android Lint, debug APK, source icon guard and temporary-key signature verification. The workflow published `MONOLITH-CI-debug-NOT-a-stable-signature`; it is not signed with the permanent release certificate. Lenovo device acceptance is not recorded.
