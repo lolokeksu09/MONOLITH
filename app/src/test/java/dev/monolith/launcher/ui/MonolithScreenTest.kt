@@ -155,8 +155,7 @@ class MonolithScreenTest {
         launchMonolith(apps = listOf(appAlpha, appBeta))
         composeRule.onNodeWithText("MONOLITH").assertExists()
         // Quick access is omitted on genuinely short HOME layouts.
-        // Navigation and the central Orbit trigger must remain usable.
-        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+        // The central Orbit trigger must remain accessible.
         composeRule.onNodeWithText("OPEN ORBIT").assertExists()
         composeRule.onNodeWithText("System playback controls").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("Alpha").assertExists()
