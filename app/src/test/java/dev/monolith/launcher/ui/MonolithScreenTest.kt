@@ -151,10 +151,12 @@ class MonolithScreenTest {
     }
 
     @Test
-    fun precisionHomeShowsTimepieceDockAndSmallOrbitHitTarget() {
+    fun precisionHomeShowsTimepieceAndSmallOrbitHitTarget() {
         launchMonolith(apps = listOf(appAlpha, appBeta))
         composeRule.onNodeWithText("MONOLITH").assertExists()
-        composeRule.onNodeWithText("QUICK ACCESS").assertExists()
+        // Quick access is omitted on genuinely short HOME layouts.
+        // Navigation and the central Orbit trigger must remain usable.
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
         composeRule.onNodeWithText("OPEN ORBIT").assertExists()
         composeRule.onNodeWithText("System playback controls").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("Alpha").assertExists()
@@ -243,7 +245,9 @@ class MonolithScreenTest {
         }
         composeRule.waitForIdle()
         assertEquals(listOf(appAlpha), launched)
-        composeRule.onNodeWithText("QUICK ACCESS").assertExists()
+        // Quick access is omitted on genuinely short HOME layouts.
+        // Navigation and the central Orbit trigger must remain usable.
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
     }
 
     @Test
@@ -508,7 +512,9 @@ class MonolithScreenTest {
         composeRule.onNode(hasSetTextAction()).performImeAction()
         composeRule.waitForIdle()
         assertEquals(listOf(appBeta), launched)
-        composeRule.onNodeWithText("QUICK ACCESS").assertExists()
+        // Quick access is omitted on genuinely short HOME layouts.
+        // Navigation and the central Orbit trigger must remain usable.
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
     }
 
     @Test
