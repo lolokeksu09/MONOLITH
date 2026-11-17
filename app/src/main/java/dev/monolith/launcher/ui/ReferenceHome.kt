@@ -80,6 +80,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -160,7 +161,9 @@ internal fun referencePhoneLayout(
             width * .27f / scale
         ).coerceAtLeast(26f),
         editorialBottomDp = if (compact) 138 else 144,
-        editorialAppLimit = if (compact) 4 else 8,
+        // Labels must fit inside the safe-drawing width alongside shortcuts.
+        // Keep at least 28dp inset and 8dp spacing around readable captions.
+        editorialAppLimit = if (width < 340f || scale >= 1.4f) 3 else 4,
         showEditorialGreeting = !short && scale < 1.6f
     )
 }
@@ -181,7 +184,9 @@ fun ReferenceHome(
     onSettings: () -> Unit,
     onMakeDefaultHome: () -> Unit,
     editorialApps: List<LaunchableApp> = apps,
-    editorialIsRecent: Boolean = false
+    editorialIsRecent: Boolean = false,
+    minimalQuickApps: List<LaunchableApp> = apps,
+    minimalQuickIsRecent: Boolean = false
 ) {
     var page by rememberSaveable { mutableIntStateOf(0) }
     var orbitOpen by rememberSaveable { mutableStateOf(false) }
@@ -270,6 +275,8 @@ fun ReferenceHome(
                 MinimalScene(
                     now = now,
                     apps = apps,
+                    quickApps = minimalQuickApps,
+                    quickAppsAreRecent = minimalQuickIsRecent,
                     iconStyle = iconStyle,
                     orbitOpen = orbitOpen,
                     motionDuration = motionDuration,
@@ -338,11 +345,25 @@ fun ReferenceHome(
                         label = "Reference page indicator"
                     ) { currentPage ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            // Purely visual dots; the announced state lives on the button.
-                            Text(if (currentPage == 0) "●  ○" else "○  ●",
-                                color = Soft, fontSize = 12.sp,
-                                modifier = Modifier.clearAndSetSemantics { })
-                            Spacer(Modifier.width(9.dp))
+                            // True-size decorative dots; the button owns one
+                            // accessibility announcement for the page state.
+                            Row(
+                                modifier = Modifier.clearAndSetSemantics { },
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                repeat(2) { index ->
+                                    val active = index == currentPage
+                                    Box(
+                                        Modifier.size(if (active) 6.dp else 4.dp)
+                                            .background(
+                                                if (active) Paper else Dim,
+                                                CircleShape
+                                            )
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.width(10.dp))
                             Text(stringResource(if (currentPage == 0) R.string.reference_editorial
                                                 else R.string.reference_minimal),
                                 color = Soft, fontSize = 10.sp)
@@ -368,6 +389,8 @@ fun ReferenceHome(
 private fun MinimalScene(
     now: LocalDateTime,
     apps: List<LaunchableApp>,
+    quickApps: List<LaunchableApp>,
+    quickAppsAreRecent: Boolean,
     iconStyle: AppIconStyle,
     orbitOpen: Boolean,
     motionDuration: Int,
@@ -611,7 +634,7 @@ private fun MinimalScene(
         }
 
         AnimatedVisibility(
-            visible = !orbitOpen && apps.isNotEmpty() && layout.showQuickApps,
+            visible = !orbitOpen && quickApps.isNotEmpty() && layout.showQuickApps,
             modifier = Modifier.align(Alignment.BottomCenter)
                 .padding(bottom = layout.quickAppsBottomDp.dp),
             enter = fadeIn(tween(if (motionDuration == 0) 0 else 160)),
@@ -619,14 +642,19 @@ private fun MinimalScene(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    stringResource(R.string.reference_quick_apps),
-                    color = Soft, fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium, letterSpacing = 1.5.sp
+                    stringResource(
+                        if (quickAppsAreRecent) R.string.reference_recent_apps
+                        else R.string.reference_quick_apps
+                    ),
+                    color = Paper, fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium, letterSpacing = 1.1.sp
                 )
-                Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(22.dp)) {
-                    apps.take(4).forEach { app ->
-                        EditorialShortcut(app, iconStyle, onLaunch, onActions)
+                Spacer(Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    quickApps.take(layout.editorialAppLimit).forEach { app ->
+                        EditorialShortcut(
+                            app, iconStyle, onLaunch, onActions, showLabel = true
+                        )
                     }
                 }
             }
@@ -734,8 +762,10 @@ private fun EditorialScene(
         Box(Modifier.fillMaxSize().background(
             Brush.verticalGradient(
                 0f to Ink.copy(alpha = .14f),
-                .7f to Color.Transparent,
-                1f to Ink.copy(alpha = .28f)
+                .60f to Color.Transparent,
+                // Darken only the shortcut area so ORIGINAL/INK artwork and
+                // app captions remain discernible over the rock photograph.
+                1f to Ink.copy(alpha = .80f)
             )
         ))
 
@@ -777,7 +807,7 @@ private fun EditorialScene(
                     if (isRecentlyOpened) R.string.reference_recent_apps
                     else R.string.reference_quick_apps
                 ),
-                fontSize = 10.sp, color = Soft, letterSpacing = 1.8.sp
+                fontSize = 11.sp, color = Paper, letterSpacing = 1.25.sp
             )
             Spacer(Modifier.height(13.dp))
             if (apps.isEmpty()) {
@@ -791,13 +821,15 @@ private fun EditorialScene(
                         color = Paper, fontSize = 12.sp)
                 }
             } else {
-                apps.take(layout.editorialAppLimit).chunked(4).forEach { rowApps ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                        rowApps.forEach { app ->
-                            EditorialShortcut(app, iconStyle, onLaunch, onActions)
-                        }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    apps.take(layout.editorialAppLimit).forEach { app ->
+                        EditorialShortcut(
+                            app, iconStyle, onLaunch, onActions, showLabel = true
+                        )
                     }
-                    Spacer(Modifier.height(9.dp))
                 }
             }
             if (layout.showEditorialGreeting) {
@@ -821,33 +853,52 @@ private fun EditorialShortcut(
     app: LaunchableApp,
     iconStyle: AppIconStyle,
     onLaunch: (LaunchableApp) -> Unit,
-    onActions: (LaunchableApp) -> Unit
+    onActions: (LaunchableApp) -> Unit,
+    showLabel: Boolean = false
 ) {
     val bitmap = rememberAppIcon(app, iconStyle)
-    Box(
-        modifier = Modifier.size(48.dp)
-            .semantics { contentDescription = app.label }
-            .combinedClickable(
-                onClick = { onLaunch(app) },
-                onLongClick = { onActions(app) },
-                onClickLabel = stringResource(R.string.open_app),
-                onLongClickLabel = stringResource(R.string.app_actions)
-            ),
-        contentAlignment = Alignment.Center
+    Column(
+        modifier = Modifier.width(if (showLabel) 64.dp else 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Preserve the approved artwork frame and original 48dp touch
+        // target; the readable caption is not an extra click zone.
         Box(
-            modifier = Modifier.size(42.dp)
-                .border(.7.dp, Paper.copy(alpha = .30f), CircleShape)
-                .background(Ink.copy(alpha = .22f), CircleShape),
+            modifier = Modifier.size(48.dp)
+                .semantics { contentDescription = app.label }
+                .combinedClickable(
+                    onClick = { onLaunch(app) },
+                    onLongClick = { onActions(app) },
+                    onClickLabel = stringResource(R.string.open_app),
+                    onLongClickLabel = stringResource(R.string.app_actions)
+                ),
             contentAlignment = Alignment.Center
         ) {
-            if (bitmap != null) {
-                Image(bitmap.asImageBitmap(), contentDescription = null,
-                    modifier = Modifier.size(29.dp))
-            } else {
-                Text(app.label.take(1), color = Paper, fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium)
+            Box(
+                modifier = Modifier.size(42.dp)
+                    .border(.7.dp, Paper.copy(alpha = .30f), CircleShape)
+                    .background(Ink.copy(alpha = .22f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                if (bitmap != null) {
+                    Image(bitmap.asImageBitmap(), contentDescription = null,
+                        modifier = Modifier.size(29.dp))
+                } else {
+                    Text(app.label.take(1), color = Paper, fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium)
+                }
             }
+        }
+        if (showLabel) {
+            Spacer(Modifier.height(5.dp))
+            Text(
+                app.label,
+                color = Paper, fontSize = 11.sp, lineHeight = 13.sp,
+                fontWeight = FontWeight.Medium, maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.width(64.dp)
+            )
         }
     }
 }

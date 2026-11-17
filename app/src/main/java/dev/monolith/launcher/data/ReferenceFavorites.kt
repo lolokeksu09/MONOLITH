@@ -36,3 +36,27 @@ fun chooseRecentlyOpenedApps(
     return sortApps(eligible, AppSort.LAST_OPENED, stats)
         .take(limit.coerceIn(0, 8))
 }
+
+// The two HOME scenes share one short, immediately visible row. Actual local
+// recents lead; saved Orbit shortcuts and frequent apps fill vacant slots.
+// Inputs are already filtered for hidden/uninstalled apps by their selectors.
+data class HomeShortcutSelection(
+    val apps: List<LaunchableApp>,
+    val allRecent: Boolean
+)
+
+fun chooseHomeShortcuts(
+    recent: List<LaunchableApp>,
+    fallback: List<LaunchableApp>,
+    limit: Int = 4
+): HomeShortcutSelection {
+    val uniqueRecent = recent.distinctBy { it.id }
+    val selected = (uniqueRecent + fallback)
+        .distinctBy { it.id }
+        .take(limit.coerceIn(0, 4))
+    val recentIds = uniqueRecent.mapTo(HashSet()) { it.id }
+    return HomeShortcutSelection(
+        apps = selected,
+        allRecent = selected.isNotEmpty() && selected.all { it.id in recentIds }
+    )
+}

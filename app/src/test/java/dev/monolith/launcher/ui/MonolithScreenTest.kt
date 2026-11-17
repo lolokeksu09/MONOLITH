@@ -102,7 +102,7 @@ class MonolithScreenTest {
         assertEquals(78f, layout.clockFontSp)
         assertEquals(215, layout.quickAppsBottomDp)
         assertTrue(layout.showQuickApps)
-        assertEquals(8, layout.editorialAppLimit)
+        assertEquals(4, layout.editorialAppLimit)
         assertEquals(144, layout.editorialBottomDp)
     }
 
@@ -112,7 +112,10 @@ class MonolithScreenTest {
         assertTrue(compact.compact)
         assertTrue(compact.showQuickApps)
         assertTrue(compact.clockFontSp < 78f)
-        assertEquals(4, compact.editorialAppLimit)
+        assertEquals(3, compact.editorialAppLimit)
+        assertEquals(3, referencePhoneLayout(280f, 640f, 1f).editorialAppLimit)
+        assertEquals(3, referencePhoneLayout(320f, 860f, 1f).editorialAppLimit)
+        assertEquals(4, referencePhoneLayout(360f, 860f, 1f).editorialAppLimit)
         assertTrue(compact.editorialDayFontSp < 96f)
 
         val short = referencePhoneLayout(320f, 520f, 2f)
@@ -363,6 +366,80 @@ class MonolithScreenTest {
         assertEquals(Screen.HOME, destinationOnBack(Screen.ALL_APPS, Screen.HOME))
     }
 
+    // The default Robolectric viewport is intentionally short (<590dp),
+    // where Minimal hides its bottom shortcuts. Use a realistic taller HOME
+    // viewport to verify the visible shortcut row rather than a clipped node.
+    @Config(qualifiers = "w412dp-h860dp")
+    @Test
+    fun minimalQuickAccessShowsRecentAppsInsteadOfRepeatingOrbitFavorites() {
+        val launched = mutableListOf<LaunchableApp>()
+        composeRule.setContent {
+            Box(Modifier.size(412.dp, 860.dp)) {
+                ReferenceHome(
+                    apps = listOf(appAlpha),
+                    minimalQuickApps = listOf(appBeta),
+                    minimalQuickIsRecent = true,
+                    iconStyle = AppIconStyle.ORIGINAL,
+                    homeRequestGeneration = 0,
+                    isDefaultHome = true,
+                    loading = false,
+                    loadError = false,
+                    onRetry = {},
+                    onLaunch = { launched += it },
+                    onAppActions = {},
+                    onAllApps = {},
+                    onSettings = {},
+                    onMakeDefaultHome = {}
+                )
+            }
+        }
+        composeRule.onNodeWithText("RECENT IN MONOLITH").assertIsDisplayed()
+        composeRule.onNodeWithText("Beta").assertIsDisplayed()
+        composeRule.onNodeWithText("QUICK ACCESS").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Beta").performClick()
+        assertEquals(listOf(appBeta), launched)
+    }
+
+    @Config(qualifiers = "w412dp-h860dp")
+    @Test
+    fun minimalQuickAccessFallbackShowsReadableLabelsAndPreservesClick() {
+        val launched = mutableListOf<LaunchableApp>()
+        composeRule.setContent {
+            Box(Modifier.size(412.dp, 860.dp)) {
+                ReferenceHome(
+                    apps = listOf(appAlpha, appBeta),
+                    minimalQuickApps = listOf(appAlpha, appBeta),
+                    minimalQuickIsRecent = false,
+                    iconStyle = AppIconStyle.ORIGINAL,
+                    homeRequestGeneration = 0,
+                    isDefaultHome = true,
+                    loading = false,
+                    loadError = false,
+                    onRetry = {},
+                    onLaunch = { launched += it },
+                    onAppActions = {},
+                    onAllApps = {},
+                    onSettings = {},
+                    onMakeDefaultHome = {}
+                )
+            }
+        }
+        composeRule.onNodeWithText("QUICK ACCESS").assertIsDisplayed()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+        composeRule.onNodeWithText("Beta").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Beta").performClick()
+        assertEquals(listOf(appBeta), launched)
+    }
+
+    @Test
+    fun pageIndicatorStillNavigatesBetweenMinimalAndEditorial() {
+        launchMonolith()
+        composeRule.onNodeWithText("EDITORIAL →").performClick()
+        composeRule.onNodeWithText("MINIMAL", substring = true).assertExists()
+        composeRule.onNodeWithText("MINIMAL", substring = true).performClick()
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+    }
+
     @Test
     fun editorialRecentShortcutsOpenActualAppsWithoutChangingOrbitFavorites() {
         val launched = mutableListOf<LaunchableApp>()
@@ -373,12 +450,35 @@ class MonolithScreenTest {
             onLaunch = { launched += it }
         )
         composeRule.onNodeWithText("EDITORIAL →").performClick()
-        composeRule.onNodeWithText("RECENT IN MONOLITH").assertExists()
+        // One recent app is supplemented with a real quick-access fallback.
+        composeRule.onNodeWithText("QUICK ACCESS").assertExists()
+        composeRule.onNodeWithText("RECENT IN MONOLITH").assertDoesNotExist()
+        composeRule.onNodeWithText("Beta").assertIsDisplayed()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Beta").performClick()
         composeRule.waitForIdle()
         assertEquals(listOf(appBeta), launched)
         assertEquals(listOf(appAlpha.id), currentFavorites.value)
         composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+    }
+
+    @Config(qualifiers = "w412dp-h860dp")
+    @Test
+    fun minimalOneRecentAppAlsoShowsPinnedAndAvailableApps() {
+        val launched = mutableListOf<LaunchableApp>()
+        currentFavorites.value = listOf(appAlpha.id)
+        launchMonolith(
+            apps = listOf(appAlpha, appBeta, appGamma),
+            launchStats = mapOf(appBeta.id to LaunchStats(1, 100L)),
+            onLaunch = { launched += it }
+        )
+        composeRule.onNodeWithText("QUICK ACCESS").assertIsDisplayed()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+        composeRule.onNodeWithText("Beta").assertIsDisplayed()
+        composeRule.onNodeWithText("Gamma").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Gamma").performClick()
+        assertEquals(listOf(appGamma), launched)
+        assertEquals(listOf(appAlpha.id), currentFavorites.value)
     }
 
     @Test
@@ -391,6 +491,7 @@ class MonolithScreenTest {
         composeRule.onNodeWithText("EDITORIAL →").performClick()
         composeRule.onNodeWithText("QUICK ACCESS").assertExists()
         composeRule.onNodeWithText("RECENT IN MONOLITH").assertDoesNotExist()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Alpha").assertExists()
         composeRule.onNodeWithContentDescription("Beta").assertDoesNotExist()
     }
@@ -496,6 +597,50 @@ class MonolithScreenTest {
                 composeRule.onNodeWithText("Beta").assertExists()
             }.isSuccess
         }
+    }
+
+    @Test
+    fun drawerOrbitFilterDisplaysOnlyPinnedAppsAndRestoresCatalog() {
+        currentFavorites.value = listOf(appBeta.id)
+        launchMonolith(apps = listOf(appAlpha, appBeta, appGamma))
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Orbit · 1").performClick()
+        composeRule.onNodeWithText("Beta").assertIsDisplayed()
+        composeRule.onNodeWithText("Alpha").assertDoesNotExist()
+        composeRule.onNodeWithText("Gamma").assertDoesNotExist()
+        composeRule.onNodeWithText("Orbit · 1").performClick()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+        composeRule.onNodeWithText("Gamma").assertIsDisplayed()
+    }
+
+    @Test
+    fun drawerOrbitFilterShowsUsefulEmptyState() {
+        currentFavorites.value = emptyList()
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Orbit · 0").performClick()
+        composeRule.onNodeWithText("No apps pinned to Orbit").assertIsDisplayed()
+        composeRule.onNodeWithText("Show all apps").performClick()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+    }
+
+    @Test
+    fun drawerOrbitFilterExcludesHiddenPinsAndRespectsSearch() {
+        currentFavorites.value = listOf(appAlpha.id, appBeta.id)
+        launchMonolith(
+            apps = listOf(appAlpha, appBeta, appGamma),
+            hiddenApps = setOf(appBeta.id)
+        )
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Orbit · 1").performClick()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+        composeRule.onNodeWithText("Beta").assertDoesNotExist()
+        composeRule.onNode(hasSetTextAction()).performTextInput("Gam")
+        composeRule.waitUntil(5_000) {
+            runCatching { composeRule.onNodeWithText("No applications found").assertExists() }.isSuccess
+        }
+        composeRule.onNodeWithText("Clear search").performClick()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
     }
 
     @Test

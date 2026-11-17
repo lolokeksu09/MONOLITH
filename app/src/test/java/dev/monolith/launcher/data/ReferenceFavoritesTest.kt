@@ -62,6 +62,43 @@ class ReferenceFavoritesTest {
             chooseRecentlyOpenedApps(installed, stats = stats, limit = -3))
     }
 
+    @Test fun homeShortcutsFillVisibleRowWithoutDuplicatingApps() {
+        val selection = chooseHomeShortcuts(
+            recent = listOf(app("recent"), app("recent")),
+            fallback = listOf(app("pinned"), app("recent"), app("common"), app("extra"))
+        )
+        assertEquals(listOf("recent", "pinned", "common", "extra"),
+            selection.apps.map { it.id })
+        assertEquals(false, selection.allRecent)
+    }
+
+    @Test fun homeShortcutHeadingIsRecentOnlyIfEveryDisplayedAppIsRecent() {
+        val recents = (1..5).map { app("recent-$it") }
+        val selection = chooseHomeShortcuts(recents, listOf(app("pinned")))
+        assertEquals(recents.take(4), selection.apps)
+        assertEquals(true, selection.allRecent)
+        val noHistory = chooseHomeShortcuts(emptyList(), listOf(app("fallback")))
+        assertEquals(listOf("fallback"), noHistory.apps.map { it.id })
+        assertEquals(false, noHistory.allRecent)
+        assertEquals(emptyList<LaunchableApp>(),
+            chooseHomeShortcuts(recents, emptyList(), limit = -1).apps)
+    }
+
+    @Test fun homeShortcutsUseOnlyAlreadyVisibleInstalledApps() {
+        val installed = listOf(app("pinned"), app("hidden"), app("recent"), app("other"))
+        val hidden = setOf("hidden")
+        val stats = mapOf(
+            "recent" to LaunchStats(1, 90L),
+            "hidden" to LaunchStats(5, 100L)
+        )
+        val reference = chooseReferenceApps(installed, hiddenIds = hidden,
+            favoriteIds = listOf("pinned", "hidden"))
+        val recents = chooseRecentlyOpenedApps(installed, hiddenIds = hidden, stats = stats)
+        val selection = chooseHomeShortcuts(recents, reference)
+        assertEquals(listOf("recent", "pinned", "other"), selection.apps.map { it.id })
+        assertEquals(false, selection.allRecent)
+    }
+
     @Test fun emptyAndLimitsAreSafe() {
         assertEquals(emptyList<LaunchableApp>(), chooseReferenceApps(emptyList()))
         assertEquals(emptyList<LaunchableApp>(), chooseReferenceApps(listOf(app("a")), limit = 0))

@@ -1,5 +1,32 @@
 # Changelog
 
+## Unreleased — Orbit filter in All Apps
+
+- Add a one-tap **Orbit** filter chip with the count of installed, non-hidden pinned apps; filter the current search/sort projection and reset grid scroll when filter membership changes. No hidden app can be exposed or stale query matched.
+- New localized empty state explains how to pin by long pressing an app and offers a direct return to the full catalog.
+- Present the pre-existing pin/unpin function as a prominent full-width contrasting action in the app sheet; preserve its actual persistence callback and 15-pin limit.
+- Add Compose regressions for filter toggling, empty state, hidden pins and live text search. Original native icons, HOME gestures, app IDs and signing unchanged.
+
+
+## Unreleased — always-filled HOME shortcut row
+
+- Fill empty slots in Minimal/Editorial with existing Orbit favorites and frequent installed apps **after** launcher-local recent apps; deduplicate by app ID and cap the row at four. One recent app no longer leaves three blank positions when other visible apps exist.
+- Name the section "Recent" only when every displayed shortcut is actually recent; otherwise use the existing Quick Access heading. No fake usage data, permissions, new preferences or icon artwork changes.
+- Add pure selection/hidden-app/limit regressions and an end-to-end Compose check for one recent plus pinned/available shortcuts.
+
+## Unreleased — visible Minimal & Editorial shortcuts
+
+- Make lower quick apps identifiable **without first opening Orbit**: show the same two-line, high-contrast app captions on Minimal and Editorial, plus a stronger shortcut section heading.
+- Increase caption width from 58dp to 64dp (11sp, up to two lines), limit shortcut rows to three apps on narrow widths / enlarged font, and deepen the existing Editorial bottom scrim rather than changing native icon artwork or adding new icon frames.
+- Retain existing 29dp application icon bitmap, 42dp Editorial frame, 48dp target, onClick/longClick behavior, quick-access fallback, and page transitions. Add viewport/label/click tests; physical Lenovo visual review remains pending.
+
+## Unreleased — Minimal & Editorial hierarchy polish
+
+- Make Minimal's quick-access row show actual launcher-local recent apps when they exist (instead of duplicating pinned Orbit apps); preserve previous pinned/frequent fallback when history is empty. No usage permissions or persistence changes.
+- Keep Editorial shortcuts to one responsive row (four apps on regular widths, three on very narrow screens) with readable truncated captions. Preserve the existing native shortcut icon artwork, 48dp hit targets and long-press app actions.
+- Replace font-glyph pagination dots with two measured circular indicators inside the existing accessible page-switch button; no navigation or motion-system changes.
+- Add Compose regression coverage for recent quick access, Editorial caption visibility, narrow layout and page navigation. Actual Lenovo visual/TalkBack acceptance remains pending.
+
 ## v0.25.1-beta — combined visual polish release
 
 - Release integration PR #60: approved INK transparency fallback, compact App Drawer, accessible full-row Settings search switch, improved Orbit trigger contrast and screen-reader semantics.
