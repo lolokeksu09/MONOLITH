@@ -6,6 +6,19 @@ Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, rec
 
 **2026-11-12 screenshot-only checkpoint:** Four user-provided images show collapsed/expanded Orbit, All Apps and Settings. See [the screenshot QA evidence record](QA_0.20_SCREENSHOT_2026-11-12.md). This is a **partial visual rendering observation, not a hardware QA pass**: installed release identity, gestures, install-over, HOME recovery, TalkBack and actual responsiveness remain unverified. **All device-test checkboxes below remain open.**
 
+## PR #54 Preview — P5 performance, history and HOME recovery (hardware gate open)
+
+Run `bash scripts/collect-device-acceptance.sh preview /path/to/report.txt --launch` using an authorized connected `adb` device and the installed Preview. The script writes device/installed APK identity, current HOME role holder, warm `am start -W` timing and renderer frame stats. Omitting `--launch` leaves the foreground app unchanged. **The script does not select HOME, install, clear user data or force-stop any process.** Record the report path and the tested APK commit in the acceptance evidence.
+
+- [ ] Record run date, actual firmware/fingerprint, screen resolution, scale, APK identity and HOME-role holder; verify that it is still the expected launcher.
+- [ ] Collect at least three **warm** start observations and app frame timing with the same settings and compare with previously installed release. Do not claim a cold-start or a measured speedup from one CI pass.
+- [ ] Launch an app during a pending background catalog refresh and then return. Check history increments only once and Editorial order reflects the latest launch.
+- [ ] Clear MONOLITH launch history while a catalog refresh may be running. Verify the cleared state remains empty after the scan ends; pinned apps and stored preferences remain unchanged.
+- [ ] Verify Android Back and stock HOME recovery on device. **Only after verifying existing permanent signing**, install over the prior signed production APK and check retained favorites, hidden apps, search/sort preferences and HOME role; do not uninstall to upgrade.
+- [ ] Enable TalkBack and enlarged fonts; verify the All Apps search, Orbit gesture alternative, Editorial shortcuts, media actions and HOME page navigation.
+
+**All device checks remain NOT RUN until actual Lenovo observations are recorded.**
+
 ## PR #54 Preview — P4 real Editorial recent shortcuts (not device-tested)
 
 - [ ] Launch two different apps from MONOLITH, open Editorial and confirm only real locally recorded recent apps appear in most-recent-first order under the localized `RECENT IN MONOLITH` header.

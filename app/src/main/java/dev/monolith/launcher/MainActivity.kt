@@ -29,7 +29,6 @@ import dev.monolith.launcher.data.LauncherSettingsStore
 import dev.monolith.launcher.data.OrbitFavoritesStore
 import dev.monolith.launcher.data.normalizeOrbitFavorites
 import dev.monolith.launcher.data.hideApp
-import dev.monolith.launcher.data.retainCatalogOnError
 import dev.monolith.launcher.data.unhideApp
 import dev.monolith.launcher.ui.AppIconCache
 import dev.monolith.launcher.ui.MonolithScreen
@@ -38,6 +37,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+/**
+ * A background catalog refresh may have captured stats before a successful app
+ * launch or History Clear. Do not let that stale snapshot overwrite newer local
+ * state. No persistence format or HOME behavior is changed.
+ */
+internal fun statsAfterCatalogRefresh(
+    current: Map<String, LaunchStats>,
+    refreshed: Map<String, LaunchStats>,
+    revisionAtStart: Long,
+    currentRevision: Long
+): Map<String, LaunchStats> =
+    if (revisionAtStart == currentRevision) refreshed else current
 
 /** Android HOME entry point. Legacy desktop, Dock and widget state is not modified or cleared. */
 class MainActivity : ComponentActivity() {
@@ -57,6 +69,8 @@ class MainActivity : ComponentActivity() {
     private var isDefaultHome by mutableStateOf(false)
     private var homeRequestGeneration by mutableIntStateOf(0)
     private var refreshJob: Job? = null
+    // Revision advances on successful MONOLITH launches and history clearing.
+    private var statsRevision: Long = 0L
     private var receiverRegistered = false
 
     private val packageReceiver = object : BroadcastReceiver() {
@@ -99,6 +113,7 @@ class MainActivity : ComponentActivity() {
                 onLaunch = { app ->
                     if (catalog.launch(app)) {
                         val next = statsStore.record(app.id)
+                        statsRevision++
                         launchStats = launchStats + (app.id to next)
                     } else {
                         Toast.makeText(this, R.string.launch_failed, Toast.LENGTH_SHORT).show()
@@ -131,6 +146,7 @@ class MainActivity : ComponentActivity() {
                 },
                 onClearLaunchHistory = {
                     statsStore.clear()
+                    statsRevision++
                     launchStats = emptyMap()
                     Toast.makeText(this, R.string.usage_cleared, Toast.LENGTH_SHORT).show()
                 }
@@ -216,15 +232,35 @@ class MainActivity : ComponentActivity() {
         refreshJob?.cancel()
         loading = true
         loadError = false
+        // Capture this BEFORE launching the IO operation, on the main thread.
+        val revisionAtStart = statsRevision
         refreshJob = lifecycleScope.launch {
-            val result = try {
-                withContext(Dispatchers.IO) { runCatching { catalog.load() } }
-            } catch (e: CancellationException) {
-                throw e
-            }
-            apps = retainCatalogOnError(apps, result)
-            if (result.isSuccess) launchStats = statsStore.read(apps)
-            loadError = result.isFailure
+            // PackageManager enumeration and SharedPreferences history loading
+            // are potentially expensive. Neither should block Compose / HOME.
+            val result: Result<Pair<List<LaunchableApp>, Map<String, LaunchStats>>> =
+                withContext(Dispatchers.IO) {
+                    try {
+                        val refreshedApps = catalog.load()
+                        Result.success(refreshedApps to statsStore.read(refreshedApps))
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Result.failure(e)
+                    }
+                }
+            result.fold(
+                onSuccess = { (refreshedApps, refreshedStats) ->
+                    apps = refreshedApps
+                    launchStats = statsAfterCatalogRefresh(
+                        launchStats, refreshedStats, revisionAtStart, statsRevision
+                    )
+                    loadError = false
+                },
+                onFailure = {
+                    // Retain last known installed apps and stats for recovery.
+                    loadError = true
+                }
+            )
             loading = false
         }
     }

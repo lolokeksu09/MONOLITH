@@ -2,6 +2,9 @@
 
 ## Unreleased — handheld visual hierarchy pass
 
+- Move PackageManager catalog enumeration **and** local launch-history reads off the HOME UI thread; reject older refresh snapshots after a successful launch or history clear without changing persistence format.
+- Add Robolectric tests for real history persistence and refresh-version conflicts; introduce an opt-in, non-destructive ADB evidence collector (warm launch, HOME role identity, frame stats) for P5 Lenovo acceptance. Physical checks remain open.
+
 - Make Editorial a genuinely different app-launch surface: show real launcher-local recently opened apps in recency order, with an accurate localized label; keep existing quick-access shortcuts when no recent activity exists.
 - Preserve Orbit's saved favorite order, hidden-app filtering, original icon art and touch targets; add sorting/empty/hidden checks and real Compose tap tests without permissions or migration.
 

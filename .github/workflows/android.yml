@@ -27,8 +27,8 @@ jobs:
           SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -n 1)
           test -n "$SDKMANAGER"
           "$SDKMANAGER" --install "platforms;android-36" "build-tools;35.0.0"
-      - name: Validate Termux signing script syntax
-        run: bash -n scripts/setup-signing-termux.sh
+      - name: Validate Android device-evidence and signing scripts
+        run: bash -n scripts/setup-signing-termux.sh scripts/collect-device-acceptance.sh
       - name: Enforce unmodified native Android app icons
         run: python3 scripts/check_native_icon_fidelity.py
       - name: Unit tests, Android Lint, debug APK
