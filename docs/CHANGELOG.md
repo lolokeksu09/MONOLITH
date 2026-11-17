@@ -2,7 +2,7 @@
 
 ## Unreleased — handheld visual hierarchy pass
 
-- Add opt-in hold/drag/release selection from the expanded Orbit's existing Collapse control: only drop within a 24dp target after expansion can launch; cancellation and release outside any icon are inert.
+- Add opt-in hold/drag/release selection from the expanded Orbit's existing Collapse control: only drop within a 20dp target after expansion can launch; cancellation and release outside any icon are inert.
 - Keep ordinary Collapse tap, app-icon tap/hold, source icon artwork and all current controls. Provide drag target text feedback and geometry/Compose regression checks; physical gesture QA still open.
 
 

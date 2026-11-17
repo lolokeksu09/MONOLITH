@@ -101,8 +101,8 @@ class OrbitCustomizationTest {
     }
 
     @Test fun orbitDragRejectsUnintentionalOrIncompleteSelections() {
-        // Between 58dp-spaced targets, the 24dp selection radius leaves
-        // a clear cancellation gap (the finger must finish on an app).
+        // The 20dp selection radius keeps a gap between neighboring icons.
+
         assertEquals(null, orbitDragTarget(2, 0f, 0f, 1f, 1f, true))
         assertEquals(null, orbitDragTarget(8, 250f, 250f, 1f, 1f, true))
         assertEquals(null, orbitDragTarget(8, -58f, -87f, 1f, .89f, true))
@@ -112,6 +112,37 @@ class OrbitCustomizationTest {
         assertEquals(null, orbitDragTarget(8, 0f, 0f, 0f, 1f, true))
         assertEquals(null, orbitDragTarget(8, 0f, 0f, 1f, 1f, true, -1f))
         assertEquals(null, orbitDragTarget(8, 0f, 0f, 1f, 1f, true, Float.NaN))
+    }
+
+    @Test fun adjacentOrbitDragTargetsNeverOverlapAtMinimumScaleAndProgress() {
+        val scale = .92f
+        val progress = .90f
+        for (count in 2..15) {
+            val points = orbitPositions(count)
+            for (i in points.indices) for (j in (i + 1) until points.size) {
+                val midpoint = OrbitPoint(
+                    (points[i].x + points[j].x) / 2f,
+                    (points[i].y + points[j].y) / 2f
+                )
+                val result = orbitDragTarget(
+                    count,
+                    midpoint.x * scale * progress,
+                    midpoint.y * scale * progress,
+                    scale, progress, true
+                )
+                // Only neighbor pairs that are within 48dp in rendered space
+                // could produce overlapping gesture zones; their midpoint
+                // must never select either app.
+                val distance = hypot(
+                    (points[i].x - points[j].x) * scale * progress,
+                    (points[i].y - points[j].y) * scale * progress
+                )
+                if (distance < 48f) {
+                    assertEquals("overlapping drag zones for $count apps ($i, $j)",
+                        null, result)
+                }
+            }
+        }
     }
 
     @Test fun collapsedOrbitHasNoAppClickTargets() {

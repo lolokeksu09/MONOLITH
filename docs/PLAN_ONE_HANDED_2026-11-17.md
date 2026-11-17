@@ -16,7 +16,7 @@
 |---|---|---|---|---|
 | P0 | Finish handheld hierarchy, error states, icon and accessible-selection fixes | `ReferenceHome.kt`, `MonolithScreen.kt`, existing UI tests | [PR #54](https://github.com/lolokeksu09/MONOLITH/pull/54) checks pass; physical-device test separate | Implemented on draft PR #54 |
 | P1 | **Search IME quick launch:** when nonblank search is settled and exactly one visible app remains, Search opens it; otherwise Search only hides keyboard | `MonolithScreen.kt`, `MonolithScreenTest.kt` | Top and Bottom use one guarded handler; positive and negative tests; successful unit tests, Lint, debug APK and native-icon guard | Implemented; Android CI passed for code commit `d061e538` (device QA pending) |
-| P2 | Optional press/drag/release **from the expanded Orbit's Collapse control** (not from collapsed center) | `ReferenceHome.kt`, `OrbitLayout.kt` and gesture tests | No launch outside a 24dp target, until animation is complete, or on cancellation. Existing tap and app icon actions retained; physical device gesture review | Implemented in this patch; exact CI and Lenovo review pending |
+| P2 | Optional press/drag/release **from the expanded Orbit's Collapse control** (not from collapsed center) | `ReferenceHome.kt`, `OrbitLayout.kt` and gesture tests | No launch outside a 20dp target, until animation is complete, or on cancellation. Existing tap and app icon actions retained; physical device gesture review | Implemented in this patch; exact CI and Lenovo review pending |
 | P3 | Responsive component placement if layout fails at compact screens or large text | `ReferenceHome.kt`, screenshot comparison | No clipping with safeDrawing/IME, RU/EN and font scaling; icons stay unchanged | **Not implemented** |
 | P4 | Clarify Editorial shortcuts and empty state based on real launches | `ReferenceHome.kt`, focused UI tests | Actual one-tap action; no decorative status or extra permissions | **Not implemented** |
 | P5 | Shipping / performance gate | `docs/DEVICE_ACCEPTANCE.md`, CI, direct Lenovo observations | Record frame/startup measurements, settings preservation on signed update, HOME fallback and TalkBack before stable | **Not implemented** |
@@ -25,7 +25,7 @@
 
 1. Open Orbit using the existing 48dp central button. **Tap** the existing Collapse control to close as before.
 2. **Hold** Collapse, drag onto an actual Orbit app icon and release to launch; the app-name caption is only visible during target selection.
-3. Release away from all icons, cancel the gesture, or finish while Orbit is still animating: **no app opens**. Selection uses the real, current icon centers and a 24dp radius, not a new icon layer.
+3. Release away from all icons, cancel the gesture, or finish while Orbit is still animating: **no app opens**. Selection uses the real, current icon centers and a 20dp radius, not a new icon layer.
 4. Original app icon tap/long-press, page swipes, All Apps swipe-up, Back, and TalkBack controls stay available. This is not claimed as a one-gesture launch from a fully collapsed HOME.
 5. Real Lenovo acceptance requires checking conflicts with the parent's drag detector, gesture cancellation, short taps, text scale, one and fifteen apps, plus accessibility. CI cannot establish these physical behaviors.
 

@@ -94,6 +94,7 @@ fun orbitHitTargetsEnabled(expanded: Boolean, progress: Float = 1f): Boolean =
 
 // Hit-test the ACTUAL expanded icon centers for an intentional Orbit drag.
 // Pointer coordinates are in dp relative to the center of the cluster.
+// A 20dp radius leaves a gap even at 92% scale and 90% animation progress.
 // Do not accept a release between icons, before animation completes, or
 // with invalid coordinates. The same rule covers 1 through 15 icons.
 fun orbitDragTarget(
@@ -103,7 +104,7 @@ fun orbitDragTarget(
     orbitScale: Float,
     progress: Float,
     expanded: Boolean,
-    radiusDp: Float = 24f
+    radiusDp: Float = 20f
 ): Int? {
     if (!orbitHitTargetsEnabled(expanded, progress) ||
         !xDp.isFinite() || !yDp.isFinite() ||
