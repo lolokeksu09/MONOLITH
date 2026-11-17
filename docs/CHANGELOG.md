@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — Minimal & Editorial hierarchy polish
+
+- Make Minimal's quick-access row show actual launcher-local recent apps when they exist (instead of duplicating pinned Orbit apps); preserve previous pinned/frequent fallback when history is empty. No usage permissions or persistence changes.
+- Keep Editorial shortcuts to one responsive row (four apps on regular widths, three on very narrow screens) with readable truncated captions. Preserve the existing native shortcut icon artwork, 48dp hit targets and long-press app actions.
+- Replace font-glyph pagination dots with two measured circular indicators inside the existing accessible page-switch button; no navigation or motion-system changes.
+- Add Compose regression coverage for recent quick access, Editorial caption visibility, narrow layout and page navigation. Actual Lenovo visual/TalkBack acceptance remains pending.
+
 ## v0.25.1-beta — combined visual polish release
 
 - Release integration PR #60: approved INK transparency fallback, compact App Drawer, accessible full-row Settings search switch, improved Orbit trigger contrast and screen-reader semantics.

@@ -263,6 +263,8 @@ fun MonolithScreen(
                     apps = referenceApps,
                     editorialApps = editorialApps,
                     editorialIsRecent = recentEditorialApps.isNotEmpty(),
+                    minimalQuickApps = editorialApps,
+                    minimalQuickIsRecent = recentEditorialApps.isNotEmpty(),
                     iconStyle = preferences.appIconStyle,
                     homeRequestGeneration = homeRequestGeneration,
                     isDefaultHome = isDefaultHome,

@@ -102,7 +102,7 @@ class MonolithScreenTest {
         assertEquals(78f, layout.clockFontSp)
         assertEquals(215, layout.quickAppsBottomDp)
         assertTrue(layout.showQuickApps)
-        assertEquals(8, layout.editorialAppLimit)
+        assertEquals(4, layout.editorialAppLimit)
         assertEquals(144, layout.editorialBottomDp)
     }
 
@@ -113,6 +113,7 @@ class MonolithScreenTest {
         assertTrue(compact.showQuickApps)
         assertTrue(compact.clockFontSp < 78f)
         assertEquals(4, compact.editorialAppLimit)
+        assertEquals(3, referencePhoneLayout(280f, 640f, 1f).editorialAppLimit)
         assertTrue(compact.editorialDayFontSp < 96f)
 
         val short = referencePhoneLayout(320f, 520f, 2f)
@@ -364,6 +365,44 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun minimalQuickAccessShowsRecentAppsInsteadOfRepeatingOrbitFavorites() {
+        val launched = mutableListOf<LaunchableApp>()
+        composeRule.setContent {
+            Box(Modifier.size(412.dp, 860.dp)) {
+                ReferenceHome(
+                    apps = listOf(appAlpha),
+                    minimalQuickApps = listOf(appBeta),
+                    minimalQuickIsRecent = true,
+                    iconStyle = AppIconStyle.ORIGINAL,
+                    homeRequestGeneration = 0,
+                    isDefaultHome = true,
+                    loading = false,
+                    loadError = false,
+                    onRetry = {},
+                    onLaunch = { launched += it },
+                    onAppActions = {},
+                    onAllApps = {},
+                    onSettings = {},
+                    onMakeDefaultHome = {}
+                )
+            }
+        }
+        composeRule.onNodeWithText("RECENT IN MONOLITH").assertIsDisplayed()
+        composeRule.onNodeWithText("QUICK ACCESS").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Beta").performClick()
+        assertEquals(listOf(appBeta), launched)
+    }
+
+    @Test
+    fun pageIndicatorStillNavigatesBetweenMinimalAndEditorial() {
+        launchMonolith()
+        composeRule.onNodeWithText("EDITORIAL →").performClick()
+        composeRule.onNodeWithText("MINIMAL").assertExists()
+        composeRule.onNodeWithText("MINIMAL").performClick()
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+    }
+
+    @Test
     fun editorialRecentShortcutsOpenActualAppsWithoutChangingOrbitFavorites() {
         val launched = mutableListOf<LaunchableApp>()
         currentFavorites.value = listOf(appAlpha.id)
@@ -374,6 +413,7 @@ class MonolithScreenTest {
         )
         composeRule.onNodeWithText("EDITORIAL →").performClick()
         composeRule.onNodeWithText("RECENT IN MONOLITH").assertExists()
+        composeRule.onNodeWithText("Beta").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Beta").performClick()
         composeRule.waitForIdle()
         assertEquals(listOf(appBeta), launched)
@@ -391,6 +431,7 @@ class MonolithScreenTest {
         composeRule.onNodeWithText("EDITORIAL →").performClick()
         composeRule.onNodeWithText("QUICK ACCESS").assertExists()
         composeRule.onNodeWithText("RECENT IN MONOLITH").assertDoesNotExist()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Alpha").assertExists()
         composeRule.onNodeWithContentDescription("Beta").assertDoesNotExist()
     }
