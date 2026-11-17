@@ -470,7 +470,7 @@ class MonolithScreenTest {
         assertEquals(dev.monolith.launcher.data.AppSort.FREQUENT,
             currentPreferences.value.appSort)
 
-        composeRule.onNodeWithContentDescription("Back to home").performClick()
+        composeRule.onNodeWithContentDescription("Back home").performClick()
         composeRule.onNodeWithText("OPEN ORBIT").assertExists()
     }
 
