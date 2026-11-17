@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — Settings interaction and clarity
+
+- Make the entire search-bar preference row a 56dp accessible Switch control. Tapping the label and the switch now uses the same handler and updates dependent Top/Bottom settings immediately.
+- Remove two redundant always-visible helper paragraphs beneath Orbit density and search position without changing the saved selection or its available options.
+- Move the existing Back Home action into a quieter footer without a misleading chevron, and clarify its Russian label as «На главный экран».
+- Add Compose regressions for touch/semantics, dependent-setting visibility, and HOME return; keep original app icons, screen navigation, sorting choices, signing and persistence unchanged.
+
 ## 0.25.0-beta candidate — handheld hierarchy and one-handed launcher improvements (PR #54)
 
 - Assert manifest package identity from actual built APKs in CI: `dev.monolith.launcher.preview` for Debug Preview and `dev.monolith.launcher` for disposable-key release smoke build, in addition to pinned-certificate check in the production-only release workflow.
