@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — Orbit filter in All Apps
+
+- Add a one-tap **Orbit** filter chip with the count of installed, non-hidden pinned apps; filter the current search/sort projection and reset grid scroll when filter membership changes. No hidden app can be exposed or stale query matched.
+- New localized empty state explains how to pin by long pressing an app and offers a direct return to the full catalog.
+- Present the pre-existing pin/unpin function as a prominent full-width contrasting action in the app sheet; preserve its actual persistence callback and 15-pin limit.
+- Add Compose regressions for filter toggling, empty state, hidden pins and live text search. Original native icons, HOME gestures, app IDs and signing unchanged.
+
+
 ## Unreleased — always-filled HOME shortcut row
 
 - Fill empty slots in Minimal/Editorial with existing Orbit favorites and frequent installed apps **after** launcher-local recent apps; deduplicate by app ID and cap the row at four. One recent app no longer leaves three blank positions when other visible apps exist.

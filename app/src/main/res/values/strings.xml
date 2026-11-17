@@ -24,6 +24,10 @@
     <string name="drawer_search_bottom">Bottom</string>
     <string name="drawer_search_position_hint">Bottom is easier one-handed.</string>
     <string name="drawer_title">Apps</string>
+    <string name="drawer_orbit_filter">Orbit · %1$d</string>
+    <string name="drawer_no_orbit_pins">No apps pinned to Orbit</string>
+    <string name="drawer_orbit_pin_hint">Long-press an app in All Apps to pin it to Orbit.</string>
+    <string name="drawer_show_all">Show all apps</string>
     <string name="hidden_apps_description">Hidden apps stay installed. Unhide an app to show it in All Apps and on the Reference pages.</string>
     <string name="hidden_apps_title">Hidden applications</string>
     <string name="hide_app">Hide from app drawer</string>

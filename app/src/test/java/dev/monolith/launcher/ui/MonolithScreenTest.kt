@@ -600,6 +600,50 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun drawerOrbitFilterDisplaysOnlyPinnedAppsAndRestoresCatalog() {
+        currentFavorites.value = listOf(appBeta.id)
+        launchMonolith(apps = listOf(appAlpha, appBeta, appGamma))
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Orbit · 1").performClick()
+        composeRule.onNodeWithText("Beta").assertIsDisplayed()
+        composeRule.onNodeWithText("Alpha").assertDoesNotExist()
+        composeRule.onNodeWithText("Gamma").assertDoesNotExist()
+        composeRule.onNodeWithText("Orbit · 1").performClick()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+        composeRule.onNodeWithText("Gamma").assertIsDisplayed()
+    }
+
+    @Test
+    fun drawerOrbitFilterShowsUsefulEmptyState() {
+        currentFavorites.value = emptyList()
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Orbit · 0").performClick()
+        composeRule.onNodeWithText("No apps pinned to Orbit").assertIsDisplayed()
+        composeRule.onNodeWithText("Show all apps").performClick()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+    }
+
+    @Test
+    fun drawerOrbitFilterExcludesHiddenPinsAndRespectsSearch() {
+        currentFavorites.value = listOf(appAlpha.id, appBeta.id)
+        launchMonolith(
+            apps = listOf(appAlpha, appBeta, appGamma),
+            hiddenApps = setOf(appBeta.id)
+        )
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Orbit · 1").performClick()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+        composeRule.onNodeWithText("Beta").assertDoesNotExist()
+        composeRule.onNode(hasSetTextAction()).performTextInput("Gam")
+        composeRule.waitUntil(5_000) {
+            runCatching { composeRule.onNodeWithText("No applications found").assertExists() }.isSuccess
+        }
+        composeRule.onNodeWithText("Clear search").performClick()
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+    }
+
+    @Test
     fun compactDrawerHeaderRetainsAccessibleSearchAndBackNavigation() {
         launchMonolith()
         composeRule.onNodeWithText("ALL APPS ↑").performClick()

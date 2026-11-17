@@ -2,6 +2,7 @@ package dev.monolith.launcher.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
@@ -56,6 +57,8 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -174,6 +177,7 @@ fun MonolithScreen(
     var debouncedQuery by rememberSaveable { mutableStateOf("") }
     var orbitQuery by rememberSaveable { mutableStateOf("") }
     var orbitPinnedOnly by rememberSaveable { mutableStateOf(false) }
+    var drawerPinnedOnly by rememberSaveable { mutableStateOf(false) }
     var confirmClearLaunchHistory by rememberSaveable { mutableStateOf(false) }
     var selectedApp by remember { mutableStateOf<LaunchableApp?>(null) }
     // Unicode collation and full-catalog sorting happen away from the UI thread.
@@ -203,6 +207,14 @@ fun MonolithScreen(
     val visibleApps = if (drawerQueryIsSettling(
             query, debouncedQuery, preferences.showDrawerSearch
         )) null else matchingDrawerApps(drawerRequest, drawerResult)
+    // Only pinned installed, visible activities may appear in All Apps.
+    val visiblePinnedIds = remember(apps, hiddenApps, orbitFavorites) {
+        val present = filterHiddenApps(apps, hiddenApps).mapTo(mutableSetOf()) { it.id }
+        orbitFavorites.filterTo(mutableSetOf()) { it in present }
+    }
+    val drawerShownApps = visibleApps?.let { matched ->
+        if (drawerPinnedOnly) matched.filter { it.id in visiblePinnedIds } else matched
+    }
     val referenceApps = remember(
         apps, hiddenApps, launchStats, orbitFavorites, preferences.orbitDensity
     ) {
@@ -283,7 +295,7 @@ fun MonolithScreen(
                 )
                 Screen.ALL_APPS -> {
                     val gridState = rememberLazyGridState()
-                    LaunchedEffect(drawerRequest, preferences.drawerColumns) {
+                    LaunchedEffect(drawerRequest, preferences.drawerColumns, drawerPinnedOnly, visiblePinnedIds) {
                         gridState.scrollToItem(0)
                     }
                     Column(
@@ -358,7 +370,7 @@ fun MonolithScreen(
                                 onSearch = {
                                     singleDrawerImeMatch(
                                         query, debouncedQuery, preferences.showDrawerSearch,
-                                        visibleApps
+                                        drawerShownApps
                                     )?.let(launchAndReturnHome)
                                 }
                             )
@@ -370,8 +382,8 @@ fun MonolithScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                if (visibleApps == null) stringResource(R.string.drawer_updating)
-                                else stringResource(R.string.apps_count, visibleApps.size),
+                                if (drawerShownApps == null) stringResource(R.string.drawer_updating)
+                                else stringResource(R.string.apps_count, drawerShownApps.size),
                                 modifier = Modifier.weight(1f).padding(end = 8.dp),
                                 color = Muted, fontSize = 12.sp,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis
@@ -380,6 +392,25 @@ fun MonolithScreen(
                                 onPreferencesChange(preferences.copy(appSort = it))
                             }
                         }
+                        // One-tap saved Orbit filter; no application icon surfaces change.
+                        FilterChip(
+                            selected = drawerPinnedOnly,
+                            onClick = { drawerPinnedOnly = !drawerPinnedOnly },
+                            label = {
+                                Text(
+                                    stringResource(R.string.drawer_orbit_filter, visiblePinnedIds.size),
+                                    fontSize = 12.sp, fontWeight = FontWeight.Medium
+                                )
+                            },
+                            modifier = Modifier.heightIn(min = 48.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = Panel,
+                                labelColor = Foreground,
+                                selectedContainerColor = Foreground,
+                                selectedLabelColor = Background
+                            )
+                        )
                         // A cached-list refresh failure differs from a first-load failure.
                         // Never claim that cached apps exist, or offer two retries, when empty.
                         if (loadError && apps.isNotEmpty()) {
@@ -400,13 +431,28 @@ fun MonolithScreen(
                                 Text(stringResource(R.string.loading), color = Muted)
                                 Spacer(Modifier.weight(1f))
                             }
-                            visibleApps == null -> {
+                            drawerShownApps == null -> {
                                 // A result is pending. Never show an old filtered list
                                 // or misreport a still-processing query as no results.
                                 Spacer(Modifier.weight(1f))
                             }
-                            visibleApps.isEmpty() -> {
-                                Text(stringResource(R.string.no_results), color = Muted)
+                            drawerShownApps.isEmpty() -> {
+                                if (drawerPinnedOnly && visiblePinnedIds.isEmpty()) {
+                                    Text(stringResource(R.string.drawer_no_orbit_pins),
+                                        color = Foreground, fontSize = 14.sp)
+                                    Spacer(Modifier.height(6.dp))
+                                    Text(stringResource(R.string.drawer_orbit_pin_hint),
+                                        color = Muted, fontSize = 12.sp)
+                                    TextButton(
+                                        onClick = { drawerPinnedOnly = false },
+                                        modifier = Modifier.heightIn(min = 48.dp)
+                                    ) {
+                                        Text(stringResource(R.string.drawer_show_all),
+                                            color = Foreground)
+                                    }
+                                } else {
+                                    Text(stringResource(R.string.no_results), color = Muted)
+                                }
                                 if (preferences.showDrawerSearch && query.isNotBlank()) {
                                     TextButton(
                                         onClick = { query = "" },
@@ -426,7 +472,7 @@ fun MonolithScreen(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                                 verticalArrangement = Arrangement.spacedBy(14.dp)
                             ) {
-                                items(visibleApps, key = { it.id }) { app ->
+                                items(drawerShownApps, key = { it.id }) { app ->
                                     DrawerAppTile(
                                         app = app,
                                         iconStyle = preferences.appIconStyle,
@@ -445,7 +491,7 @@ fun MonolithScreen(
                                 onSearch = {
                                     singleDrawerImeMatch(
                                         query, debouncedQuery, preferences.showDrawerSearch,
-                                        visibleApps
+                                        drawerShownApps
                                     )?.let(launchAndReturnHome)
                                 }
                             )
@@ -841,11 +887,18 @@ fun MonolithScreen(
                         Text(stringResource(R.string.open_app))
                     }
                     val pinnedToOrbit = app.id in orbitFavorites
-                    TextButton(
+                    OutlinedButton(
                         enabled = pinnedToOrbit || orbitFavorites.size < ORBIT_CAPACITY,
                         onClick = {
                             onOrbitFavoritesChange(toggleOrbitFavorite(orbitFavorites, app.id))
-                        }
+                        },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, if (pinnedToOrbit) Foreground else Outline),
+                        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                            containerColor = if (pinnedToOrbit) Foreground else Background,
+                            contentColor = if (pinnedToOrbit) Background else Foreground
+                        )
                     ) {
                         Text(
                             stringResource(

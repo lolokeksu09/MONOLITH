@@ -24,6 +24,10 @@
     <string name="drawer_search_bottom">Снизу</string>
     <string name="drawer_search_position_hint">Снизу удобнее одной рукой.</string>
     <string name="drawer_title">Приложения</string>
+    <string name="drawer_orbit_filter">Orbit · %1$d</string>
+    <string name="drawer_no_orbit_pins">В Orbit нет закреплённых приложений</string>
+    <string name="drawer_orbit_pin_hint">Зажмите приложение в меню и выберите «Закрепить в Orbit».</string>
+    <string name="drawer_show_all">Показать все приложения</string>
     <string name="hidden_apps_description">Скрытые приложения остаются установленными. Верните приложение кнопкой «Показать».</string>
     <string name="hidden_apps_title">Скрытые приложения</string>
     <string name="hide_app">Скрыть из меню приложений</string>
