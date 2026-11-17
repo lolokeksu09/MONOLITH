@@ -3,6 +3,7 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, closed]
   workflow_dispatch:
 
 permissions:
@@ -27,12 +28,19 @@ jobs:
           SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -n 1)
           test -n "$SDKMANAGER"
           "$SDKMANAGER" --install "platforms;android-36" "build-tools;35.0.0"
-      - name: Validate Termux signing script syntax
-        run: bash -n scripts/setup-signing-termux.sh
+      - name: Validate Android device-evidence and signing scripts
+        run: bash -n scripts/setup-signing-termux.sh scripts/collect-device-acceptance.sh
       - name: Enforce unmodified native Android app icons
         run: python3 scripts/check_native_icon_fidelity.py
       - name: Unit tests, Android Lint, debug APK
         run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+      - name: Enforce isolated Preview APK identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging \
+            app/build/outputs/apk/debug/app-debug.apk | \
+            grep -F "package: name='dev.monolith.launcher.preview'"
       - name: Verify release signing using a disposable CI-only key
         shell: bash
         run: |
@@ -49,6 +57,9 @@ jobs:
           test -n "$VERSION_BASE"
           MONOLITH_VERSION_CODE=4 MONOLITH_VERSION_NAME="${VERSION_BASE}-ci" \
             gradle --no-daemon :app:assembleRelease
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging \
+            app/build/outputs/apk/release/app-release.apk | \
+            grep -F "package: name='dev.monolith.launcher'"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose \
             app/build/outputs/apk/release/app-release.apk
           rm -f "$MONOLITH_KEYSTORE_FILE"
@@ -61,7 +72,17 @@ jobs:
 
   signed-release:
     needs: verify
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    # One-time merge-authorized beta release for PR #54; all other releases
+    # retain the original explicit workflow_dispatch main-branch gate.
+    # Never run the signing job for an open/updated pull request.
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request' &&
+       github.event.action == 'closed' &&
+       github.event.pull_request.merged == true &&
+       github.event.pull_request.number == 54 &&
+       github.event.pull_request.base.ref == 'main' &&
+       github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -136,9 +157,13 @@ jobs:
           VERSION_NAME="${VERSION_BASE}.${GITHUB_RUN_NUMBER}"
           ASSET="MONOLITH-${VERSION_NAME}-signed.apk"
           cp app/build/outputs/apk/release/app-release.apk "$ASSET"
+          NOTES_ARGS=(--notes "Permanently signed beta APK. Certificate pinned and verified. Refer to docs/CHANGELOG.md at this release tag for features and fixes. Physical Lenovo Legion Y70 / Motorola Android 16 acceptance is pending. Keep the stock launcher installed.")
+          if [[ "$VERSION_BASE" == "0.25.0-beta" ]]; then
+            NOTES_ARGS=(--notes-file docs/RELEASE_NOTES_0.25.md)
+          fi
           gh release create "v${VERSION_NAME}" "$ASSET" \
             --title "MONOLITH ${VERSION_NAME}" \
-            --notes "Permanently signed beta APK. Certificate pinned and verified. Refer to docs/CHANGELOG.md at this release tag for features and fixes. Physical Lenovo Legion Y70 / Motorola Android 16 acceptance is pending. Keep the stock launcher installed." \
+            "${NOTES_ARGS[@]}" \
             --prerelease --target "$GITHUB_SHA"
       - name: Destroy temporary keystore copy
         if: always()

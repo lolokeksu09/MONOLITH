@@ -82,6 +82,69 @@ class OrbitCustomizationTest {
         assertEquals(OrbitPoint(0f, 0f), orbitPositions(1).single())
     }
 
+    @Test fun orbitDragSelectsOnlyInsideAnExpandedIconHitTarget() {
+        for (count in listOf(1, 8, 12, 15)) {
+            val points = orbitPositions(count)
+            points.forEachIndexed { index, point ->
+                assertEquals(
+                    "incorrect drag target for count $count, icon $index",
+                    index, orbitDragTarget(count, point.x, point.y, 1f, 1f, true)
+                )
+                assertEquals(
+                    "incorrect scaled drag target for count $count, icon $index",
+                    index, orbitDragTarget(count, point.x * .92f, point.y * .92f,
+                        .92f, 1f, true)
+                )
+            }
+        }
+        assertEquals(null, orbitDragTarget(0, 0f, 0f, 1f, 1f, true))
+    }
+
+    @Test fun orbitDragRejectsUnintentionalOrIncompleteSelections() {
+        // The 20dp selection radius keeps a gap between neighboring icons.
+
+        assertEquals(null, orbitDragTarget(2, 0f, 0f, 1f, 1f, true))
+        assertEquals(null, orbitDragTarget(8, 250f, 250f, 1f, 1f, true))
+        assertEquals(null, orbitDragTarget(8, -58f, -87f, 1f, .89f, true))
+        assertEquals(null, orbitDragTarget(8, -58f, -87f, 1f, 1f, false))
+        assertEquals(null, orbitDragTarget(8, Float.NaN, 0f, 1f, 1f, true))
+        assertEquals(null, orbitDragTarget(8, 0f, Float.POSITIVE_INFINITY, 1f, 1f, true))
+        assertEquals(null, orbitDragTarget(8, 0f, 0f, 0f, 1f, true))
+        assertEquals(null, orbitDragTarget(8, 0f, 0f, 1f, 1f, true, -1f))
+        assertEquals(null, orbitDragTarget(8, 0f, 0f, 1f, 1f, true, Float.NaN))
+    }
+
+    @Test fun adjacentOrbitDragTargetsNeverOverlapAtMinimumScaleAndProgress() {
+        val scale = .92f
+        val progress = .90f
+        for (count in 2..15) {
+            val points = orbitPositions(count)
+            for (i in points.indices) for (j in (i + 1) until points.size) {
+                val midpoint = OrbitPoint(
+                    (points[i].x + points[j].x) / 2f,
+                    (points[i].y + points[j].y) / 2f
+                )
+                val result = orbitDragTarget(
+                    count,
+                    midpoint.x * scale * progress,
+                    midpoint.y * scale * progress,
+                    scale, progress, true
+                )
+                // Only neighbor pairs that are within 48dp in rendered space
+                // could produce overlapping gesture zones; their midpoint
+                // must never select either app.
+                val distance = hypot(
+                    (points[i].x - points[j].x) * scale * progress,
+                    (points[i].y - points[j].y) * scale * progress
+                )
+                if (distance < 48f) {
+                    assertEquals("overlapping drag zones for $count apps ($i, $j)",
+                        null, result)
+                }
+            }
+        }
+    }
+
     @Test fun collapsedOrbitHasNoAppClickTargets() {
         assertFalse(orbitHitTargetsEnabled(false))
         assertTrue(orbitHitTargetsEnabled(true))

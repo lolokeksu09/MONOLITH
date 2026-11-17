@@ -1,6 +1,10 @@
 # MONOLITH roadmap
 
-Updated 2026-11-11. **Current signed beta: [v0.20.0-beta.428](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.20.0-beta.428)** from main commit `4cd84776b511e7bdf7f3b0838ebb90e7553f128a`; [Android CI #428](https://github.com/lolokeksu09/MONOLITH/actions/runs/43082198569) succeeded, pinned permanent signing was verified and the release asset was published. **Physical Lenovo Legion Y70 / Motorola Android 16 acceptance remains open.**
+Updated 2026-11-17. **Current signed beta: [v0.24.0-beta.463](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.24.0-beta.463)** from main commit `62eb199cb43e927c1f6dcca6633a15b693244ab8`; [PR #54](https://github.com/lolokeksu09/MONOLITH/pull/54) contains unreleased phone enhancements. Physical Lenovo/Motorola acceptance is not yet recorded.
+
+## Current implementation plan
+
+[One-handed launch and delivery plan, 2026-11-17](PLAN_ONE_HANDED_2026-11-17.md) defines real code paths and tests, release gates, and explicitly deferred ideas.
 
 ## Implemented
 

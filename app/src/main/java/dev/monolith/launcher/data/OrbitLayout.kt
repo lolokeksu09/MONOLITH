@@ -90,3 +90,38 @@ fun orbitPositions(count: Int): List<OrbitPoint> = when (val size = count.coerce
 /** Collapsed and still-overlapping icons must never receive a tap. */
 fun orbitHitTargetsEnabled(expanded: Boolean, progress: Float = 1f): Boolean =
     expanded && progress >= .90f
+
+
+// Hit-test the ACTUAL expanded icon centers for an intentional Orbit drag.
+// Pointer coordinates are in dp relative to the center of the cluster.
+// A 20dp radius leaves a gap even at 92% scale and 90% animation progress.
+// Do not accept a release between icons, before animation completes, or
+// with invalid coordinates. The same rule covers 1 through 15 icons.
+fun orbitDragTarget(
+    count: Int,
+    xDp: Float,
+    yDp: Float,
+    orbitScale: Float,
+    progress: Float,
+    expanded: Boolean,
+    radiusDp: Float = 20f
+): Int? {
+    if (!orbitHitTargetsEnabled(expanded, progress) ||
+        !xDp.isFinite() || !yDp.isFinite() ||
+        !orbitScale.isFinite() || orbitScale <= 0f ||
+        !radiusDp.isFinite() || radiusDp <= 0f
+    ) return null
+    val positions = orbitPositions(count)
+    var nearestIndex = -1
+    var nearestDistanceSquared = radiusDp * radiusDp
+    positions.forEachIndexed { index, point ->
+        val dx = xDp - point.x * orbitScale * progress
+        val dy = yDp - point.y * orbitScale * progress
+        val distanceSquared = dx * dx + dy * dy
+        if (distanceSquared <= nearestDistanceSquared) {
+            nearestDistanceSquared = distanceSquared
+            nearestIndex = index
+        }
+    }
+    return nearestIndex.takeIf { it >= 0 }
+}

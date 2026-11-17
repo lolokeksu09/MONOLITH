@@ -1,7 +1,6 @@
 package dev.monolith.launcher.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,6 +34,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -71,6 +73,8 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -91,6 +95,7 @@ import dev.monolith.launcher.data.LaunchableApp
 import dev.monolith.launcher.data.LaunchStats
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.chooseReferenceApps
+import dev.monolith.launcher.data.chooseRecentlyOpenedApps
 import dev.monolith.launcher.data.filterApps
 import dev.monolith.launcher.data.filterHiddenApps
 import dev.monolith.launcher.data.ORBIT_CAPACITY
@@ -108,6 +113,27 @@ private val Panel = Color(0xFF161615)
 private val Outline = Color(0xFF383835)
 
 internal enum class Screen { HOME, ALL_APPS, SETTINGS, ORBIT_APPS, HIDDEN_APPS }
+
+/**
+ * While the input is debouncing, never render a catalog calculated for another query.
+ * The blank-query path still clears immediately without waiting for debounce.
+ */
+internal fun drawerQueryIsSettling(
+    query: String,
+    settledQuery: String,
+    searchEnabled: Boolean
+): Boolean = searchEnabled && query != settledQuery
+
+/** Launch a unique current search result only; never choose a stale or ambiguous app. */
+internal fun singleDrawerImeMatch(
+    query: String,
+    settledQuery: String,
+    searchEnabled: Boolean,
+    visibleApps: List<LaunchableApp>?
+): LaunchableApp? =
+    if (searchEnabled && query.isNotBlank() && query == settledQuery)
+        visibleApps?.singleOrNull()
+    else null
 
 /** Return to the parent settings screen instead of unexpectedly jumping HOME. */
 internal fun destinationOnBack(screen: Screen, settingsOrigin: Screen): Screen = when (screen) {
@@ -172,7 +198,9 @@ fun MonolithScreen(
         }
         value = DrawerProjectionResult(drawerRequest, matched)
     }
-    val visibleApps = matchingDrawerApps(drawerRequest, drawerResult)
+    val visibleApps = if (drawerQueryIsSettling(
+            query, debouncedQuery, preferences.showDrawerSearch
+        )) null else matchingDrawerApps(drawerRequest, drawerResult)
     val referenceApps = remember(
         apps, hiddenApps, launchStats, orbitFavorites, preferences.orbitDensity
     ) {
@@ -184,6 +212,13 @@ fun MonolithScreen(
             favoriteIds = orbitFavorites
         )
     }
+    // Editorial uses real launcher-local recent activity; Orbit retains its
+    // saved favorites and frequent-app fallback. No Android usage permission.
+    val recentEditorialApps = remember(apps, hiddenApps, launchStats) {
+        chooseRecentlyOpenedApps(apps, hiddenApps, launchStats)
+    }
+    val editorialApps = recentEditorialApps.ifEmpty { referenceApps }
+
     val launchAndReturnHome: (LaunchableApp) -> Unit = { app ->
         screen = Screen.HOME
         query = ""
@@ -202,7 +237,7 @@ fun MonolithScreen(
         if (!preferences.showDrawerSearch) query = ""
     }
     // Only nonblank input is debounced. Clearing search must restore the full
-    // catalog immediately; sorting still runs on the UI thread after settling.
+    // catalog immediately; filtering and sorting run off the UI thread.
     LaunchedEffect(query) {
         if (query.isBlank()) {
             debouncedQuery = ""
@@ -225,6 +260,8 @@ fun MonolithScreen(
             when (screen) {
                 Screen.HOME -> ReferenceHome(
                     apps = referenceApps,
+                    editorialApps = editorialApps,
+                    editorialIsRecent = recentEditorialApps.isNotEmpty(),
                     iconStyle = preferences.appIconStyle,
                     homeRequestGeneration = homeRequestGeneration,
                     isDefaultHome = isDefaultHome,
@@ -247,7 +284,7 @@ fun MonolithScreen(
                             .background(Color.Black)
                             .windowInsetsPadding(WindowInsets.safeDrawing)
                             .imePadding()
-                            .padding(horizontal = 20.dp, vertical = 12.dp)
+                            .padding(horizontal = 20.dp, vertical = 10.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth().pointerInput(Unit) {
@@ -288,8 +325,8 @@ fun MonolithScreen(
                                 )
                                 Text(
                                     stringResource(R.string.drawer_title),
-                                    fontSize = 32.sp, fontWeight = FontWeight.SemiBold,
-                                    letterSpacing = (-.8).sp, lineHeight = 38.sp
+                                    fontSize = 29.sp, fontWeight = FontWeight.SemiBold,
+                                    letterSpacing = (-.8).sp, lineHeight = 34.sp
                                 )
                             }
                             TextButton(
@@ -308,11 +345,20 @@ fun MonolithScreen(
                         }
                         Spacer(Modifier.height(10.dp))
                         Box(Modifier.fillMaxWidth().height(1.dp).background(Outline))
-                        Spacer(Modifier.height(17.dp))
+                        Spacer(Modifier.height(12.dp))
                         val bottomSearch = preferences.drawerSearchPosition ==
                             DrawerSearchPosition.BOTTOM
                         if (preferences.showDrawerSearch && !bottomSearch) {
-                            DrawerSearchField(query = query, onQueryChange = { query = it })
+                            DrawerSearchField(
+                                query = query,
+                                onQueryChange = { query = it },
+                                onSearch = {
+                                    singleDrawerImeMatch(
+                                        query, debouncedQuery, preferences.showDrawerSearch,
+                                        visibleApps
+                                    )?.let(launchAndReturnHome)
+                                }
+                            )
                         }
                         Spacer(Modifier.height(9.dp))
                         Row(
@@ -323,27 +369,32 @@ fun MonolithScreen(
                             Text(
                                 if (visibleApps == null) stringResource(R.string.drawer_updating)
                                 else stringResource(R.string.apps_count, visibleApps.size),
-                                color = Muted, fontSize = 12.sp
+                                modifier = Modifier.weight(1f).padding(end = 8.dp),
+                                color = Muted, fontSize = 12.sp,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis
                             )
                             SortPicker(preferences.appSort) {
                                 onPreferencesChange(preferences.copy(appSort = it))
                             }
                         }
-                        if (loadError) {
+                        // A cached-list refresh failure differs from a first-load failure.
+                        // Never claim that cached apps exist, or offer two retries, when empty.
+                        if (loadError && apps.isNotEmpty()) {
                             TextButton(onClick = onRetry) {
                                 Text(stringResource(R.string.catalog_stale_retry), color = Foreground)
                             }
                         }
                         when {
-                            loading && apps.isEmpty() -> {
-                                Text(stringResource(R.string.loading), color = Muted)
-                                Spacer(Modifier.weight(1f))
-                            }
                             loadError && apps.isEmpty() -> {
                                 Text(stringResource(R.string.catalog_failed), color = Muted)
-                                TextButton(onClick = onRetry) {
-                                    Text(stringResource(R.string.retry))
+                                TextButton(onClick = onRetry,
+                                    modifier = Modifier.heightIn(min = 48.dp)) {
+                                    Text(stringResource(R.string.retry), color = Foreground)
                                 }
+                                Spacer(Modifier.weight(1f))
+                            }
+                            loading && apps.isEmpty() -> {
+                                Text(stringResource(R.string.loading), color = Muted)
                                 Spacer(Modifier.weight(1f))
                             }
                             visibleApps == null -> {
@@ -368,14 +419,15 @@ fun MonolithScreen(
                                 state = gridState,
                                 columns = GridCells.Fixed(preferences.drawerColumns),
                                 modifier = Modifier.fillMaxWidth().weight(1f),
-                                contentPadding = PaddingValues(top = 19.dp, bottom = 20.dp),
+                                contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                verticalArrangement = Arrangement.spacedBy(19.dp)
+                                verticalArrangement = Arrangement.spacedBy(14.dp)
                             ) {
                                 items(visibleApps, key = { it.id }) { app ->
                                     DrawerAppTile(
                                         app = app,
                                         iconStyle = preferences.appIconStyle,
+                                        compactLabels = preferences.drawerColumns >= 5,
                                         onLaunch = { launchAndReturnHome(app) },
                                         onActions = { selectedApp = app }
                                     )
@@ -384,14 +436,23 @@ fun MonolithScreen(
                         }
                         if (preferences.showDrawerSearch && bottomSearch) {
                             Spacer(Modifier.height(9.dp))
-                            DrawerSearchField(query = query, onQueryChange = { query = it })
+                            DrawerSearchField(
+                                query = query,
+                                onQueryChange = { query = it },
+                                onSearch = {
+                                    singleDrawerImeMatch(
+                                        query, debouncedQuery, preferences.showDrawerSearch,
+                                        visibleApps
+                                    )?.let(launchAndReturnHome)
+                                }
+                            )
                         }
                     }
                 }
                 Screen.SETTINGS -> Column(
                     modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)
                         .verticalScroll(rememberScrollState())
-                        .padding(22.dp)
+                        .padding(horizontal = 20.dp, vertical = 16.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TextButton(
@@ -408,18 +469,19 @@ fun MonolithScreen(
                         Spacer(Modifier.width(3.dp))
                         Text(
                             stringResource(R.string.settings),
-                            fontSize = 34.sp,
+                            fontSize = 30.sp,
                             fontWeight = FontWeight.SemiBold,
                             letterSpacing = (-1).sp
                         )
                     }
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(18.dp))
                     // The controls explain themselves; the previous tutorial
                     // paragraph created noise on every visit to Settings.
                     SettingsSectionHeading(stringResource(R.string.settings_section_appearance))
                     Text(stringResource(R.string.appearance_title), color = Muted, fontSize = 13.sp)
                     Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(modifier = Modifier.selectableGroup(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         AppIconStyle.entries.forEach { style ->
                             ChoiceButton(
                                 modifier = Modifier.weight(1f),
@@ -431,14 +493,15 @@ fun MonolithScreen(
                             )
                         }
                     }
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(8.dp))
                     Text(stringResource(R.string.appearance_hint), fontSize = 12.sp,
                         lineHeight = 17.sp, color = Muted)
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(18.dp))
                     SettingsSectionHeading(stringResource(R.string.settings_section_orbit))
                     Text(stringResource(R.string.orbit_density), color = Muted, fontSize = 13.sp)
                     Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(modifier = Modifier.selectableGroup(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         listOf(8, 12, 15).forEach { density ->
                             ChoiceButton(
                                 modifier = Modifier.weight(1f),
@@ -450,18 +513,15 @@ fun MonolithScreen(
                             )
                         }
                     }
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(8.dp))
                     Text(stringResource(R.string.orbit_density_hint), fontSize = 12.sp,
                         lineHeight = 17.sp, color = Muted)
-                    Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(16.dp))
                     SettingsAction(
                         title = stringResource(R.string.reference_customize_orbit),
                         onClick = { orbitQuery = ""; screen = Screen.ORBIT_APPS }
                     )
-                    Spacer(Modifier.height(6.dp))
-                    Text(stringResource(R.string.reference_customize_hint),
-                        fontSize = 12.sp, lineHeight = 17.sp, color = Muted)
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(18.dp))
                     SettingsSectionHeading(stringResource(R.string.settings_section_catalog))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -473,11 +533,12 @@ fun MonolithScreen(
                             onCheckedChange = { onPreferencesChange(preferences.copy(showDrawerSearch = it)) })
                     }
                     if (preferences.showDrawerSearch) {
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(10.dp))
                         Text(stringResource(R.string.drawer_search_position),
                             color = Muted, fontSize = 12.sp)
-                        Spacer(Modifier.height(7.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Spacer(Modifier.height(6.dp))
+                        Row(modifier = Modifier.selectableGroup(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             DrawerSearchPosition.entries.forEach { position ->
                                 ChoiceButton(
                                     modifier = Modifier.weight(1f),
@@ -495,13 +556,14 @@ fun MonolithScreen(
                                 )
                             }
                         }
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(8.dp))
                         Text(stringResource(R.string.drawer_search_position_hint),
                             color = Muted, fontSize = 11.sp, lineHeight = 15.sp)
                     }
-                    Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(16.dp))
                     Text(stringResource(R.string.drawer_columns), color = Muted, fontSize = 13.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(modifier = Modifier.selectableGroup(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         (3..6).forEach { columns ->
                             ChoiceButton(
                                 modifier = Modifier.weight(1f),
@@ -513,7 +575,7 @@ fun MonolithScreen(
                             )
                         }
                     }
-                    Spacer(Modifier.height(18.dp))
+                    Spacer(Modifier.height(14.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -526,28 +588,25 @@ fun MonolithScreen(
                     }
                     Text(stringResource(R.string.tracked_launches_only),
                         fontSize = 12.sp, lineHeight = 17.sp, color = Muted)
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(18.dp))
                     SettingsSectionHeading(stringResource(R.string.settings_section_system))
                     SettingsAction(
                         title = stringResource(R.string.manage_hidden_apps, hiddenApps.size),
                         onClick = { screen = Screen.HIDDEN_APPS }
                     )
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(8.dp))
                     SettingsAction(
                         title = stringResource(R.string.clear_launches),
                         onClick = { confirmClearLaunchHistory = true }
                     )
-                    Spacer(Modifier.height(14.dp))
+                    Spacer(Modifier.height(10.dp))
                     if (!isDefaultHome) {
                         SettingsAction(
                             title = stringResource(R.string.make_default),
                             onClick = onMakeDefaultHome
                         )
                     }
-                    Spacer(Modifier.height(17.dp))
-                    Text(stringResource(R.string.reference_legacy_data_note),
-                        fontSize = 11.sp, color = Muted)
-                    Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(14.dp))
                     SettingsAction(
                         title = stringResource(R.string.back_home),
                         onClick = { screen = Screen.HOME }
@@ -822,7 +881,8 @@ fun MonolithScreen(
 @Composable
 private fun DrawerSearchField(
     query: String,
-    onQueryChange: (String) -> Unit
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     TextField(
@@ -845,7 +905,10 @@ private fun DrawerSearchField(
         }),
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
+        keyboardActions = KeyboardActions(onSearch = {
+            keyboardController?.hide()
+            onSearch()
+        }),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp),
         colors = TextFieldDefaults.colors(
@@ -946,7 +1009,7 @@ private fun OrbitManagerRow(
 @Composable
 private fun SettingsSectionHeading(title: String) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 13.dp),
+        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -960,18 +1023,26 @@ private fun SettingsSectionHeading(title: String) {
 
 @Composable
 private fun SettingsAction(title: String, onClick: () -> Unit) {
+    // Flat, full-width action row; keep native button semantics and >=48dp hit area.
     OutlinedButton(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-        shape = RoundedCornerShape(14.dp),
-        border = BorderStroke(1.dp, Outline),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+        shape = RoundedCornerShape(10.dp),
+        border = null,
         colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-            containerColor = Panel, contentColor = Foreground
+            containerColor = Color.Transparent, contentColor = Foreground
         ),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 10.dp)
     ) {
-        Text(title, fontSize = 13.sp, fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(title, modifier = Modifier.weight(1f), fontSize = 14.sp,
+                fontWeight = FontWeight.Medium)
+            Text("›", color = Muted, fontSize = 21.sp)
+        }
     }
 }
 
@@ -982,14 +1053,13 @@ private fun ChoiceButton(
     label: String,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(10.dp)
     Box(
-        modifier = modifier.heightIn(min = 50.dp)
+        modifier = modifier.heightIn(min = 48.dp)
             .clip(shape)
             .background(if (selected) Foreground else Panel)
             .border(1.dp, if (selected) Foreground else Outline, shape)
-            .clickable(onClick = onClick)
-            .semantics { this.selected = selected },
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -1006,12 +1076,18 @@ private fun ChoiceButton(
 private fun DrawerAppTile(
     app: LaunchableApp,
     iconStyle: AppIconStyle,
+    compactLabels: Boolean,
     onLaunch: () -> Unit,
     onActions: () -> Unit
 ) {
     val bitmap = rememberAppIcon(app, iconStyle)
     Column(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp).combinedClickable(
+        modifier = Modifier.fillMaxWidth()
+            .heightIn(min = if (compactLabels) 84.dp else 96.dp)
+            .then(if (compactLabels) Modifier.semantics {
+                contentDescription = app.label
+            } else Modifier)
+            .combinedClickable(
             onClickLabel = stringResource(R.string.open_app),
             onLongClickLabel = stringResource(R.string.app_actions),
             onClick = onLaunch,
@@ -1034,12 +1110,14 @@ private fun DrawerAppTile(
         Text(
             app.label,
             color = Foreground,
-            fontSize = 13.sp,
+            fontSize = if (compactLabels) 12.sp else 13.sp,
             lineHeight = 16.sp,
-            maxLines = 2,
+            // Dense 5/6-column grids should not split long words mid-letter.
+            maxLines = if (compactLabels) 1 else 2,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
-            modifier = Modifier.heightIn(min = 28.dp)
+            modifier = Modifier.heightIn(min = if (compactLabels) 16.dp else 28.dp)
+                .then(if (compactLabels) Modifier.clearAndSetSemantics { } else Modifier)
         )
     }
 }
@@ -1050,8 +1128,9 @@ private fun SortPicker(selected: AppSort, onChange: (AppSort) -> Unit) {
     Box {
         TextButton(
             onClick = { open = true },
-            modifier = Modifier.border(.7.dp, Outline, RoundedCornerShape(13.dp))
-                .heightIn(min = 46.dp)
+            modifier = Modifier.widthIn(max = 192.dp)
+                .border(.7.dp, Outline, RoundedCornerShape(10.dp))
+                .heightIn(min = 48.dp)
         ) {
             Icon(
                 painterResource(R.drawable.ic_sort),
@@ -1060,7 +1139,8 @@ private fun SortPicker(selected: AppSort, onChange: (AppSort) -> Unit) {
                 modifier = Modifier.size(18.dp)
             )
             Spacer(Modifier.width(7.dp))
-            Text(stringResource(sortLabel(selected)), fontSize = 12.sp, maxLines = 1)
+            Text(stringResource(sortLabel(selected)), fontSize = 12.sp, maxLines = 1,
+                overflow = TextOverflow.Ellipsis)
         }
         DropdownMenu(
             expanded = open, onDismissRequest = { open = false },
@@ -1069,7 +1149,8 @@ private fun SortPicker(selected: AppSort, onChange: (AppSort) -> Unit) {
             AppSort.entries.forEach { choice ->
                 DropdownMenuItem(
                     text = { Text(stringResource(sortLabel(choice))) },
-                    onClick = { open = false; if (selected != choice) onChange(choice) }
+                    onClick = { open = false; if (selected != choice) onChange(choice) },
+                    modifier = Modifier.semantics { this.selected = selected == choice }
                 )
             }
         }

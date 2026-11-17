@@ -27,6 +27,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -37,6 +38,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -53,6 +55,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -66,6 +69,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -81,6 +85,7 @@ import dev.monolith.launcher.R
 import dev.monolith.launcher.data.AppIconStyle
 import dev.monolith.launcher.data.LaunchableApp
 import dev.monolith.launcher.data.orbitHitTargetsEnabled
+import dev.monolith.launcher.data.orbitDragTarget
 import dev.monolith.launcher.data.orbitPositions
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -93,7 +98,71 @@ private val Paper = Color(0xFFF4F3F0)
 private val Soft = Color(0xFFB8B6B1)
 private val Dim = Color(0xFF686662)
 private val Hint = Color(0xFF999792)
-private val Accent = Color(0xFFE1DDD5)
+
+// Geometry only: avoid moving icons, altering persistence or changing gestures.
+// Screen dimensions are the safeDrawing area of the Reference scene, in dp.
+internal data class ReferencePhoneLayout(
+    val compact: Boolean,
+    val mediaTopDp: Int,
+    val clockTopDp: Int,
+    val clockFontSp: Float,
+    val clockLineSp: Float,
+    val showClockDate: Boolean,
+    val showQuickApps: Boolean,
+    val quickAppsBottomDp: Int,
+    val editorialDateTopDp: Int,
+    val editorialDayOffsetDp: Int,
+    val editorialDayFontSp: Float,
+    val editorialBottomDp: Int,
+    val editorialAppLimit: Int,
+    val showEditorialGreeting: Boolean
+)
+
+internal fun referencePhoneLayout(
+    widthDp: Float,
+    heightDp: Float,
+    fontScale: Float
+): ReferencePhoneLayout {
+    val width = widthDp.takeIf { it.isFinite() && it > 0f } ?: 320f
+    val height = heightDp.takeIf { it.isFinite() && it > 0f } ?: 600f
+    val scale = fontScale.takeIf { it.isFinite() && it > 0f } ?: 1f
+    val compact = height < 700f || width < 360f || scale >= 1.25f
+    val short = height < 590f
+    // Fit the large HH:mm clock without reducing its contrast or hiding time.
+    val clockFont = minOf(
+        if (compact) 64f else 78f,
+        ((width - 56f).coerceAtLeast(120f) / (3.0f * scale))
+    ).coerceAtLeast(28f)
+    return ReferencePhoneLayout(
+        compact = compact,
+        mediaTopDp = if (compact) 20 else 32,
+        clockTopDp = when {
+            short -> 82
+            compact && scale >= 1.6f -> 92
+            compact -> 106
+            else -> 142
+        },
+        clockFontSp = clockFont,
+        clockLineSp = clockFont + 6f,
+        showClockDate = !short || scale < 1.3f,
+        showQuickApps = !short,
+        quickAppsBottomDp = when {
+            height < 700f -> 138
+            height < 760f -> 169
+            else -> 215
+        },
+        editorialDateTopDp = if (compact) 28 else 44,
+        editorialDayOffsetDp = if (compact) -75 else -94,
+        editorialDayFontSp = minOf(
+            if (compact) 76f else 96f,
+            width * .27f / scale
+        ).coerceAtLeast(26f),
+        editorialBottomDp = if (compact) 138 else 144,
+        editorialAppLimit = if (compact) 4 else 8,
+        showEditorialGreeting = !short && scale < 1.6f
+    )
+}
+
 
 @Composable
 fun ReferenceHome(
@@ -108,7 +177,9 @@ fun ReferenceHome(
     onAppActions: (LaunchableApp) -> Unit,
     onAllApps: () -> Unit,
     onSettings: () -> Unit,
-    onMakeDefaultHome: () -> Unit
+    onMakeDefaultHome: () -> Unit,
+    editorialApps: List<LaunchableApp> = apps,
+    editorialIsRecent: Boolean = false
 ) {
     var page by rememberSaveable { mutableIntStateOf(0) }
     var orbitOpen by rememberSaveable { mutableStateOf(false) }
@@ -210,7 +281,10 @@ fun ReferenceHome(
                     onNext = { sendMediaKey(context, KeyEvent.KEYCODE_MEDIA_NEXT) }
                 )
             } else {
-                EditorialScene(now, apps, iconStyle, openApp, onAppActions, openDrawer)
+                EditorialScene(
+                    now, editorialApps, iconStyle, openApp, onAppActions,
+                    openDrawer, editorialIsRecent
+                )
             }
         }
 
@@ -229,13 +303,15 @@ fun ReferenceHome(
 
         Column(
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                .padding(start = 24.dp, end = 24.dp, bottom = 10.dp),
+                .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (loadError) {
-                TextButton(onClick = onRetry) {
-                    Text(stringResource(R.string.catalog_stale_retry),
-                        color = Paper, fontSize = 12.sp)
+                TextButton(onClick = onRetry, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text(stringResource(
+                        if (apps.isEmpty()) R.string.catalog_empty_retry
+                        else R.string.catalog_stale_retry
+                    ), color = Paper, fontSize = 12.sp)
                 }
             } else if (loading && apps.isEmpty()) {
                 Text(stringResource(R.string.loading), color = Soft, fontSize = 12.sp)
@@ -278,7 +354,7 @@ fun ReferenceHome(
             }
             if (!isDefaultHome) {
                 TextButton(onClick = onMakeDefaultHome) {
-                    Text(stringResource(R.string.make_default), color = Accent, fontSize = 12.sp)
+                    Text(stringResource(R.string.make_default), color = Soft, fontSize = 11.sp)
                 }
             }
         }
@@ -311,8 +387,16 @@ private fun MinimalScene(
         if (orbitOpen) R.string.reference_orbit_expanded
         else R.string.reference_orbit_collapsed
     )
+    // Drag selection is transient: neither app order nor user settings change.
+    var draggedOrbitIndex by remember(orbitOpen, apps) { mutableStateOf<Int?>(null) }
+    val latestOrbitProgress by rememberUpdatedState(orbitProgress)
+    val latestLaunch by rememberUpdatedState(onLaunch)
 
-    Box(Modifier.fillMaxSize().background(Ink)) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(Ink)) {
+        val fontScale = LocalDensity.current.fontScale
+        val layout = remember(maxWidth, maxHeight, fontScale) {
+            referencePhoneLayout(maxWidth.value, maxHeight.value, fontScale)
+        }
         if (orbitOpen) {
             val dismissLabel = stringResource(R.string.reference_dismiss_orbit)
             // Full-screen dismiss layer sits BEHIND media controls and shortcuts,
@@ -332,7 +416,7 @@ private fun MinimalScene(
         }
         Column(
             modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()
-                .padding(start = 28.dp, top = 43.dp, end = 20.dp)
+                .padding(start = 28.dp, top = layout.mediaTopDp.dp, end = 20.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -342,14 +426,6 @@ private fun MinimalScene(
                     Text(stringResource(R.string.reference_media), color = Paper,
                         fontSize = 12.sp, fontWeight = FontWeight.Medium,
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(
-                        stringResource(R.string.reference_media_hint),
-                        color = Soft,
-                        fontSize = 11.sp,
-                        lineHeight = 15.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
                 }
                 MediaControl(
                     R.drawable.ic_play_arrow,
@@ -368,7 +444,7 @@ private fun MinimalScene(
         AnimatedVisibility(
             visible = !orbitOpen,
             modifier = Modifier.align(Alignment.TopStart)
-                .padding(start = 29.dp, top = 150.dp, end = 24.dp),
+                .padding(start = 29.dp, top = layout.clockTopDp.dp, end = 24.dp),
             enter = fadeIn(tween(if (motionDuration == 0) 0 else 180)),
             exit = fadeOut(tween(if (motionDuration == 0) 0 else 140))
         ) {
@@ -380,15 +456,18 @@ private fun MinimalScene(
             Spacer(Modifier.height(10.dp))
             Text(
                 now.format(DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())),
-                color = Paper, fontSize = 78.sp, lineHeight = 84.sp,
+                color = Paper, fontSize = layout.clockFontSp.sp,
+                lineHeight = layout.clockLineSp.sp,
                 fontWeight = FontWeight.Light, letterSpacing = (-3.8).sp,
                 maxLines = 1
             )
-            Text(
-                now.format(DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.getDefault())),
-                color = Soft, fontSize = 13.sp, lineHeight = 19.sp,
-                maxLines = 1, overflow = TextOverflow.Ellipsis
+            if (layout.showClockDate) {
+                Text(
+                    now.format(DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.getDefault())),
+                    color = Soft, fontSize = 13.sp, lineHeight = 19.sp,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis
                 )
+            }
             }
         }
 
@@ -410,7 +489,7 @@ private fun MinimalScene(
                 if (!orbitOpen) {
                     Text(
                         stringResource(R.string.reference_open_orbit),
-                        modifier = Modifier.align(Alignment.Center).offset(y = 110.dp),
+                        modifier = Modifier.align(Alignment.Center).offset(y = 38.dp),
                         color = Soft, fontSize = 11.sp,
                         letterSpacing = 1.5.sp,
                         fontWeight = FontWeight.Medium
@@ -461,6 +540,36 @@ private fun MinimalScene(
                     modifier = Modifier.semantics {
                         stateDescription = orbitStateDescription
                     }.clickable(onClick = onToggleOrbit)
+                        // Optional one-stroke selection starts ONLY after a long
+                        // press on the existing Collapse control. Ordinary taps,
+                        // Orbit icons, and Android HOME swipes remain independent.
+                        .pointerInput(apps, orbitScale) {
+                            detectDragGesturesAfterLongPress(
+                                onDragStart = { draggedOrbitIndex = null },
+                                onDrag = { change, _ ->
+                                    change.consume()
+                                    val density = this.density
+                                    draggedOrbitIndex = orbitDragTarget(
+                                        count = apps.size,
+                                        xDp = (change.position.x - size.width / 2f) / density,
+                                        // The Collapse row is 176dp BELOW Orbit center.
+                                        yDp = (change.position.y - size.height / 2f) / density +
+                                            176f,
+                                        orbitScale = orbitScale,
+                                        progress = latestOrbitProgress,
+                                        expanded = orbitOpen
+                                    )
+                                },
+                                onDragEnd = {
+                                    val index = draggedOrbitIndex
+                                    draggedOrbitIndex = null
+                                    if (orbitHitTargetsEnabled(orbitOpen, latestOrbitProgress)) {
+                                        index?.let { apps.getOrNull(it) }?.let(latestLaunch)
+                                    }
+                                },
+                                onDragCancel = { draggedOrbitIndex = null }
+                            )
+                        }
                         .height(48.dp).padding(horizontal = 14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -477,12 +586,24 @@ private fun MinimalScene(
                     )
                 }
             }
+            // The preview is text only; it never alters the locked icon artwork.
+            draggedOrbitIndex?.let { index ->
+                apps.getOrNull(index)?.let { target ->
+                    Text(
+                        target.label,
+                        modifier = Modifier.align(Alignment.Center)
+                            .offset(y = 224.dp).padding(horizontal = 30.dp),
+                        color = Paper, fontSize = 12.sp,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
         }
 
         AnimatedVisibility(
-            visible = !orbitOpen && apps.isNotEmpty(),
+            visible = !orbitOpen && apps.isNotEmpty() && layout.showQuickApps,
             modifier = Modifier.align(Alignment.BottomCenter)
-                .padding(bottom = 169.dp),
+                .padding(bottom = layout.quickAppsBottomDp.dp),
             enter = fadeIn(tween(if (motionDuration == 0) 0 else 160)),
             exit = fadeOut(tween(if (motionDuration == 0) 0 else 120))
         ) {
@@ -501,12 +622,6 @@ private fun MinimalScene(
             }
         }
 
-        Text(
-            stringResource(R.string.reference_swipe_hint),
-            modifier = Modifier.align(Alignment.BottomStart)
-                .padding(start = 30.dp, bottom = 102.dp),
-            fontSize = 12.sp, color = Hint, letterSpacing = .4.sp
-        )
     }
 }
 
@@ -583,12 +698,16 @@ private fun EditorialScene(
     iconStyle: AppIconStyle,
     onLaunch: (LaunchableApp) -> Unit,
     onActions: (LaunchableApp) -> Unit,
-    onAllApps: () -> Unit
+    onAllApps: () -> Unit,
+    isRecentlyOpened: Boolean
 ) {
     val locale = Locale.getDefault()
     val dayShort = now.format(DateTimeFormatter.ofPattern("EEE", locale)).uppercase(locale)
     BoxWithConstraints(Modifier.fillMaxSize().background(Ink)) {
-        val editorialWidth = maxWidth.value
+        val fontScale = LocalDensity.current.fontScale
+        val layout = remember(maxWidth, maxHeight, fontScale) {
+            referencePhoneLayout(maxWidth.value, maxHeight.value, fontScale)
+        }
         Image(
             painter = painterResource(R.drawable.editorial_rock),
             contentDescription = null,
@@ -611,7 +730,8 @@ private fun EditorialScene(
         ))
 
         Column(
-            modifier = Modifier.align(Alignment.TopStart).padding(start = 28.dp, top = 44.dp)
+            modifier = Modifier.align(Alignment.TopStart)
+                .padding(start = 28.dp, top = layout.editorialDateTopDp.dp)
         ) {
             Text(
                 now.format(DateTimeFormatter.ofPattern("dd MMMM yyyy", locale)),
@@ -623,13 +743,13 @@ private fun EditorialScene(
 
         Column(
             modifier = Modifier.align(Alignment.CenterStart)
-                .offset(y = (-94).dp)
+                .offset(y = layout.editorialDayOffsetDp.dp)
                 .padding(start = 25.dp)
         ) {
             Text(
                 dayShort,
                 color = Paper,
-                fontSize = minOf(96f, editorialWidth * .27f).sp,
+                fontSize = layout.editorialDayFontSp.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = (-4).sp,
                 maxLines = 1
@@ -640,10 +760,15 @@ private fun EditorialScene(
 
         Column(
             modifier = Modifier.align(Alignment.BottomStart)
-                .padding(start = 28.dp, bottom = 114.dp)
+                .padding(start = 28.dp, bottom = layout.editorialBottomDp.dp)
         ) {
-            Text(stringResource(R.string.reference_quick_apps), fontSize = 10.sp,
-                color = Soft, letterSpacing = 1.8.sp)
+            Text(
+                stringResource(
+                    if (isRecentlyOpened) R.string.reference_recent_apps
+                    else R.string.reference_quick_apps
+                ),
+                fontSize = 10.sp, color = Soft, letterSpacing = 1.8.sp
+            )
             Spacer(Modifier.height(13.dp))
             if (apps.isEmpty()) {
                 Text(stringResource(R.string.reference_no_quick_apps),
@@ -656,7 +781,7 @@ private fun EditorialScene(
                         color = Paper, fontSize = 12.sp)
                 }
             } else {
-                apps.take(8).chunked(4).forEach { rowApps ->
+                apps.take(layout.editorialAppLimit).chunked(4).forEach { rowApps ->
                     Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
                         rowApps.forEach { app ->
                             EditorialShortcut(app, iconStyle, onLaunch, onActions)
@@ -665,15 +790,17 @@ private fun EditorialScene(
                     Spacer(Modifier.height(9.dp))
                 }
             }
-            Spacer(Modifier.height(8.dp))
-            Text(
-                stringResource(when(now.hour) {
-                    in 5..11 -> R.string.reference_good_morning
-                    in 12..17 -> R.string.reference_good_afternoon
-                    else -> R.string.reference_good_evening
-                }),
-                color = Paper, fontSize = 11.sp, letterSpacing = 1.5.sp
-            )
+            if (layout.showEditorialGreeting) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    stringResource(when(now.hour) {
+                        in 5..11 -> R.string.reference_good_morning
+                        in 12..17 -> R.string.reference_good_afternoon
+                        else -> R.string.reference_good_evening
+                    }),
+                    color = Paper, fontSize = 11.sp, letterSpacing = 1.5.sp
+                )
+            }
         }
     }
 }

@@ -2,9 +2,54 @@
 
 Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, record date, firmware, tested signed APK tag and pass/fail evidence. CI success is not device success.
 
-**Current signed candidate:** [v0.20.0-beta.428](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.20.0-beta.428), from source commit `4cd84776b511e7bdf7f3b0838ebb90e7553f128a`. [Signed-release CI #428](https://github.com/lolokeksu09/MONOLITH/actions/runs/43082198569) completed successfully with pinned production signing. **No physical-device acceptance evidence is recorded yet.** Run applicable historical checks for this exact signed APK; record the installed version, certificate continuity, firmware, date and observed result.
+**Latest published production-signed candidate:** [v0.24.0-beta.463](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.24.0-beta.463), built from `62eb199cb43e927c1f6dcca6633a15b693244ab8` on 2026-11-12. Its [Android CI](https://github.com/lolokeksu09/MONOLITH/actions/runs/43214691432) passed. **No physical-device acceptance evidence has been recorded for this exact signed APK.** Note firmware, installed version, certificate identity and pass/fail observations before changing this status. Earlier-version requirements below remain historical test references, not claims that v0.20 is latest.
 
 **2026-11-12 screenshot-only checkpoint:** Four user-provided images show collapsed/expanded Orbit, All Apps and Settings. See [the screenshot QA evidence record](QA_0.20_SCREENSHOT_2026-11-12.md). This is a **partial visual rendering observation, not a hardware QA pass**: installed release identity, gestures, install-over, HOME recovery, TalkBack and actual responsiveness remain unverified. **All device-test checkboxes below remain open.**
+
+## PR #54 Preview — P5 performance, history and HOME recovery (hardware gate open)
+
+Run `bash scripts/collect-device-acceptance.sh preview /path/to/report.txt --launch` using an authorized connected `adb` device and the installed Preview. The script writes device/installed APK identity, current HOME role holder, warm `am start -W` timing and renderer frame stats. Omitting `--launch` leaves the foreground app unchanged. **The script does not select HOME, install, clear user data or force-stop any process.** Record the report path and the tested APK commit in the acceptance evidence.
+
+- [ ] Record run date, actual firmware/fingerprint, screen resolution, scale, APK identity and HOME-role holder; verify that it is still the expected launcher.
+- [ ] Collect at least three **warm** start observations and app frame timing with the same settings and compare with previously installed release. Do not claim a cold-start or a measured speedup from one CI pass.
+- [ ] Launch an app during a pending background catalog refresh and then return. Check history increments only once and Editorial order reflects the latest launch.
+- [ ] Clear MONOLITH launch history while a catalog refresh may be running. Verify the cleared state remains empty after the scan ends; pinned apps and stored preferences remain unchanged.
+- [ ] Verify Android Back and stock HOME recovery on device. **Only after verifying existing permanent signing**, install over the prior signed production APK and check retained favorites, hidden apps, search/sort preferences and HOME role; do not uninstall to upgrade.
+- [ ] Enable TalkBack and enlarged fonts; verify the All Apps search, Orbit gesture alternative, Editorial shortcuts, media actions and HOME page navigation.
+
+**All device checks remain NOT RUN until actual Lenovo observations are recorded.**
+
+## PR #54 Preview — P4 real Editorial recent shortcuts (not device-tested)
+
+- [ ] Launch two different apps from MONOLITH, open Editorial and confirm only real locally recorded recent apps appear in most-recent-first order under the localized `RECENT IN MONOLITH` header.
+- [ ] Tap and long-press recent shortcuts and confirm launch, return HOME and app actions are correct. Ensure Orbit saved favorites are still in their saved order.
+- [ ] Hide or uninstall the most recent app. Check it is absent from Editorial and no stale shortcut remains. Clear launch history; Editorial should show usable real quick-access fallback, not fabricated recent apps.
+- [ ] On compact and regular display settings, verify the 4/8-item limit, RU/EN label width, and untouched original artwork. All Apps navigation via footer and the empty state must remain functional.
+
+**All four physical checks are still open.** Robolectric tests alone are not a Lenovo hardware pass.
+
+## PR #54 Preview — P3 safe-area responsive composition (not device-tested)
+
+- [ ] Compare Minimal at normal and maximum supported system text scaling. The clock, media buttons, Orbit center and available shortcuts must not overlap; the clock must remain readable.
+- [ ] Test effective safeDrawing bounds equivalent to 320 × 520dp and 320 × 640dp, plus normal 412 × 860dp. Record device, font scale and screenshots. The very short layout should omit only the duplicated Minimal quick-access panel, while preserving Orbit and All Apps.
+- [ ] Open Editorial at these sizes. Check the scaled weekday, date, real shortcuts (up to four when compact), background artwork and bottom navigation; verify no interaction is hidden under Android bars.
+- [ ] Test long press actions and media keys with larger fonts, and return from HOME. Verify application original icons unchanged.
+
+All four checks above are **NOT RUN on Lenovo**; Compose tests are not pixel-level screen evidence.
+
+## PR #54 Preview — Orbit hold/drag/release and search IME quick launch (not device-tested)
+
+**Exact source:** `e0cb52dd59b5ecf82d0fae3b32a05eddf4e7c2d1`, [Android CI #44025481548](https://github.com/lolokeksu09/MONOLITH/actions/runs/44025481548) succeeded (unit tests, Lint, debug build, icon guard and disposable-key signature check). This is a **separately installed `dev.monolith.launcher.preview`** debug build, not a production-signed update to the installed launcher.
+
+- [ ] Record the installed Preview package/version, device firmware, resolution, display scaling and font size; check that the production HOME launcher and recovery path remain intact.
+- [ ] Open Orbit with the usual center tap, then tap **Collapse orbit** without dragging: it must close normally. Repeat with TalkBack.
+- [ ] Open Orbit with 1, 8, 12 and 15 actual installed shortcuts. From **Collapse orbit**, long-press, drag to a shortcut and release; verify exactly the intended application launches once. Verify name preview, animation readiness and no accidental parent swipe or page change.
+- [ ] Release a drag between icons or away from the cluster; cancel mid-gesture and return from Android Back. None of these should open an app. Confirm direct icon tap and icon long-press context actions still work.
+- [ ] Verify the drag gesture with reduced animations, larger font, system gesture navigation, landscape if supported and smaller effective display bounds. Ensure the caption does not overlap actionable footer controls.
+- [ ] Search for a single app using both Top and Bottom IME search and press keyboard Search; verify launch and return to HOME. Repeat with zero, two and rapidly changing results; these must never auto-launch.
+- [ ] Confirm Favorites order, hidden apps, Original/Mono/INK preference and other stored settings remain unchanged. Recheck normal swipe-up drawer and Minimal/Editorial page navigation.
+
+**All boxes remain open until directly observed on the actual phone.** Passing Robolectric touch injection is not proof of real Android touch arbitration or OEM gesture behavior.
 
 ## 0.20 signed beta — catalog responsiveness and Orbit dismissal (not device-tested)
 

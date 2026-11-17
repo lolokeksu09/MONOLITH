@@ -6,9 +6,10 @@
     <string name="app_info_unavailable">Application settings are unavailable</string>
     <string name="apps_count">%1$d applications</string>
     <string name="appearance_title">Application icon appearance</string>
-    <string name="appearance_hint">Original keeps app artwork; Mono is grayscale; INK uses native monochrome or falls back to Original.</string>
+    <string name="appearance_hint">Original: app artwork. Mono: grayscale. INK: system monochrome, or original.</string>
     <string name="back_home">Back home</string>
     <string name="catalog_failed">Unable to load installed applications</string>
+    <string name="catalog_empty_retry">Unable to load apps. Try again</string>
     <string name="catalog_stale_retry">App list could not refresh. Using the last loaded list. Tap to retry.</string>
     <string name="clear_launches">Clear launch history</string>
     <string name="default_sort">Sort by default</string>
@@ -21,7 +22,7 @@
     <string name="drawer_search_position">Search bar position</string>
     <string name="drawer_search_top">Top</string>
     <string name="drawer_search_bottom">Bottom</string>
-    <string name="drawer_search_position_hint">Bottom is easier to reach with one hand. Top stays the default.</string>
+    <string name="drawer_search_position_hint">Bottom is easier one-handed.</string>
     <string name="drawer_title">Apps</string>
     <string name="hidden_apps_description">Hidden apps stay installed. Unhide an app to show it in All Apps and on the Reference pages.</string>
     <string name="hidden_apps_title">Hidden applications</string>
@@ -37,7 +38,7 @@
     <string name="no_results">No applications found</string>
     <string name="open_app">Open application</string>
     <string name="orbit_density">Visible orbit applications</string>
-    <string name="orbit_density_hint">Choose 8, 12 or 15. Saved favorites and their order stay intact.</string>
+    <string name="orbit_density_hint">Saved favorites and their order stay intact.</string>
     <string name="reference_all_apps">ALL APPS  ↑</string>
     <string name="reference_editorial">EDITORIAL  →</string>
     <string name="reference_good_afternoon">GOOD AFTERNOON</string>
@@ -54,6 +55,7 @@
     <string name="reference_orbit_collapsed">Orbit applications collapsed</string>
     <string name="reference_orbit_expanded">Orbit applications expanded</string>
     <string name="reference_quick_apps">QUICK ACCESS</string>
+    <string name="reference_recent_apps">RECENT IN MONOLITH</string>
     <string name="reference_no_quick_apps">No shortcuts available yet</string>
     <string name="reference_browse_all_apps">Browse all apps</string>
     <string name="reference_swipe_hint">SWIPE LEFT  —  EDITORIAL</string>

@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.25.0-beta candidate — handheld hierarchy and one-handed launcher improvements (PR #54)
+
+- Assert manifest package identity from actual built APKs in CI: `dev.monolith.launcher.preview` for Debug Preview and `dev.monolith.launcher` for disposable-key release smoke build, in addition to pinned-certificate check in the production-only release workflow.
+
+- Move PackageManager catalog enumeration **and** local launch-history reads off the HOME UI thread; reject older refresh snapshots after a successful launch or history clear without changing persistence format.
+- Add Robolectric tests for real history persistence and refresh-version conflicts; introduce an opt-in, non-destructive ADB evidence collector (warm launch, HOME role identity, frame stats) for P5 Lenovo acceptance. Physical checks remain open.
+
+- Make Editorial a genuinely different app-launch surface: show real launcher-local recently opened apps in recency order, with an accurate localized label; keep existing quick-access shortcuts when no recent activity exists.
+- Preserve Orbit's saved favorite order, hidden-app filtering, original icon art and touch targets; add sorting/empty/hidden checks and real Compose tap tests without permissions or migration.
+
+- Calculate safe-area and font-scale responsive layouts on Minimal and Editorial: scaled clock and weekday, compact top spacing, four real Editorial shortcuts instead of eight in compact layouts, and omission of only the duplicated Minimal quick-access strip on very short screens.
+- Preserve existing default-size layout and all original application icon geometry and gestures; add normal/compact/large-text unit checks and a 320×520dp Compose rendering test. Physical screenshot QA remains open.
+
+
+- Add opt-in hold/drag/release selection from the expanded Orbit's existing Collapse control: only drop within a 20dp target after expansion can launch; cancellation and release outside any icon are inert.
+- Keep ordinary Collapse tap, app-icon tap/hold, source icon artwork and all current controls. Provide drag target text feedback and geometry/Compose regression checks; physical gesture QA still open.
+
+
+- Launch the single, current filtered app when keyboard Search is pressed; leave zero, multiple, empty, disabled and pending search results non-launching, for both Top and Bottom layouts.
+- Add positive and negative Compose/Robolectric tests and the [implementation plan](PLAN_ONE_HANDED_2026-11-17.md).
+
+- Correct first-load catalog failure: one retry button in All Apps, a truthful empty-state retry on HOME, and preserve the stale-catalog retry only when cached applications actually exist.
+- Mark the current sort option as selected in the menu for accessibility; trim an obsolete Classic-HOME data notice from Settings without changing saved preferences.
+- Add targeted UI regression tests for empty-error retry, cached-error display and selection semantics.
+
+- Prevent stale app results during the 180ms search debounce, while preserving immediate clear and the background projection.
+- Group Settings radio choices for screen readers; announce compact-grid app names once and preserve complete accessible labels.
+- Remove the redundant technical subtitle beneath media controls on Minimal HOME; keep real media-key actions.
+
+- Make 5/6-column All Apps labels compact and single-line with ellipsis rather than splitting words; preserve full accessible app names and two-line labels for 3/4 columns.
+- Constrain the sort selector width so translated labels cannot crowd out the app count, and give Settings choices explicit radio-button semantics.
+
+- Tighten All Apps header and grid spacing without altering 0.21 icon artwork, icon dimensions, hit targets, search, or sorting logic.
+- Reduce Settings vertical noise: compact selectors and typography, flat native action rows with 48dp minimum targets, shortened RU/EN hints.
+- Bring the collapsed Orbit label back next to its explicit central trigger; lift quick access on tall screens while preserving compact-screen spacing; remove duplicated swipe instruction but retain the accessible page switch, All Apps, HOME role action, and gesture behavior.
+- Lift Editorial shortcuts slightly without changing its rock asset, artwork, or navigation.
+- No changes to package identity, signing, persisted settings, permissions, Android launcher role, or app-owned icons. Physical Lenovo acceptance remains pending.
+
+
 ## 0.24.0-beta — Orbit organization and safer history management (candidate)
 
 - Split the Orbit app manager into **Pinned** (saved order) and **Available** sections with explicit counts. Existing **Pinned only / All applications** filtering and search remain intact.

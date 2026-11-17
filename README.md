@@ -2,7 +2,7 @@
 
 Native, offline-first AMOLED Android HOME launcher written in Kotlin + Jetpack Compose.
 
-**Latest verified signed prerelease: [v0.20.0-beta.428](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.20.0-beta.428)** (published 2026-11-11). Android API 26–36 · production application ID: `dev.monolith.launcher` · source commit `4cd8477`. [Android CI #428](https://github.com/lolokeksu09/MONOLITH/actions/runs/43082198569) succeeded and verified the original permanent signing certificate. Physical Lenovo Legion Y70 validation remains open; Preview remains a separate debug-only package.
+**Latest published signed prerelease: [v0.24.0-beta.463](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.24.0-beta.463)** (2026-11-12; source `62eb199`). Android API 26–36 · production ID `dev.monolith.launcher`. The [CI on this revision](https://github.com/lolokeksu09/MONOLITH/actions/runs/43214691432) passed; physical Lenovo acceptance remains open. Unreleased ergonomics changes are in [PR #54](https://github.com/lolokeksu09/MONOLITH/pull/54) and the [one-handed plan](docs/PLAN_ONE_HANDED_2026-11-17.md). Debug Preview is a separate app.
 
 ## Single Reference HOME
 

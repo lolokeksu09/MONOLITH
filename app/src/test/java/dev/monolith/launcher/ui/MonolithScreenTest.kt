@@ -1,8 +1,15 @@
 package dev.monolith.launcher.ui
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasSetTextAction
@@ -10,16 +17,20 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performScrollTo
 import dev.monolith.launcher.data.AppIconStyle
 import dev.monolith.launcher.data.LaunchableApp
+import dev.monolith.launcher.data.LaunchStats
 import dev.monolith.launcher.data.LauncherPreferences
 import dev.monolith.launcher.data.DrawerSearchPosition
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -51,17 +62,19 @@ class MonolithScreenTest {
         loading: Boolean = false,
         loadError: Boolean = false,
         hiddenApps: Set<String> = emptySet(),
+        launchStats: Map<String, LaunchStats> = emptyMap(),
         onRetry: () -> Unit = {},
         onPreferencesChange: (LauncherPreferences) -> Unit =
             { currentPreferences.value = it },
-        onClearLaunchHistory: () -> Unit = {}
+        onClearLaunchHistory: () -> Unit = {},
+        onLaunch: (LaunchableApp) -> Unit = {}
     ) {
         composeRule.setContent {
             MonolithScreen(
                 apps = apps,
                 preferences = currentPreferences.value,
                 homeRequestGeneration = 0,
-                launchStats = emptyMap(),
+                launchStats = launchStats,
                 hiddenApps = hiddenApps,
                 orbitFavorites = currentFavorites.value,
                 loading = loading,
@@ -69,7 +82,7 @@ class MonolithScreenTest {
                 isDefaultHome = true,
                 onRetry = onRetry,
                 onMakeDefaultHome = {},
-                onLaunch = {},
+                onLaunch = onLaunch,
                 onAppInfo = {},
                 onOrbitFavoritesChange = { currentFavorites.value = it },
                 onPreferencesChange = onPreferencesChange,
@@ -81,12 +94,74 @@ class MonolithScreenTest {
     }
 
     @Test
-    fun precisionHomeShowsTimepieceDockAndSmallOrbitHitTarget() {
+    fun regularPhoneLayoutPreservesApprovedHomeHierarchy() {
+        val layout = referencePhoneLayout(412f, 860f, 1f)
+        assertFalse(layout.compact)
+        assertEquals(32, layout.mediaTopDp)
+        assertEquals(142, layout.clockTopDp)
+        assertEquals(78f, layout.clockFontSp)
+        assertEquals(215, layout.quickAppsBottomDp)
+        assertTrue(layout.showQuickApps)
+        assertEquals(8, layout.editorialAppLimit)
+        assertEquals(144, layout.editorialBottomDp)
+    }
+
+    @Test
+    fun compactAndLargeFontLayoutsKeepTheClockAndReduceClutter() {
+        val compact = referencePhoneLayout(320f, 640f, 1.5f)
+        assertTrue(compact.compact)
+        assertTrue(compact.showQuickApps)
+        assertTrue(compact.clockFontSp < 78f)
+        assertEquals(4, compact.editorialAppLimit)
+        assertTrue(compact.editorialDayFontSp < 96f)
+
+        val short = referencePhoneLayout(320f, 520f, 2f)
+        assertTrue(short.compact)
+        assertFalse(short.showQuickApps)
+        assertFalse(short.showClockDate)
+        assertFalse(short.showEditorialGreeting)
+        assertTrue(short.clockFontSp > 0f)
+        assertTrue(short.clockTopDp + short.clockLineSp * 2f < 260f)
+
+        // An invalid font scale cannot create NaN offsets or font sizes.
+        assertTrue(referencePhoneLayout(320f, 520f, Float.NaN).clockFontSp.isFinite())
+    }
+
+    @Test
+    fun veryShortScreenRetainsOrbitAndAppsNavigationWithoutQuickDockOverlap() {
+        composeRule.setContent {
+            Box(Modifier.size(320.dp, 520.dp)) {
+                ReferenceHome(
+                    apps = listOf(appAlpha, appBeta),
+                    iconStyle = AppIconStyle.ORIGINAL,
+                    homeRequestGeneration = 0,
+                    isDefaultHome = true,
+                    loading = false,
+                    loadError = false,
+                    onRetry = {},
+                    onLaunch = {},
+                    onAppActions = {},
+                    onAllApps = {},
+                    onSettings = {},
+                    onMakeDefaultHome = {}
+                )
+            }
+        }
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+        composeRule.onNodeWithText("QUICK ACCESS").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Settings").assertExists()
+    }
+
+    @Test
+    fun precisionHomeShowsTimepieceAndSmallOrbitHitTarget() {
         launchMonolith(apps = listOf(appAlpha, appBeta))
         composeRule.onNodeWithText("MONOLITH").assertExists()
-        composeRule.onNodeWithText("QUICK ACCESS").assertExists()
+        // Quick access is omitted on genuinely short HOME layouts.
+        // The central Orbit trigger must remain accessible.
         composeRule.onNodeWithText("OPEN ORBIT").assertExists()
-        composeRule.onNodeWithContentDescription("Alpha").assertExists()
+        composeRule.onNodeWithText("System playback controls").assertDoesNotExist()
+        // On short layouts the collapsed quick-access panel is intentionally hidden.
+        // The real app shortcut must still be accessible once Orbit expands.
         val center = composeRule.onNode(
             SemanticsMatcher.expectValue(
                 SemanticsProperties.StateDescription, "Orbit applications collapsed"
@@ -99,6 +174,7 @@ class MonolithScreenTest {
             width <= settingsWidth * 1.5f)
         center.performClick()
         composeRule.waitForIdle()
+        composeRule.onNodeWithContentDescription("Alpha").assertExists()
         composeRule.onNodeWithText("MONOLITH").assertDoesNotExist()
         composeRule.onNodeWithText("QUICK ACCESS").assertDoesNotExist()
     }
@@ -119,6 +195,89 @@ class MonolithScreenTest {
         collapsed.performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithContentDescription("Alpha").assertExists()
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications expanded"
+            )
+        ).assertExists()
+    }
+
+    @Test
+    fun collapseControlStillClosesOrbitOnOrdinaryTap() {
+        launchMonolith(apps = listOf(appAlpha, appBeta))
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications collapsed"
+            )
+        ).performClick()
+        composeRule.onNodeWithText("Collapse orbit").performClick()
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNode(
+                    SemanticsMatcher.expectValue(
+                        SemanticsProperties.StateDescription, "Orbit applications collapsed"
+                    )
+                ).assertExists()
+            }.isSuccess
+        }
+    }
+
+    @Test
+    fun longPressDragFromCollapseLaunchesSingleOrbitApp() {
+        val launched = mutableListOf<LaunchableApp>()
+        launchMonolith(apps = listOf(appAlpha), onLaunch = { launched += it })
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications collapsed"
+            )
+        ).performClick()
+        composeRule.waitForIdle()
+        // The existing Collapse control is 176dp below the Orbit center.
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications expanded"
+            )
+        ).performTouchInput {
+            val start = center
+            val pxPerDp = height / 48f
+            down(start)
+            advanceEventTime(800L)
+            moveTo(Offset(start.x, start.y - 48f * pxPerDp))
+            moveTo(Offset(start.x, start.y - 176f * pxPerDp))
+            up()
+        }
+        composeRule.waitForIdle()
+        assertEquals(listOf(appAlpha), launched)
+        // Quick access is omitted on genuinely short HOME layouts.
+        // Navigation and the central Orbit trigger must remain usable.
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+    }
+
+    @Test
+    fun dragReleaseBetweenCollapseAndOrbitIconDoesNotLaunch() {
+        val launched = mutableListOf<LaunchableApp>()
+        launchMonolith(apps = listOf(appAlpha), onLaunch = { launched += it })
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications collapsed"
+            )
+        ).performClick()
+        composeRule.waitForIdle()
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription, "Orbit applications expanded"
+            )
+        ).performTouchInput {
+            val start = center
+            val pxPerDp = height / 48f
+            down(start)
+            advanceEventTime(800L)
+            moveTo(Offset(start.x, start.y - 48f * pxPerDp))
+            moveTo(Offset(start.x, start.y - 88f * pxPerDp))
+            up()
+        }
+        composeRule.waitForIdle()
+        assertTrue(launched.isEmpty())
         composeRule.onNode(
             SemanticsMatcher.expectValue(
                 SemanticsProperties.StateDescription, "Orbit applications expanded"
@@ -158,6 +317,38 @@ class MonolithScreenTest {
     }
 
     @Test
+    fun editorialRecentShortcutsOpenActualAppsWithoutChangingOrbitFavorites() {
+        val launched = mutableListOf<LaunchableApp>()
+        currentFavorites.value = listOf(appAlpha.id)
+        launchMonolith(
+            apps = listOf(appAlpha, appBeta),
+            launchStats = mapOf(appBeta.id to LaunchStats(1, 100L)),
+            onLaunch = { launched += it }
+        )
+        composeRule.onNodeWithText("EDITORIAL →").performClick()
+        composeRule.onNodeWithText("RECENT IN MONOLITH").assertExists()
+        composeRule.onNodeWithContentDescription("Beta").performClick()
+        composeRule.waitForIdle()
+        assertEquals(listOf(appBeta), launched)
+        assertEquals(listOf(appAlpha.id), currentFavorites.value)
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+    }
+
+    @Test
+    fun editorialFreshOrHiddenHistoryUsesRealQuickAccessFallback() {
+        launchMonolith(
+            apps = listOf(appAlpha, appBeta),
+            hiddenApps = setOf(appBeta.id),
+            launchStats = mapOf(appBeta.id to LaunchStats(1, 100L))
+        )
+        composeRule.onNodeWithText("EDITORIAL →").performClick()
+        composeRule.onNodeWithText("QUICK ACCESS").assertExists()
+        composeRule.onNodeWithText("RECENT IN MONOLITH").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Alpha").assertExists()
+        composeRule.onNodeWithContentDescription("Beta").assertDoesNotExist()
+    }
+
+    @Test
     fun emptyEditorialOffersRealPathToAllApps() {
         launchMonolith(apps = emptyList())
         composeRule.onNodeWithText("EDITORIAL →").performClick()
@@ -175,11 +366,49 @@ class MonolithScreenTest {
     fun catalogErrorOffersRetry() {
         var retried = false
         launchMonolith(apps = emptyList(), loadError = true, onRetry = { retried = true })
-        composeRule.onNodeWithText(
-            "App list could not refresh. Using the last loaded list. Tap to retry."
-        ).performClick()
+        composeRule.onNodeWithText("Unable to load apps. Try again").performClick()
         composeRule.waitForIdle()
         assertTrue(retried)
+        composeRule.onNodeWithText(
+            "App list could not refresh. Using the last loaded list. Tap to retry."
+        ).assertDoesNotExist()
+    }
+
+    @Test
+    fun firstLoadFailureInDrawerOffersExactlyOneRetry() {
+        var retries = 0
+        launchMonolith(apps = emptyList(), loadError = true, onRetry = { retries++ })
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Unable to load installed applications").assertExists()
+        composeRule.onAllNodesWithText("Try again").assertCountEquals(1)
+        composeRule.onNodeWithText(
+            "App list could not refresh. Using the last loaded list. Tap to retry."
+        ).assertDoesNotExist()
+        composeRule.onNodeWithText("Try again").performClick()
+        assertEquals(1, retries)
+    }
+
+    @Test
+    fun failedRefreshWithExistingCatalogKeepsAppsVisible() {
+        launchMonolith(apps = listOf(appAlpha), loadError = true)
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("Alpha").assertExists()
+        composeRule.onNodeWithText(
+            "App list could not refresh. Using the last loaded list. Tap to retry."
+        ).assertExists()
+        composeRule.onNodeWithText("Unable to load installed applications")
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun sortMenuAnnouncesTheActiveChoice() {
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNodeWithText("A–Z").performClick()
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)
+                and hasText("A–Z")
+        ).assertExists()
     }
 
     @Test
@@ -285,6 +514,66 @@ class MonolithScreenTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Alpha").assertDoesNotExist()
         composeRule.onNodeWithText("Beta").assertIsDisplayed()
+    }
+
+    @Test
+    fun changingQueryHidesEarlierCatalogWhileDebouncing() {
+        assertTrue(drawerQueryIsSettling("Bet", "Al", searchEnabled = true))
+        assertTrue(drawerQueryIsSettling("", "Al", searchEnabled = true))
+        assertFalse(drawerQueryIsSettling("Bet", "Bet", searchEnabled = true))
+        assertFalse(drawerQueryIsSettling("Bet", "Al", searchEnabled = false))
+
+        launchMonolith()
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNode(hasSetTextAction()).performTextInput("Bet")
+        composeRule.onNodeWithText("Alpha").assertDoesNotExist()
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNodeWithText("Beta").assertExists()
+            }.isSuccess
+        }
+    }
+
+    @Test
+    fun searchImeLaunchesSingleSettledResultAndReturnsHome() {
+        val launched = mutableListOf<LaunchableApp>()
+        assertEquals(appBeta, singleDrawerImeMatch("Bet", "Bet", true, listOf(appBeta)))
+        launchMonolith(onLaunch = { launched += it })
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNode(hasSetTextAction()).performTextInput("Bet")
+        composeRule.waitUntil(5_000) {
+            runCatching { composeRule.onNodeWithText("Beta").assertIsDisplayed() }.isSuccess
+        }
+        composeRule.onNode(hasSetTextAction()).performImeAction()
+        composeRule.waitForIdle()
+        assertEquals(listOf(appBeta), launched)
+        // Quick access is omitted on genuinely short HOME layouts.
+        // Navigation and the central Orbit trigger must remain usable.
+        composeRule.onNodeWithText("OPEN ORBIT").assertExists()
+    }
+
+    @Test
+    fun searchImeNeverLaunchesStaleEmptyOrAmbiguousResults() {
+        assertEquals(null, singleDrawerImeMatch("Be", "Al", true, listOf(appBeta)))
+        assertEquals(null, singleDrawerImeMatch("", "", true, listOf(appBeta)))
+        assertEquals(null, singleDrawerImeMatch("Be", "Be", false, listOf(appBeta)))
+        assertEquals(null, singleDrawerImeMatch("a", "a", true, listOf(appAlpha, appBeta)))
+        assertEquals(null, singleDrawerImeMatch("Be", "Be", true, null))
+
+        val launched = mutableListOf<LaunchableApp>()
+        launchMonolith(onLaunch = { launched += it })
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.onNode(hasSetTextAction()).performTextInput("a")
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+                composeRule.onNodeWithText("Beta").assertIsDisplayed()
+            }.isSuccess
+        }
+        composeRule.onNode(hasSetTextAction()).performImeAction()
+        composeRule.waitForIdle()
+        assertTrue(launched.isEmpty())
+        composeRule.onNodeWithText("Apps").assertIsDisplayed()
     }
 
     @Test
@@ -398,6 +687,29 @@ class MonolithScreenTest {
                 and hasText("INK")
         ).assertExists()
         assertEquals(AppIconStyle.INK, received.last().appIconStyle)
+    }
+
+    @Test
+    fun denseDrawerKeepsFullLongAppNameForAccessibility() {
+        val longName = "Interactive live wallpapers"
+        currentPreferences.value = LauncherPreferences(drawerColumns = 5)
+        launchMonolith(
+            apps = listOf(LaunchableApp("pkg/long", longName, "pkg", "long"))
+        )
+        composeRule.onNodeWithText("ALL APPS ↑").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithContentDescription(longName).assertExists()
+    }
+
+    @Test
+    fun settingsChoicesExposeRadioSelectionSemantics() {
+        launchMonolith()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        composeRule.onNode(
+            SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton)
+                and SemanticsMatcher.expectValue(SemanticsProperties.Selected, false)
+                and hasText("INK")
+        ).assertExists()
     }
 
     @Test
