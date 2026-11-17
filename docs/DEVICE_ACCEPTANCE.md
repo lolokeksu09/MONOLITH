@@ -2,9 +2,23 @@
 
 Target: Lenovo Legion Y70 with Motorola Android 16 firmware. For each check, record date, firmware, tested signed APK tag and pass/fail evidence. CI success is not device success.
 
-**Current signed candidate:** [v0.20.0-beta.428](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.20.0-beta.428), from source commit `4cd84776b511e7bdf7f3b0838ebb90e7553f128a`. [Signed-release CI #428](https://github.com/lolokeksu09/MONOLITH/actions/runs/43082198569) completed successfully with pinned production signing. **No physical-device acceptance evidence is recorded yet.** Run applicable historical checks for this exact signed APK; record the installed version, certificate continuity, firmware, date and observed result.
+**Latest published production-signed candidate:** [v0.24.0-beta.463](https://github.com/lolokeksu09/MONOLITH/releases/tag/v0.24.0-beta.463), built from `62eb199cb43e927c1f6dcca6633a15b693244ab8` on 2026-11-12. Its [Android CI](https://github.com/lolokeksu09/MONOLITH/actions/runs/43214691432) passed. **No physical-device acceptance evidence has been recorded for this exact signed APK.** Note firmware, installed version, certificate identity and pass/fail observations before changing this status. Earlier-version requirements below remain historical test references, not claims that v0.20 is latest.
 
 **2026-11-12 screenshot-only checkpoint:** Four user-provided images show collapsed/expanded Orbit, All Apps and Settings. See [the screenshot QA evidence record](QA_0.20_SCREENSHOT_2026-11-12.md). This is a **partial visual rendering observation, not a hardware QA pass**: installed release identity, gestures, install-over, HOME recovery, TalkBack and actual responsiveness remain unverified. **All device-test checkboxes below remain open.**
+
+## PR #54 Preview — Orbit hold/drag/release and search IME quick launch (not device-tested)
+
+**Exact source:** `e0cb52dd59b5ecf82d0fae3b32a05eddf4e7c2d1`, [Android CI #44025481548](https://github.com/lolokeksu09/MONOLITH/actions/runs/44025481548) succeeded (unit tests, Lint, debug build, icon guard and disposable-key signature check). This is a **separately installed `dev.monolith.launcher.preview`** debug build, not a production-signed update to the installed launcher.
+
+- [ ] Record the installed Preview package/version, device firmware, resolution, display scaling and font size; check that the production HOME launcher and recovery path remain intact.
+- [ ] Open Orbit with the usual center tap, then tap **Collapse orbit** without dragging: it must close normally. Repeat with TalkBack.
+- [ ] Open Orbit with 1, 8, 12 and 15 actual installed shortcuts. From **Collapse orbit**, long-press, drag to a shortcut and release; verify exactly the intended application launches once. Verify name preview, animation readiness and no accidental parent swipe or page change.
+- [ ] Release a drag between icons or away from the cluster; cancel mid-gesture and return from Android Back. None of these should open an app. Confirm direct icon tap and icon long-press context actions still work.
+- [ ] Verify the drag gesture with reduced animations, larger font, system gesture navigation, landscape if supported and smaller effective display bounds. Ensure the caption does not overlap actionable footer controls.
+- [ ] Search for a single app using both Top and Bottom IME search and press keyboard Search; verify launch and return to HOME. Repeat with zero, two and rapidly changing results; these must never auto-launch.
+- [ ] Confirm Favorites order, hidden apps, Original/Mono/INK preference and other stored settings remain unchanged. Recheck normal swipe-up drawer and Minimal/Editorial page navigation.
+
+**All boxes remain open until directly observed on the actual phone.** Passing Robolectric touch injection is not proof of real Android touch arbitration or OEM gesture behavior.
 
 ## 0.20 signed beta — catalog responsiveness and Orbit dismissal (not device-tested)
 
